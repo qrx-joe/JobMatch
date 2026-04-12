@@ -93,26 +93,128 @@ class SimpleJobReader:
             job.job_type = self._find_value(row, cols, ['岗位类型', '岗位名称'])
             job.service_category = self._find_value(row, cols, ['服务类别', '服务类型'])
             job.recruit_count = self._parse_int(self._find_value(row, cols, ['招募人数']))
-            job.education = self._find_value(row, cols, ['学历'])
-            job.degree = self._find_value(row, cols, ['学位'])
-            job.major = self._find_value(row, cols, ['专业'])
-            job.qualifications = self._find_value(row, cols, ['相关资格'])
-            job.other = self._find_value(row, cols, ['其他'])
             job.phone = self._find_value(row, cols, ['联系电话', '电话'])
             job.contact = self._find_value(row, cols, ['联系人'])
+
+            # 直接读取各列（处理Unnamed列）
+            job.education = self._find_value(row, cols, ['服务岗位要求'])
+            job.degree = self._find_value(row, cols, ['Unnamed: 6'])
+            job.major = self._find_value(row, cols, ['Unnamed: 7'])
+            job.qualifications = self._find_value(row, cols, ['Unnamed: 8'])
+            job.other = self._find_value(row, cols, ['Unnamed: 9'])
+
+            # 清理可能包含的表头文字
+            if job.education == '学历':
+                job.education = ''
+            if job.degree == '学位':
+                job.degree = ''
+            if job.major == '专业':
+                job.major = ''
+            if job.qualifications == '相关资格':
+                job.qualifications = ''
+            if job.other == '其他':
+                job.other = ''
 
             return job
 
         except Exception as e:
             return None
 
+    def _parse_requirements(self, requirements: str) -> dict:
+        """
+        从服务岗位要求中解析出各个字段
+        格式示例：本科及以上，学士及以上，经济学类（0201）、统计学类（0712）
+        """
+        result = {
+            'education': '',
+            'degree': '',
+            'major': '',
+            'qualifications': '',
+            'other': ''
+        }
+
+        if not requirements:
+            return result
+
+        req = str(requirements).strip()
+
+        # 提取学历（如：本科及以上，大专及以上，研究生）
+        edu_patterns = ['研究生及以上', '研究生', '本科及以上', '本科', '大专及以上', '大专', '专科及以上', '专科']
+        for pattern in edu_patterns:
+            if pattern in req:
+                result['education'] = pattern
+                break
+
+        # 提取学位（如：学士及以上，硕士及以上）
+        degree_patterns = ['博士及以上', '博士', '硕士及以上', '硕士', '学士及以上', '学士']
+        for pattern in degree_patterns:
+            if pattern in req:
+                result['degree'] = pattern
+                break
+
+        # 提取专业：通常在"学历/学位"之后，或包含"类"、"专业"、数字代码
+        # 尝试找到专业部分
+        major = ''
+
+        # 尝试匹配"本科及以上，学士及以上，专业名称"这种格式
+        parts = req.split('，')
+        if len(parts) >= 3:
+            # 最后一部分可能是专业
+            major = parts[-1]
+        elif len(parts) == 2:
+            # 可能只有学历和专业
+            if '及以上' in parts[0] or '本科' in parts[0] or '大专' in parts[0]:
+                major = parts[1]
+        elif len(parts) == 1:
+            # 只有一项，判断是否是专业
+            if '类' in parts[0] or any(c.isdigit() for c in parts[0]):
+                major = parts[0]
+
+        # 如果还没找到，尝试用正则匹配专业代码格式（如：0201）
+        if not major:
+            import re
+            # 匹配包含数字代码的部分
+            match = re.search(r'[（(](\d{4})[）)]', req)
+            if match:
+                # 找到代码，提取从代码往前到学历/学位的部分
+                idx = match.start()
+                # 向前找逗号或空格
+                start = max(0, req.rfind('，', 0, idx))
+                if start == 0:
+                    start = max(0, req.rfind(' ', 0, idx))
+                major = req[start:].strip('，')
+
+        # 清理专业字段
+        if major:
+            # 移除学历相关文字
+            for edu in edu_patterns:
+                major = major.replace(edu, '')
+            # 移除学位相关文字
+            for deg in degree_patterns:
+                major = major.replace(deg, '')
+            # 清理多余字符
+            major = major.strip('，,、 ')
+            result['major'] = major
+
+        # 提取相关资格（如：教师资格证、法律职业资格等）
+        qual_patterns = ['教师资格证', '法律职业资格', '医师资格证', '护士资格证', '会计证', '注册会计师']
+        for pattern in qual_patterns:
+            if pattern in req:
+                result['qualifications'] = pattern
+                break
+
+        # 其他要求（性别、户籍等）暂不归入other，由其他列处理
+
+        return result
+
     def _find_value(self, row: pd.Series, cols: list, possible_names: list, default='') -> str:
         """查找字段值"""
         # 先按列名查找
         for name in possible_names:
+            name_clean = str(name).replace('\n', '').replace(' ', '')
             for col in cols:
                 col_str = str(col).replace('\n', '').replace(' ', '')
-                if name in col_str or col_str in name:
+                if name_clean in col_str or col_str in name_clean:
                     val = row[col]
                     if pd.notna(val):
                         return str(val).strip()
