@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+env/
+venv/
+
+# Excel output files
+*.xlsx
+*.xls
+
+# Logs
+*.log
+error_log.txt
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

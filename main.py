@@ -9,7 +9,7 @@ import glob
 import argparse
 from typing import List
 from job_matcher import JobMatcher, Job, MatchLevel
-from excel_reader_v2 import JobExcelReader, StatsExcelReader
+from excel_reader_v2 import SimpleJobReader as JobExcelReader, StatsReader as StatsExcelReader
 from excel_exporter import ExcelExporter
 import yaml
 
