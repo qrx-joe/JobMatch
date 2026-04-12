@@ -53,6 +53,9 @@ class SimpleJobReader:
             # 用找到的表头读取
             df = pd.read_excel(self.file_path, sheet_name=sheet_name, header=header_row)
 
+            # 尝试找到子表头行，建立列名映射
+            self._column_map = self._build_column_map(df_raw, header_row, df.columns)
+
             # 遍历每一行
             for _, row in df.iterrows():
                 job = self._parse_row(row, sheet_name)
@@ -96,12 +99,12 @@ class SimpleJobReader:
             job.phone = self._find_value(row, cols, ['联系电话', '电话'])
             job.contact = self._find_value(row, cols, ['联系人'])
 
-            # 直接读取各列（处理Unnamed列）
-            job.education = self._find_value(row, cols, ['服务岗位要求'])
-            job.degree = self._find_value(row, cols, ['Unnamed: 6'])
-            job.major = self._find_value(row, cols, ['Unnamed: 7'])
-            job.qualifications = self._find_value(row, cols, ['Unnamed: 8'])
-            job.other = self._find_value(row, cols, ['Unnamed: 9'])
+            # 使用列名映射读取各字段
+            job.education = self._get_col_value(row, '学历')
+            job.degree = self._get_col_value(row, '学位')
+            job.major = self._get_col_value(row, '专业')
+            job.qualifications = self._get_col_value(row, '相关资格')
+            job.other = self._get_col_value(row, '其他')
 
             # 清理可能包含的表头文字
             if job.education == '学历':
@@ -119,6 +122,36 @@ class SimpleJobReader:
 
         except Exception as e:
             return None
+
+    def _build_column_map(self, df_raw: pd.DataFrame, header_row: int, columns) -> dict:
+        """构建列名映射，处理合并表头的情况"""
+        col_map = {}
+
+        # 首先使用主表头
+        for i, col in enumerate(columns):
+            col_str = str(col) if pd.notna(col) else ''
+            if col_str and not col_str.startswith('Unnamed'):
+                col_map[col_str] = col
+
+        # 然后查找子表头（下一行）
+        if header_row + 1 < len(df_raw):
+            sub_headers = df_raw.iloc[header_row + 1].tolist()
+            main_headers = df_raw.iloc[header_row].tolist()
+
+            for i, (main, sub) in enumerate(zip(main_headers, sub_headers)):
+                main_str = str(main) if pd.notna(main) else ''
+                sub_str = str(sub) if pd.notna(sub) else ''
+
+                # 如果子表头有内容，使用子表头
+                if sub_str and sub_str not in ['nan', ''] and i < len(columns):
+                    # 对于"服务岗位要求"这样的合并单元格，使用子表头
+                    if '岗位要求' in main_str or '服务岗位要求' in main_str:
+                        col_map[sub_str] = columns[i]
+                    # 如果主表头是空的或Unnamed，也使用子表头
+                    elif not main_str or main_str.startswith('Unnamed'):
+                        col_map[sub_str] = columns[i]
+
+        return col_map
 
     def _parse_requirements(self, requirements: str) -> dict:
         """
@@ -206,6 +239,19 @@ class SimpleJobReader:
         # 其他要求（性别、户籍等）暂不归入other，由其他列处理
 
         return result
+
+    def _get_col_value(self, row: pd.Series, field_name: str, default='') -> str:
+        """根据字段名获取值，使用列名映射"""
+        if hasattr(self, '_column_map') and field_name in self._column_map:
+            col = self._column_map[field_name]
+            val = row[col]
+            if pd.notna(val):
+                result = str(val).strip()
+                # 如果值等于字段名（说明是表头行），返回空
+                if result == field_name:
+                    return default
+                return result
+        return default
 
     def _find_value(self, row: pd.Series, cols: list, possible_names: list, default='') -> str:
         """查找字段值"""
