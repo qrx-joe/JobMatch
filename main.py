@@ -5,6 +5,16 @@
 """
 import os
 import sys
+
+# 修复Windows终端编码问题
+if sys.platform == 'win32':
+    import io
+    # 强制使用UTF-8编码
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    # 设置环境变量
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+
 import glob
 import argparse
 from typing import List
