@@ -1,0 +1,11 @@
+[project]
+name = "jobmatch"
+version = "0.1.0"
+description = "考公考编岗位筛选工具"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.0.0",
+    "openpyxl>=3.1.0",
+    "xlrd>=2.0.2",
+    "pyyaml>=6.0.3",
+]
