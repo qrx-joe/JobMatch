@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>三支一扶岗位筛选系统</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://unpkg.com/element-plus"></script>
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+  <script src="https://unpkg.com/@element-plus/icons-vue"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; }
+    .app { min-height: 100vh; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; text-align: center; }
+    .header h1 { font-size: 32px; margin-bottom: 10px; }
+    .header p { opacity: 0.9; font-size: 16px; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
+    @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+    .filter-panel { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); height: fit-content; position: sticky; top: 20px; }
+    .result-panel { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .section-title { font-size: 16px; font-weight: bold; color: #409eff; margin: 20px 0 15px; display: flex; align-items: center; gap: 8px; }
+    .upload-area { border: 2px dashed #dcdfe6; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; }
+    .upload-area:hover { border-color: #409eff; background: #f5f7fa; }
+    .upload-area.dragover { border-color: #409eff; background: #ecf5ff; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+    .stat-card { padding: 20px; border-radius: 8px; text-align: center; }
+    .stat-card.total { background: #ecf5ff; }
+    .stat-card.perfect { background: #f0f9eb; }
+    .stat-card.partial { background: #fdf6ec; }
+    .stat-card.mismatch { background: #fef0f0; }
+    .stat-number { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
+    .stat-label { font-size: 14px; color: #606266; }
+    .job-card { border: 1px solid #ebeef5; border-radius: 8px; padding: 15px; margin-bottom: 12px; transition: all 0.3s; cursor: pointer; }
+    .job-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
+    .job-card.perfect { border-left: 4px solid #67c23a; }
+    .job-card.partial { border-left: 4px solid #e6a23c; }
+    .job-card.mismatch { border-left: 4px solid #f56c6c; }
+    .job-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .job-title { font-weight: bold; font-size: 15px; color: #303133; }
+    .job-meta { display: flex; gap: 15px; font-size: 13px; color: #606266; flex-wrap: wrap; }
+    .job-meta span { display: flex; align-items: center; gap: 5px; }
+    .ratio-low { color: #67c23a; font-weight: bold; }
+    .ratio-medium { color: #e6a23c; font-weight: bold; }
+    .ratio-high { color: #f56c6c; font-weight: bold; }
+    .empty-state { text-align: center; padding: 60px 20px; color: #909399; }
+    .empty-state i { font-size: 64px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="app">
+      <!-- 头部 -->
+      <div class="header">
+        <h1>📋 三支一扶岗位筛选系统</h1>
+        <p>智能匹配 · 精准筛选 · 高效选岗</p>
+      </div>
+
+      <div class="container">
+        <!-- 筛选面板 -->
+        <div class="filter-panel">
+          <h3 style="margin-bottom: 20px;">⚙️ 筛选条件</h3>
+
+          <!-- 文件上传 -->
+          <div class="section-title">📁 上传岗位表</div>
+          <div class="upload-area" @click="$refs.fileInput.click()" @drop.prevent="handleDrop" @dragover.prevent="dragover=true" @dragleave="dragover=false" :class="{dragover}">
+            <i class="el-icon" style="font-size: 48px; color: #909399;">📄</i>
+            <p style="margin-top: 10px; color: #606266;">
+              {{ fileName || '点击或拖拽上传Excel文件' }}
+            </p>
+            <input ref="fileInput" type="file" accept=".xlsx,.xls" style="display: none" @change="handleFileChange">
+          </div>
+
+          <!-- 基本信息 -->
+          <div class="section-title">👤 个人信息</div>
+
+          <div style="margin-bottom: 15px;">
+            <label>专业</label>
+            <el-input v-model="form.major" placeholder="如：经济学" style="margin-top: 5px;"></el-input>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <label>学历</label>
+            <el-select v-model="form.education" style="width: 100%; margin-top: 5px;">
+              <el-option label="大专" value="大专"></el-option>
+              <el-option label="本科" value="本科"></el-option>
+              <el-option label="研究生" value="研究生"></el-option>
+            </el-select>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <label>性别</label>
+            <el-radio-group v-model="form.gender" style="margin-top: 5px; display: block;">
+              <el-radio label="男">男</el-radio>
+              <el-radio label="女">女</el-radio>
+            </el-radio-group>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <label>户籍</label>
+            <el-select v-model="form.household" style="width: 100%; margin-top: 5px;">
+              <el-option v-for="city in cities" :key="city" :label="city" :value="city"></el-option>
+            </el-select>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <label>意向城市（多选）</label>
+            <el-select v-model="form.targetCities" multiple collapse-tags style="width: 100%; margin-top: 5px;">
+              <el-option v-for="city in cities" :key="city" :label="city" :value="city"></el-option>
+            </el-select>
+          </div>
+
+          <!-- 开始按钮 -->
+          <el-button type="primary" size="large" style="width: 100%; margin-top: 20px;" :loading="loading" :disabled="!fileData" @click="startFilter">
+            {{ loading ? '筛选中...' : '开始筛选' }}
+          </el-button>
+
+          <el-button v-if="jobs.length > 0" type="success" size="large" style="width: 100%; margin-top: 10px;" @click="downloadExcel">
+            下载Excel结果
+          </el-button>
+        </div>
+
+        <!-- 结果面板 -->
+        <div class="result-panel">
+          <!-- 统计 -->
+          <div class="stats" v-if="jobs.length > 0">
+            <div class="stat-card total">
+              <div class="stat-number">{{ jobs.length }}</div>
+              <div class="stat-label">总岗位</div>
+            </div>
+            <div class="stat-card perfect">
+              <div class="stat-number" style="color: #67c23a;">{{ perfectCount }}</div>
+              <div class="stat-label">完全符合</div>
+            </div>
+            <div class="stat-card partial">
+              <div class="stat-number" style="color: #e6a23c;">{{ partialCount }}</div>
+              <div class="stat-label">可能符合</div>
+            </div>
+            <div class="stat-card mismatch">
+              <div class="stat-number" style="color: #f56c6c;">{{ mismatchCount }}</div>
+              <div class="stat-label">不符合</div>
+            </div>
+          </div>
+
+          <!-- 搜索和筛选 -->
+          <div v-if="jobs.length > 0" style="margin-bottom: 20px; display: flex; gap: 15px;">
+            <el-input v-model="searchText" placeholder="搜索单位或岗位" clearable style="width: 250px;"></el-input>
+            <el-checkbox-group v-model="filterLevels">
+              <el-checkbox label="完全符合"></el-checkbox>
+              <el-checkbox label="可能符合"></el-checkbox>
+              <el-checkbox label="不符合"></el-checkbox>
+            </el-checkbox-group>
+          </div>
+
+          <!-- 岗位列表 -->
+          <div v-if="filteredJobs.length > 0">
+            <div v-for="job in filteredJobs" :key="job.index" class="job-card" :class="job.matchLevel">
+              <div class="job-header">
+                <div>
+                  <el-tag :type="job.matchLevel === '完全符合' ? 'success' : job.matchLevel === '可能符合' ? 'warning' : 'danger'" effect="dark" size="small">
+                    {{ job.matchLevel }}
+                  </el-tag>
+                  <span class="job-title" style="margin-left: 10px;">{{ job.unit }}</span>
+                </div>
+                <el-tag v-if="job.competitionRatio" :type="job.competitionRatio < 30 ? 'success' : job.competitionRatio < 100 ? 'warning' : 'danger'">
+                  竞争比 {{ job.competitionRatio }}:1
+                </el-tag>
+              </div>
+              <div class="job-meta">
+                <span>📍 {{ job.sheetName }}</span>
+                <span>💼 {{ job.jobType }}</span>
+                <span>🎓 {{ job.education || '不限' }}</span>
+                <span>📚 {{ job.major || '不限' }}</span>
+                <span v-if="job.paid">👥 {{ job.paid }}人缴费</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 空状态 -->
+          <div v-else class="empty-state">
+            <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
+            <p>请先上传岗位表Excel文件</p>
+            <p style="font-size: 14px; margin-top: 10px;">支持 .xlsx 和 .xls 格式</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, reactive } = Vue;
+
+    createApp({
+      setup() {
+        const loading = ref(false);
+        const fileName = ref('');
+        const fileData = ref(null);
+        const jobs = ref([]);
+        const searchText = ref('');
+        const filterLevels = ref(['完全符合', '可能符合']);
+        const dragover = ref(false);
+
+        const cities = ['太原市', '大同市', '朔州市', '忻州市', '吕梁市', '晋中市', '阳泉市', '长治市', '晋城市', '临汾市', '运城市'];
+
+        const form = reactive({
+          major: '经济学',
+          education: '本科',
+          gender: '女',
+          household: '吕梁市',
+          targetCities: ['吕梁市', '太原市']
+        });
+
+        const handleFileChange = (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            fileName.value = file.name;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              fileData.value = e.target.result;
+            };
+            reader.readAsBinaryString(file);
+          }
+        };
+
+        const handleDrop = (e) => {
+          dragover.value = false;
+          const file = e.dataTransfer.files[0];
+          if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+            fileName.value = file.name;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              fileData.value = e.target.result;
+            };
+            reader.readAsBinaryString(file);
+          }
+        };
+
+        const startFilter = () => {
+          if (!fileData.value) return;
+
+          loading.value = true;
+
+          // 模拟异步处理
+          setTimeout(() => {
+            try {
+              const workbook = XLSX.read(fileData.value, { type: 'binary' });
+              const allJobs = [];
+
+              // 读取每个Sheet
+              workbook.SheetNames.forEach(sheetName => {
+                if (sheetName === '省林草局') return;
+
+                const worksheet = workbook.Sheets[sheetName];
+                const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                // 找表头行
+                let headerRow = -1;
+                for (let i = 0; i < Math.min(10, data.length); i++) {
+                  const rowText = data[i]?.join(' ') || '';
+                  if (rowText.includes('序号') && rowText.includes('服务')) {
+                    headerRow = i;
+                    break;
+                  }
+                }
+
+                if (headerRow === -1) return;
+
+                // 获取表头和子表头
+                const headers = data[headerRow] || [];
+                const subHeaders = data[headerRow + 1] || [];
+
+                // 构建列索引映射
+                const colMap = {};
+                headers.forEach((h, i) => {
+                  const sub = subHeaders[i];
+                  if (sub && sub !== 'nan') {
+                    colMap[sub] = i;
+                  } else if (h && h !== 'nan') {
+                    colMap[h] = i;
+                  }
+                });
+
+                // 解析数据行
+                for (let i = headerRow + 2; i < data.length; i++) {
+                  const row = data[i];
+                  if (!row || !row[0]) continue;
+
+                  const job = {
+                    index: allJobs.length + 1,
+                    sheetName: sheetName,
+                    unit: row[colMap['服务单位']] || row[1] || '',
+                    jobType: row[colMap['岗位类型']] || row[2] || '',
+                    education: row[colMap['学历']] || '',
+                    degree: row[colMap['学位']] || '',
+                    major: row[colMap['专业']] || '',
+                    qualifications: row[colMap['相关资格']] || '',
+                    other: row[colMap['其他']] || '',
+                    paid: 0,
+                    competitionRatio: 0
+                  };
+
+                  if (job.unit.length > 3) {
+                    allJobs.push(job);
+                  }
+                }
+              });
+
+              // 执行匹配
+              jobs.value = allJobs.map(job => matchJob(job, form));
+
+            } catch (e) {
+              console.error('解析失败:', e);
+              alert('文件解析失败，请检查文件格式');
+            }
+
+            loading.value = false;
+          }, 500);
+        };
+
+        const matchJob = (job, form) => {
+          const reasons = [];
+          const mismatches = [];
+          let score = 0;
+
+          // 专业匹配
+          const majorMatch = !job.major ||
+            job.major.includes('不限') ||
+            job.major.includes(form.major) ||
+            job.major.includes('经济学类') && form.major === '经济学';
+
+          if (majorMatch) {
+            score += 30;
+            reasons.push('专业匹配');
+          } else {
+            mismatches.push('专业不匹配');
+          }
+
+          // 学历匹配
+          const eduLevels = { '大专': 1, '本科': 2, '研究生': 3 };
+          const jobEdu = job.education || '';
+          const userEdu = eduLevels[form.education] || 2;
+
+          let eduMatch = false;
+          if (!jobEdu || jobEdu.includes('不限')) {
+            eduMatch = true;
+          } else {
+            for (const [level, val] of Object.entries(eduLevels)) {
+              if (jobEdu.includes(level)) {
+                if (userEdu >= val) eduMatch = true;
+                break;
+              }
+            }
+          }
+
+          if (eduMatch) {
+            score += 25;
+            reasons.push('学历匹配');
+          } else {
+            mismatches.push('学历不匹配');
+          }
+
+          // 性别匹配
+          const other = job.other || '';
+          let genderMatch = true;
+          if (other.includes('限男性') && form.gender !== '男') {
+            genderMatch = false;
+            mismatches.push('限男性');
+          } else if (other.includes('限女性') && form.gender !== '女') {
+            genderMatch = false;
+            mismatches.push('限女性');
+          } else {
+            reasons.push('性别不限或匹配');
+          }
+
+          // 户籍匹配
+          let householdMatch = true;
+          const householdMatchText = other.match(/限(.+?)户籍/);
+          if (householdMatchText) {
+            if (!householdMatchText[1].includes(form.household)) {
+              householdMatch = false;
+              mismatches.push(`限${householdMatchText[1]}户籍`);
+            } else {
+              reasons.push('户籍匹配');
+            }
+          }
+
+          // 城市偏好
+          const cityScore = form.targetCities.includes(job.sheetName) ? 20 : 0;
+          score += cityScore;
+
+          // 确定匹配等级
+          let matchLevel = '不符合';
+          if (majorMatch && eduMatch && genderMatch && householdMatch) {
+            if (form.targetCities.includes(job.sheetName)) {
+              matchLevel = '完全符合';
+            } else {
+              matchLevel = '可能符合';
+            }
+          } else if (majorMatch && eduMatch) {
+            matchLevel = '可能符合';
+          }
+
+          return {
+            ...job,
+            matchLevel,
+            matchScore: score,
+            matchReasons: reasons,
+            mismatchReasons: mismatches
+          };
+        };
+
+        const filteredJobs = computed(() => {
+          let result = jobs.value.filter(j => filterLevels.value.includes(j.matchLevel));
+
+          if (searchText.value) {
+            const keyword = searchText.value.toLowerCase();
+            result = result.filter(j =>
+              j.unit.toLowerCase().includes(keyword) ||
+              j.jobType.toLowerCase().includes(keyword)
+            );
+          }
+
+          // 排序：完全符合优先，然后按竞争比
+          result.sort((a, b) => {
+            if (a.matchLevel !== b.matchLevel) {
+              const levels = { '完全符合': 3, '可能符合': 2, '不符合': 1 };
+              return levels[b.matchLevel] - levels[a.matchLevel];
+            }
+            return (a.competitionRatio || 999) - (b.competitionRatio || 999);
+          });
+
+          return result.slice(0, 100); // 限制显示数量
+        });
+
+        const perfectCount = computed(() => jobs.value.filter(j => j.matchLevel === '完全符合').length);
+        const partialCount = computed(() => jobs.value.filter(j => j.matchLevel === '可能符合').length);
+        const mismatchCount = computed(() => jobs.value.filter(j => j.matchLevel === '不符合').length);
+
+        const downloadExcel = () => {
+          const data = filteredJobs.value.map(j => ({
+            '匹配度': j.matchLevel,
+            '所属地市': j.sheetName,
+            '服务单位': j.unit,
+            '岗位类型': j.jobType,
+            '学历要求': j.education,
+            '专业要求': j.major,
+            '其他要求': j.other,
+            '竞争比': j.competitionRatio ? `${j.competitionRatio}:1` : '暂无',
+            '缴费人数': j.paid || 0
+          }));
+
+          const ws = XLSX.utils.json_to_sheet(data);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, '筛选结果');
+          XLSX.writeFile(wb, '筛选结果.xlsx');
+        };
+
+        return {
+          loading,
+          fileName,
+          fileData,
+          jobs,
+          searchText,
+          filterLevels,
+          dragover,
+          cities,
+          form,
+          filteredJobs,
+          perfectCount,
+          partialCount,
+          mismatchCount,
+          handleFileChange,
+          handleDrop,
+          startFilter,
+          downloadExcel
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
