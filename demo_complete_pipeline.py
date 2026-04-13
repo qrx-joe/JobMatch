@@ -13,6 +13,8 @@ from dataclasses import asdict
 from excel_reader_v2 import SimpleJobReader as ExcelReader
 from job_matcher_v3 import JobMatcherV3, Job, MatchLevel
 from report_generator import ReportGenerator, MatchReport
+from historical_analyzer import enrich_jobs_with_historical_data, HistoricalAnalyzer
+import yaml
 
 
 def load_jobs_from_excel(excel_path: str, stats_path: str = None) -> List[Job]:
@@ -233,14 +235,14 @@ def display_results(jobs: List[Job], show_top: int = 10):
                 print(f"       - {reason}")
 
 
-def export_results(jobs: List[Job], profile: dict, output_dir: str = "reports"):
-    """导出结果"""
-    print(f"\n[4/4] 导出报告...")
+def export_results(jobs: List[Job], profile: dict, output_dir: str = "reports", config: dict = None):
+    """导出结果（支持历史数据）"""
+    print(f"\n[导出报告]")
 
     # 准备数据
     jobs_data = []
     for job in jobs:
-        jobs_data.append({
+        job_dict = {
             'sheet_name': job.sheet_name,
             'unit': job.unit,
             'job_type': job.job_type,
@@ -253,8 +255,14 @@ def export_results(jobs: List[Job], profile: dict, output_dir: str = "reports"):
             'competition_ratio': job.competition_ratio,
             'match_level': job.match_level.value,
             'match_score': job.match_score,
-            'match_reasons': job.match_reasons
-        })
+            'match_reasons': job.match_reasons,
+            # 历史数据字段
+            'historical_stats': job.historical_stats,
+            'predicted_score': job.predicted_score,
+            'difficulty_trend': job.difficulty_trend,
+            'pass_probability': job.pass_probability
+        }
+        jobs_data.append(job_dict)
 
     # 创建报告
     report = MatchReport(
@@ -267,7 +275,12 @@ def export_results(jobs: List[Job], profile: dict, output_dir: str = "reports"):
             'perfect': sum(1 for j in jobs if j.match_level == MatchLevel.PERFECT),
             'partial': sum(1 for j in jobs if j.match_level == MatchLevel.PARTIAL),
             'avg_score': sum(j.match_score for j in jobs) / len(jobs) if jobs else 0,
-            'avg_competition': sum(j.competition_ratio for j in jobs) / len(jobs) if jobs else 0
+            'avg_competition': sum(j.competition_ratio for j in jobs) / len(jobs) if jobs else 0,
+            # 历史数据统计
+            'with_historical': sum(1 for j in jobs if j.historical_stats),
+            'avg_predicted_score': (sum(j.predicted_score for j in jobs if j.predicted_score > 0) /
+                                   sum(1 for j in jobs if j.predicted_score > 0))
+                                   if sum(1 for j in jobs if j.predicted_score > 0) > 0 else 0
         }
     )
 
@@ -275,16 +288,22 @@ def export_results(jobs: List[Job], profile: dict, output_dir: str = "reports"):
 
     # 生成各种格式
     json_path = generator.generate_json(report)
-    print(f"      JSON: {json_path}")
+    print(f"  JSON: {json_path}")
 
     html_path = generator.generate_html(report)
-    print(f"      HTML: {html_path}")
+    print(f"  HTML: {html_path}")
 
     try:
         excel_path = generator.generate_excel(report)
-        print(f"      Excel: {excel_path}")
+        print(f"  Excel: {excel_path}")
     except Exception as e:
-        print(f"      Excel生成失败: {e}")
+        print(f"  Excel生成失败: {e}")
+
+    return {
+        'json': json_path,
+        'html': html_path,
+        'excel': excel_path if 'excel_path' in locals() else None
+    }
 
     return {
         'json': json_path,
@@ -399,25 +418,144 @@ def demo_with_mock_data():
         print(f"  {format_type.upper()}: {path}")
 
 
+def load_config(config_path: str = "config_full.yaml") -> dict:
+    """加载配置文件"""
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            return yaml.safe_load(f) or {}
+    except Exception as e:
+        print(f"警告: 读取配置文件失败: {e}")
+        return {}
+
+
+def run_with_config(config_path: str = "config_full.yaml"):
+    """
+    使用配置文件的完整流程
+
+    Args:
+        config_path: 配置文件路径
+    """
+    print("=" * 80)
+    print("三支一扶智能选岗系统 - 历史数据分析版")
+    print("=" * 80)
+
+    # 1. 加载配置
+    config = load_config(config_path)
+    print(f"\n[配置] 已加载: {config_path}")
+
+    # 2. 获取岗位表路径（从配置或命令行）
+    jobs_file = config.get('data', {}).get('jobs_file', '岗位表.xlsx')
+
+    if not os.path.exists(jobs_file):
+        print(f"错误: 岗位表不存在: {jobs_file}")
+        print("使用模拟数据演示...")
+        demo_with_mock_data()
+        return
+
+    # 3. 加载岗位数据
+    jobs = load_jobs_from_excel(jobs_file)
+
+    if not jobs:
+        print("错误: 未能加载岗位数据")
+        return
+
+    # 4. 历史数据分析（新增）
+    historical_config = config.get('historical_data', {})
+    if historical_config.get('启用', False):
+        jobs = enrich_jobs_with_historical_data(jobs, historical_config)
+
+    # 5. 匹配筛选
+    matched_jobs = filter_and_match_jobs(jobs, config_path)
+
+    # 6. 显示结果（增强版）
+    display_results_with_history(matched_jobs, show_top=20)
+
+    # 7. 导出报告
+    profile = config.get('profile', {})
+    export_results(matched_jobs, profile, config=config)
+
+    print(f"\n{'=' * 80}")
+    print("分析完成！")
+    print(f"{'=' * 80}")
+
+
+def display_results_with_history(jobs: List[Job], show_top: int = 10):
+    """显示带历史数据的匹配结果"""
+    print(f"\n{'=' * 80}")
+    print(f"匹配结果 - 含历史数据分析 (前{min(show_top, len(jobs))}个)")
+    print(f"{'=' * 80}")
+
+    for i, job in enumerate(jobs[:show_top], 1):
+        # 竞争比显示
+        ratio_str = f"{job.competition_ratio:.1f}:1" if job.competition_ratio > 0 else "暂无"
+
+        # 难度评级
+        if job.competition_ratio < 10:
+            difficulty = "[容易]"
+        elif job.competition_ratio < 30:
+            difficulty = "[中等]"
+        else:
+            difficulty = "[困难]"
+
+        # 报名数据
+        stats = f"报名{job.applicants}/初审{job.approved}/缴费{job.paid}" if job.paid > 0 else "暂无报名数据"
+
+        print(f"\n[{i}] {job.unit}")
+        print(f"    [地区] {job.sheet_name} | {job.job_type}")
+        print(f"    [专业] {job.major} | 学历: {job.education}")
+        print(f"    [人数] 招募: {job.recruit_count}人 | 竞争比: {ratio_str} {difficulty}")
+        print(f"    [统计] {stats}")
+        print(f"    [匹配] {job.match_level.value} | 分数: {job.match_score}")
+
+        # 显示历史数据分析（新增）
+        if job.historical_stats:
+            print(f"    [历史] ", end="")
+            years = sorted(job.historical_stats.keys())
+            for year in years:
+                stats = job.historical_stats[year]
+                ratio = stats.get('competition_ratio', 0)
+                score = stats.get('pass_score', 0)
+                print(f"{year}年(竞比{ratio:.1f}:1/分数{score}) ", end="")
+            print()
+
+            if job.predicted_score > 0:
+                print(f"    [预测] 今年预测上岸分: {job.predicted_score:.1f}分 | 趋势: {job.difficulty_trend}")
+                print(f"    [概率] 你的上岸概率: {job.pass_probability:.0f}%")
+
+        if job.match_reasons:
+            print(f"    [原因]")
+            for reason in job.match_reasons[:3]:
+                print(f"       - {reason}")
+
+
 def main():
     """主函数"""
     import sys
 
     if len(sys.argv) > 1:
-        # 使用真实Excel文件
-        excel_path = sys.argv[1]
-        stats_path = sys.argv[2] if len(sys.argv) > 2 else None
+        # 检查是否是配置文件模式
+        if sys.argv[1].endswith('.yaml') or sys.argv[1].endswith('.yml'):
+            # 配置文件模式: python demo.py config.yaml
+            run_with_config(sys.argv[1])
+        else:
+            # 传统模式: python demo.py 岗位表.xlsx [统计表.xlsx]
+            excel_path = sys.argv[1]
+            stats_path = sys.argv[2] if len(sys.argv) > 2 else None
 
-        print(f"从Excel加载: {excel_path}")
-        jobs = load_jobs_from_excel(excel_path, stats_path)
+            print(f"从Excel加载: {excel_path}")
+            jobs = load_jobs_from_excel(excel_path, stats_path)
 
-        if jobs:
-            matched_jobs = filter_and_match_jobs(jobs)
-            display_results(matched_jobs, show_top=20)
-            export_results(matched_jobs, {'major': '金融学', 'education': '本科'})
+            if jobs:
+                matched_jobs = filter_and_match_jobs(jobs)
+                display_results(matched_jobs, show_top=20)
+                export_results(matched_jobs, {'major': '金融学', 'education': '本科'})
     else:
-        # 使用模拟数据演示
-        demo_with_mock_data()
+        # 检查是否存在默认配置文件
+        if os.path.exists('config_full.yaml'):
+            run_with_config('config_full.yaml')
+        else:
+            # 使用模拟数据演示
+            demo_with_mock_data()
 
 
 if __name__ == "__main__":

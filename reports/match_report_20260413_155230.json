@@ -1,0 +1,82 @@
+{
+  "report_info": {
+    "generated_at": "2026-04-13 15:52:30",
+    "version": "2.0.0",
+    "source": "三支一扶智能选岗系统"
+  },
+  "user_profile": {
+    "major": "金融学",
+    "education": "本科",
+    "degree": "学士",
+    "gender": "",
+    "household": "",
+    "is_fresh_graduate": false,
+    "target_cities": []
+  },
+  "filter_config": {},
+  "summary": {
+    "total": 2,
+    "perfect": 0,
+    "partial": 2,
+    "avg_score": 90.0,
+    "avg_competition": 14.0,
+    "with_historical": 0,
+    "avg_predicted_score": 0
+  },
+  "matched_jobs": [
+    {
+      "sheet_name": "济南市",
+      "unit": "济南市财政局",
+      "job_type": "支农",
+      "major": "经济学类",
+      "education": "本科及以上",
+      "recruit_count": 5,
+      "applicants": 60,
+      "approved": 45,
+      "paid": 40,
+      "competition_ratio": 8.0,
+      "match_level": "可能符合",
+      "match_score": 90,
+      "match_reasons": [
+        "大类包含：经济学 ∈ 经济学类",
+        "学历符合：本科 >= 本科及以上",
+        "学位不限",
+        "无资格要求",
+        "无其他要求",
+        "非意向城市：济南市",
+        "[语义匹配] 学历符合：本科 >= 本科"
+      ],
+      "historical_stats": {},
+      "predicted_score": 0.0,
+      "difficulty_trend": "",
+      "pass_probability": 0.0
+    },
+    {
+      "sheet_name": "济南市",
+      "unit": "济南市统计局",
+      "job_type": "支农",
+      "major": "统计学类",
+      "education": "本科及以上",
+      "recruit_count": 3,
+      "applicants": 90,
+      "approved": 75,
+      "paid": 60,
+      "competition_ratio": 20.0,
+      "match_level": "可能符合",
+      "match_score": 90,
+      "match_reasons": [
+        "语义匹配：经济学属于经济金融",
+        "学历符合：本科 >= 本科及以上",
+        "学位不限",
+        "无资格要求",
+        "无其他要求",
+        "非意向城市：济南市",
+        "[语义匹配] 学历符合：本科 >= 本科"
+      ],
+      "historical_stats": {},
+      "predicted_score": 0.0,
+      "difficulty_trend": "",
+      "pass_probability": 0.0
+    }
+  ]
+}

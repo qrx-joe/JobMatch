@@ -45,6 +45,12 @@ class Job:
     mismatch_reasons: List[str] = field(default_factory=list)
     competition_ratio: float = 0.0
 
+    # 历史数据字段（新增）
+    historical_stats: Dict[int, dict] = field(default_factory=dict)  # 历年统计 {年份: {applicants, paid, score}}
+    predicted_score: float = 0.0      # 预测上岸分数
+    difficulty_trend: str = ""        # 难度趋势: 上升/下降/稳定/未知
+    pass_probability: float = 0.0     # 上岸概率 (%)
+
 
 @dataclass
 class UserProfile:
