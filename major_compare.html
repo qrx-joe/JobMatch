@@ -1,0 +1,3778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专业对比工具 | 智能选岗系统</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            padding: 30px 20px;
+        }
+        .header h1 { font-size: 36px; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 16px; }
+        .main {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 1100px) {
+            .main { grid-template-columns: 1fr; }
+        }
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        /* 对比选择器 */
+        .compare-selector {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f7ff 100%);
+            border: 2px solid #409eff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .compare-selector h4 {
+            color: #409eff;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .input-group {
+            margin-bottom: 12px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .input-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* 对比结果 */
+        .compare-result {
+            display: none;
+            margin-top: 20px;
+        }
+        .compare-result.show { display: block; }
+
+        .score-card {
+            text-align: center;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .score-card.high {
+            background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+            color: white;
+        }
+        .score-card.medium {
+            background: linear-gradient(135deg, #e6a23c 0%, #ebb563 100%);
+            color: white;
+        }
+        .score-card.low {
+            background: linear-gradient(135deg, #f56c6c 0%, #f78989 100%);
+            color: white;
+        }
+        .score-value {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .score-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .detail-item {
+            background: #f5f7fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .detail-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .detail-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .path-container {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .path-title {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .path-steps {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .path-step {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            border: 2px solid #409eff;
+        }
+        .path-arrow {
+            color: #409eff;
+            font-weight: bold;
+        }
+
+        .suggestion {
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .suggestion.ok {
+            background: #f0f9eb;
+            border-left: 4px solid #67c23a;
+            color: #67c23a;
+        }
+        .suggestion.maybe {
+            background: #fdf6ec;
+            border-left: 4px solid #e6a23c;
+            color: #e6a23c;
+        }
+        .suggestion.no {
+            background: #fef0f0;
+            border-left: 4px solid #f56c6c;
+            color: #f56c6c;
+        }
+
+        /* 图表面板 */
+        #graph {
+            width: 100%;
+            height: 600px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>专业对比工具</h1>
+            <p>可视化分析两个专业之间的关联关系</p>
+        </div>
+
+        <div class="main">
+            <div class="left-panel">
+                <!-- 对比选择器 -->
+                <div class="panel">
+                    <div class="compare-selector">
+                        <h4>选择要对比的专业</h4>
+                        <div class="input-group">
+                            <label>你的专业</label>
+                            <select id="major1">
+                                <option value="">请选择</option>
+                                <option value="中医儿科学">中医儿科学</option><option value="中医养生学">中医养生学</option><option value="中医学">中医学</option><option value="中医康复学">中医康复学</option><option value="中医骨伤科学">中医骨伤科学</option><option value="中国共产党历史">中国共产党历史</option><option value="中国少数民族语言文学">中国少数民族语言文学</option><option value="临床医学">临床医学</option><option value="互联网金融">互联网金融</option><option value="交通管理">交通管理</option><option value="人力资源管理">人力资源管理</option><option value="人工智能">人工智能</option><option value="人文教育">人文教育</option><option value="人类学">人类学</option><option value="会计学">会计学</option><option value="传播学">传播学</option><option value="体育教育">体育教育</option><option value="俄语">俄语</option><option value="保险学">保险学</option><option value="信息与计算科学">信息与计算科学</option><option value="信息安全">信息安全</option><option value="信息工程">信息工程</option><option value="信息管理与信息系统">信息管理与信息系统</option><option value="信用管理">信用管理</option><option value="信用风险管理与法律防控">信用风险管理与法律防控</option><option value="健康服务与管理">健康服务与管理</option><option value="傣医学">傣医学</option><option value="儿科学">儿科学</option><option value="光电信息科学与工程">光电信息科学与工程</option><option value="全球健康学">全球健康学</option><option value="公共事业管理">公共事业管理</option><option value="公共关系学">公共关系学</option><option value="分子科学与工程">分子科学与工程</option><option value="助产学">助产学</option><option value="劳动与社会保障">劳动与社会保障</option><option value="劳动经济学">劳动经济学</option><option value="化学">化学</option><option value="化学生物学">化学生物学</option><option value="医学影像学">医学影像学</option><option value="华文教育">华文教育</option><option value="卫生教育">卫生教育</option><option value="卫生监督">卫生监督</option><option value="口腔医学">口腔医学</option><option value="古典文献学">古典文献学</option><option value="司法警察学">司法警察学</option><option value="哈医学">哈医学</option><option value="商务经济学">商务经济学</option><option value="商务英语">商务英语</option><option value="回医学">回医学</option><option value="国民经济管理">国民经济管理</option><option value="国际事务与国际关系">国际事务与国际关系</option><option value="国际商务">国际商务</option><option value="国际政治">国际政治</option><option value="国际税收">国际税收</option><option value="国际经济与贸易">国际经济与贸易</option><option value="国际经贸规则">国际经贸规则</option><option value="土地资源管理">土地资源管理</option><option value="城市管理">城市管理</option><option value="壮医学">壮医学</option><option value="声学">声学</option><option value="外交学">外交学</option><option value="大数据管理与应用">大数据管理与应用</option><option value="女性学">女性学</option><option value="妇幼保健医学">妇幼保健医学</option><option value="学前教育">学前教育</option><option value="审计学">审计学</option><option value="家政学">家政学</option><option value="小学教育">小学教育</option><option value="工商管理">工商管理</option><option value="工程管理">工程管理</option><option value="工程造价">工程造价</option><option value="市场营销">市场营销</option><option value="广告学">广告学</option><option value="广播电视学">广播电视学</option><option value="应用化学">应用化学</option><option value="应用物理学">应用物理学</option><option value="应用统计学">应用统计学</option><option value="应用语言学">应用语言学</option><option value="微电子科学与工程">微电子科学与工程</option><option value="德语">德语</option><option value="思想政治教育">思想政治教育</option><option value="房地产开发与管理">房地产开发与管理</option><option value="投资学">投资学</option><option value="护理学">护理学</option><option value="放射医学">放射医学</option><option value="政治学、经济学与哲学">政治学、经济学与哲学</option><option value="政治学与行政学">政治学与行政学</option><option value="教育学">教育学</option><option value="教育康复学">教育康复学</option><option value="教育技术学">教育技术学</option><option value="数字出版">数字出版</option><option value="数字媒体技术">数字媒体技术</option><option value="数字经济">数字经济</option><option value="数学与应用数学">数学与应用数学</option><option value="数据科学">数据科学</option><option value="数据科学与大数据技术">数据科学与大数据技术</option><option value="数据计算及应用">数据计算及应用</option><option value="数理基础科学">数理基础科学</option><option value="文化产业管理">文化产业管理</option><option value="新闻学">新闻学</option><option value="日语">日语</option><option value="智能科学与技术">智能科学与技术</option><option value="核物理">核物理</option><option value="武术与民族传统体育">武术与民族传统体育</option><option value="汉语国际教育">汉语国际教育</option><option value="汉语言">汉语言</option><option value="汉语言文学">汉语言文学</option><option value="法学">法学</option><option value="法语">法语</option><option value="海事管理">海事管理</option><option value="海关管理">海关管理</option><option value="物业管理">物业管理</option><option value="物理学">物理学</option><option value="物联网工程">物联网工程</option><option value="特殊教育">特殊教育</option><option value="生态学">生态学</option><option value="生物信息学">生物信息学</option><option value="生物技术">生物技术</option><option value="生物科学">生物科学</option><option value="生物统计学">生物统计学</option><option value="电子信息工程">电子信息工程</option><option value="电子科学与技术">电子科学与技术</option><option value="监狱学">监狱学</option><option value="眼视光医学">眼视光医学</option><option value="知识产权">知识产权</option><option value="社会体育指导与管理">社会体育指导与管理</option><option value="社会学">社会学</option><option value="社会工作">社会工作</option><option value="社区矫正">社区矫正</option><option value="科学教育">科学教育</option><option value="科学社会主义">科学社会主义</option><option value="秘书学">秘书学</option><option value="税收学">税收学</option><option value="管理科学">管理科学</option><option value="精神医学">精神医学</option><option value="精算学">精算学</option><option value="系统科学与工程">系统科学与工程</option><option value="经济与金融">经济与金融</option><option value="经济学">经济学</option><option value="经济工程">经济工程</option><option value="经济统计学">经济统计学</option><option value="统计学">统计学</option><option value="维医学">维医学</option><option value="编辑出版学">编辑出版学</option><option value="网络与新媒体">网络与新媒体</option><option value="网络工程">网络工程</option><option value="网络空间安全">网络空间安全</option><option value="翻译">翻译</option><option value="能源化学">能源化学</option><option value="能源经济">能源经济</option><option value="艺术教育">艺术教育</option><option value="英语">英语</option><option value="蒙医学">蒙医学</option><option value="藏医学">藏医学</option><option value="行政管理">行政管理</option><option value="西班牙语">西班牙语</option><option value="计算机科学与技术">计算机科学与技术</option><option value="认知科学与技术">认知科学与技术</option><option value="财务管理">财务管理</option><option value="财政学">财政学</option><option value="贸易经济">贸易经济</option><option value="资产评估">资产评估</option><option value="资源与环境经济学">资源与环境经济学</option><option value="软件工程">软件工程</option><option value="运动人体科学">运动人体科学</option><option value="运动康复">运动康复</option><option value="运动训练">运动训练</option><option value="通信工程">通信工程</option><option value="金融学">金融学</option><option value="金融工程">金融工程</option><option value="金融数学">金融数学</option><option value="金融科技">金融科技</option><option value="针灸推拿学">针灸推拿学</option><option value="阿拉伯语">阿拉伯语</option><option value="预防医学">预防医学</option><option value="食品卫生与营养学">食品卫生与营养学</option><option value="马克思主义理论">马克思主义理论</option><option value="麻醉学">麻醉学</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>岗位要求的专业</label>
+                            <select id="major2">
+                                <option value="">请选择</option>
+                                <option value="中医儿科学">中医儿科学</option><option value="中医养生学">中医养生学</option><option value="中医学">中医学</option><option value="中医康复学">中医康复学</option><option value="中医骨伤科学">中医骨伤科学</option><option value="中国共产党历史">中国共产党历史</option><option value="中国少数民族语言文学">中国少数民族语言文学</option><option value="临床医学">临床医学</option><option value="互联网金融">互联网金融</option><option value="交通管理">交通管理</option><option value="人力资源管理">人力资源管理</option><option value="人工智能">人工智能</option><option value="人文教育">人文教育</option><option value="人类学">人类学</option><option value="会计学">会计学</option><option value="传播学">传播学</option><option value="体育教育">体育教育</option><option value="俄语">俄语</option><option value="保险学">保险学</option><option value="信息与计算科学">信息与计算科学</option><option value="信息安全">信息安全</option><option value="信息工程">信息工程</option><option value="信息管理与信息系统">信息管理与信息系统</option><option value="信用管理">信用管理</option><option value="信用风险管理与法律防控">信用风险管理与法律防控</option><option value="健康服务与管理">健康服务与管理</option><option value="傣医学">傣医学</option><option value="儿科学">儿科学</option><option value="光电信息科学与工程">光电信息科学与工程</option><option value="全球健康学">全球健康学</option><option value="公共事业管理">公共事业管理</option><option value="公共关系学">公共关系学</option><option value="分子科学与工程">分子科学与工程</option><option value="助产学">助产学</option><option value="劳动与社会保障">劳动与社会保障</option><option value="劳动经济学">劳动经济学</option><option value="化学">化学</option><option value="化学生物学">化学生物学</option><option value="医学影像学">医学影像学</option><option value="华文教育">华文教育</option><option value="卫生教育">卫生教育</option><option value="卫生监督">卫生监督</option><option value="口腔医学">口腔医学</option><option value="古典文献学">古典文献学</option><option value="司法警察学">司法警察学</option><option value="哈医学">哈医学</option><option value="商务经济学">商务经济学</option><option value="商务英语">商务英语</option><option value="回医学">回医学</option><option value="国民经济管理">国民经济管理</option><option value="国际事务与国际关系">国际事务与国际关系</option><option value="国际商务">国际商务</option><option value="国际政治">国际政治</option><option value="国际税收">国际税收</option><option value="国际经济与贸易">国际经济与贸易</option><option value="国际经贸规则">国际经贸规则</option><option value="土地资源管理">土地资源管理</option><option value="城市管理">城市管理</option><option value="壮医学">壮医学</option><option value="声学">声学</option><option value="外交学">外交学</option><option value="大数据管理与应用">大数据管理与应用</option><option value="女性学">女性学</option><option value="妇幼保健医学">妇幼保健医学</option><option value="学前教育">学前教育</option><option value="审计学">审计学</option><option value="家政学">家政学</option><option value="小学教育">小学教育</option><option value="工商管理">工商管理</option><option value="工程管理">工程管理</option><option value="工程造价">工程造价</option><option value="市场营销">市场营销</option><option value="广告学">广告学</option><option value="广播电视学">广播电视学</option><option value="应用化学">应用化学</option><option value="应用物理学">应用物理学</option><option value="应用统计学">应用统计学</option><option value="应用语言学">应用语言学</option><option value="微电子科学与工程">微电子科学与工程</option><option value="德语">德语</option><option value="思想政治教育">思想政治教育</option><option value="房地产开发与管理">房地产开发与管理</option><option value="投资学">投资学</option><option value="护理学">护理学</option><option value="放射医学">放射医学</option><option value="政治学、经济学与哲学">政治学、经济学与哲学</option><option value="政治学与行政学">政治学与行政学</option><option value="教育学">教育学</option><option value="教育康复学">教育康复学</option><option value="教育技术学">教育技术学</option><option value="数字出版">数字出版</option><option value="数字媒体技术">数字媒体技术</option><option value="数字经济">数字经济</option><option value="数学与应用数学">数学与应用数学</option><option value="数据科学">数据科学</option><option value="数据科学与大数据技术">数据科学与大数据技术</option><option value="数据计算及应用">数据计算及应用</option><option value="数理基础科学">数理基础科学</option><option value="文化产业管理">文化产业管理</option><option value="新闻学">新闻学</option><option value="日语">日语</option><option value="智能科学与技术">智能科学与技术</option><option value="核物理">核物理</option><option value="武术与民族传统体育">武术与民族传统体育</option><option value="汉语国际教育">汉语国际教育</option><option value="汉语言">汉语言</option><option value="汉语言文学">汉语言文学</option><option value="法学">法学</option><option value="法语">法语</option><option value="海事管理">海事管理</option><option value="海关管理">海关管理</option><option value="物业管理">物业管理</option><option value="物理学">物理学</option><option value="物联网工程">物联网工程</option><option value="特殊教育">特殊教育</option><option value="生态学">生态学</option><option value="生物信息学">生物信息学</option><option value="生物技术">生物技术</option><option value="生物科学">生物科学</option><option value="生物统计学">生物统计学</option><option value="电子信息工程">电子信息工程</option><option value="电子科学与技术">电子科学与技术</option><option value="监狱学">监狱学</option><option value="眼视光医学">眼视光医学</option><option value="知识产权">知识产权</option><option value="社会体育指导与管理">社会体育指导与管理</option><option value="社会学">社会学</option><option value="社会工作">社会工作</option><option value="社区矫正">社区矫正</option><option value="科学教育">科学教育</option><option value="科学社会主义">科学社会主义</option><option value="秘书学">秘书学</option><option value="税收学">税收学</option><option value="管理科学">管理科学</option><option value="精神医学">精神医学</option><option value="精算学">精算学</option><option value="系统科学与工程">系统科学与工程</option><option value="经济与金融">经济与金融</option><option value="经济学">经济学</option><option value="经济工程">经济工程</option><option value="经济统计学">经济统计学</option><option value="统计学">统计学</option><option value="维医学">维医学</option><option value="编辑出版学">编辑出版学</option><option value="网络与新媒体">网络与新媒体</option><option value="网络工程">网络工程</option><option value="网络空间安全">网络空间安全</option><option value="翻译">翻译</option><option value="能源化学">能源化学</option><option value="能源经济">能源经济</option><option value="艺术教育">艺术教育</option><option value="英语">英语</option><option value="蒙医学">蒙医学</option><option value="藏医学">藏医学</option><option value="行政管理">行政管理</option><option value="西班牙语">西班牙语</option><option value="计算机科学与技术">计算机科学与技术</option><option value="认知科学与技术">认知科学与技术</option><option value="财务管理">财务管理</option><option value="财政学">财政学</option><option value="贸易经济">贸易经济</option><option value="资产评估">资产评估</option><option value="资源与环境经济学">资源与环境经济学</option><option value="软件工程">软件工程</option><option value="运动人体科学">运动人体科学</option><option value="运动康复">运动康复</option><option value="运动训练">运动训练</option><option value="通信工程">通信工程</option><option value="金融学">金融学</option><option value="金融工程">金融工程</option><option value="金融数学">金融数学</option><option value="金融科技">金融科技</option><option value="针灸推拿学">针灸推拿学</option><option value="阿拉伯语">阿拉伯语</option><option value="预防医学">预防医学</option><option value="食品卫生与营养学">食品卫生与营养学</option><option value="马克思主义理论">马克思主义理论</option><option value="麻醉学">麻醉学</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="compareMajors()">开始对比分析</button>
+                    </div>
+
+                    <!-- 对比结果 -->
+                    <div class="compare-result" id="compareResult">
+                        <div class="score-card" id="scoreCard">
+                            <div class="score-value" id="scoreValue">0</div>
+                            <div class="score-label" id="scoreLabel">关联度评分</div>
+                        </div>
+
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">你的专业大类</div>
+                                <div class="detail-value" id="cat1">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">岗位要求大类</div>
+                                <div class="detail-value" id="cat2">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">专业代码</div>
+                                <div class="detail-value" id="code1">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">专业代码</div>
+                                <div class="detail-value" id="code2">-</div>
+                            </div>
+                        </div>
+
+                        <div class="path-container">
+                            <div class="path-title">关联路径</div>
+                            <div class="path-steps" id="pathSteps"></div>
+                        </div>
+
+                        <div class="suggestion" id="suggestion"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="padding: 0; overflow: hidden;">
+                <div id="graph"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const graphData = {
+  "nodes": [
+    {
+      "id": "CAT_0201",
+      "name": "经济学类",
+      "type": "category",
+      "category": "",
+      "code": "0201",
+      "group": 0
+    },
+    {
+      "id": "MAJ_020101",
+      "name": "经济学",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020101",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020102",
+      "name": "经济统计学",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020102",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020103",
+      "name": "国民经济管理",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020103",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020104",
+      "name": "资源与环境经济学",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020104",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020105",
+      "name": "商务经济学",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020105",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020106",
+      "name": "能源经济",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020106",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020107",
+      "name": "劳动经济学",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020107",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020108",
+      "name": "经济工程",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020108",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020109",
+      "name": "数字经济",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020109",
+      "group": 1
+    },
+    {
+      "id": "CAT_0202",
+      "name": "财政学类",
+      "type": "category",
+      "category": "",
+      "code": "0202",
+      "group": 0
+    },
+    {
+      "id": "MAJ_020201",
+      "name": "财政学",
+      "type": "major",
+      "category": "财政学类",
+      "code": "020201",
+      "group": 2
+    },
+    {
+      "id": "MAJ_020202",
+      "name": "税收学",
+      "type": "major",
+      "category": "财政学类",
+      "code": "020202",
+      "group": 2
+    },
+    {
+      "id": "MAJ_020203",
+      "name": "国际税收",
+      "type": "major",
+      "category": "财政学类",
+      "code": "020203",
+      "group": 2
+    },
+    {
+      "id": "CAT_0203",
+      "name": "金融学类",
+      "type": "category",
+      "category": "",
+      "code": "0203",
+      "group": 0
+    },
+    {
+      "id": "MAJ_020301",
+      "name": "金融学",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020301",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020302",
+      "name": "金融工程",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020302",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020303",
+      "name": "保险学",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020303",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020304",
+      "name": "投资学",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020304",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020305",
+      "name": "金融数学",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020305",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020306",
+      "name": "信用管理",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020306",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020307",
+      "name": "经济与金融",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020307",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020308",
+      "name": "精算学",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020308",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020309",
+      "name": "互联网金融",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020309",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020310",
+      "name": "金融科技",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020310",
+      "group": 3
+    },
+    {
+      "id": "CAT_0204",
+      "name": "经济与贸易类",
+      "type": "category",
+      "category": "",
+      "code": "0204",
+      "group": 0
+    },
+    {
+      "id": "MAJ_020401",
+      "name": "国际经济与贸易",
+      "type": "major",
+      "category": "经济与贸易类",
+      "code": "020401",
+      "group": 4
+    },
+    {
+      "id": "MAJ_020402",
+      "name": "贸易经济",
+      "type": "major",
+      "category": "经济与贸易类",
+      "code": "020402",
+      "group": 4
+    },
+    {
+      "id": "CAT_0301",
+      "name": "法学类",
+      "type": "category",
+      "category": "",
+      "code": "0301",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030101",
+      "name": "法学",
+      "type": "major",
+      "category": "法学类",
+      "code": "030101",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030102",
+      "name": "知识产权",
+      "type": "major",
+      "category": "法学类",
+      "code": "030102",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030103",
+      "name": "监狱学",
+      "type": "major",
+      "category": "法学类",
+      "code": "030103",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030104",
+      "name": "信用风险管理与法律防控",
+      "type": "major",
+      "category": "法学类",
+      "code": "030104",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030105",
+      "name": "国际经贸规则",
+      "type": "major",
+      "category": "法学类",
+      "code": "030105",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030106",
+      "name": "司法警察学",
+      "type": "major",
+      "category": "法学类",
+      "code": "030106",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030107",
+      "name": "社区矫正",
+      "type": "major",
+      "category": "法学类",
+      "code": "030107",
+      "group": 0
+    },
+    {
+      "id": "CAT_0302",
+      "name": "政治学类",
+      "type": "category",
+      "category": "",
+      "code": "0302",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030201",
+      "name": "政治学与行政学",
+      "type": "major",
+      "category": "政治学类",
+      "code": "030201",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030202",
+      "name": "国际政治",
+      "type": "major",
+      "category": "政治学类",
+      "code": "030202",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030203",
+      "name": "外交学",
+      "type": "major",
+      "category": "政治学类",
+      "code": "030203",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030204",
+      "name": "国际事务与国际关系",
+      "type": "major",
+      "category": "政治学类",
+      "code": "030204",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030205",
+      "name": "政治学、经济学与哲学",
+      "type": "major",
+      "category": "政治学类",
+      "code": "030205",
+      "group": 0
+    },
+    {
+      "id": "CAT_0303",
+      "name": "社会学类",
+      "type": "category",
+      "category": "",
+      "code": "0303",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030301",
+      "name": "社会学",
+      "type": "major",
+      "category": "社会学类",
+      "code": "030301",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030302",
+      "name": "社会工作",
+      "type": "major",
+      "category": "社会学类",
+      "code": "030302",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030303",
+      "name": "人类学",
+      "type": "major",
+      "category": "社会学类",
+      "code": "030303",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030304",
+      "name": "女性学",
+      "type": "major",
+      "category": "社会学类",
+      "code": "030304",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030305",
+      "name": "家政学",
+      "type": "major",
+      "category": "社会学类",
+      "code": "030305",
+      "group": 0
+    },
+    {
+      "id": "CAT_0305",
+      "name": "马克思主义理论类",
+      "type": "category",
+      "category": "",
+      "code": "0305",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030501",
+      "name": "科学社会主义",
+      "type": "major",
+      "category": "马克思主义理论类",
+      "code": "030501",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030502",
+      "name": "中国共产党历史",
+      "type": "major",
+      "category": "马克思主义理论类",
+      "code": "030502",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030503",
+      "name": "思想政治教育",
+      "type": "major",
+      "category": "马克思主义理论类",
+      "code": "030503",
+      "group": 0
+    },
+    {
+      "id": "MAJ_030504",
+      "name": "马克思主义理论",
+      "type": "major",
+      "category": "马克思主义理论类",
+      "code": "030504",
+      "group": 0
+    },
+    {
+      "id": "CAT_0401",
+      "name": "教育学类",
+      "type": "category",
+      "category": "",
+      "code": "0401",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040101",
+      "name": "教育学",
+      "type": "major",
+      "category": "教育学类",
+      "code": "040101",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040102",
+      "name": "科学教育",
+      "type": "major",
+      "category": "教育学类",
+      "code": "040102",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040103",
+      "name": "人文教育",
+      "type": "major",
+      "category": "教育学类",
+      "code": "040103",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040104",
+      "name": "教育技术学",
+      "type": "major",
+      "category": "教育学类",
+      "code": "040104",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040105",
+      "name": "艺术教育",
+      "type": "major",
+      "category": "教育学类",
+      "code": "040105",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040106",
+      "name": "学前教育",
+      "type": "major",
+      "category": "教育学类",
+      "code": "040106",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040107",
+      "name": "小学教育",
+      "type": "major",
+      "category": "教育学类",
+      "code": "040107",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040108",
+      "name": "特殊教育",
+      "type": "major",
+      "category": "教育学类",
+      "code": "040108",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040109",
+      "name": "华文教育",
+      "type": "major",
+      "category": "教育学类",
+      "code": "040109",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040110",
+      "name": "教育康复学",
+      "type": "major",
+      "category": "教育学类",
+      "code": "040110",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040111",
+      "name": "卫生教育",
+      "type": "major",
+      "category": "教育学类",
+      "code": "040111",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040112",
+      "name": "认知科学与技术",
+      "type": "major",
+      "category": "教育学类",
+      "code": "040112",
+      "group": 0
+    },
+    {
+      "id": "CAT_0402",
+      "name": "体育学类",
+      "type": "category",
+      "category": "",
+      "code": "0402",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040201",
+      "name": "体育教育",
+      "type": "major",
+      "category": "体育学类",
+      "code": "040201",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040202",
+      "name": "运动训练",
+      "type": "major",
+      "category": "体育学类",
+      "code": "040202",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040203",
+      "name": "社会体育指导与管理",
+      "type": "major",
+      "category": "体育学类",
+      "code": "040203",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040204",
+      "name": "武术与民族传统体育",
+      "type": "major",
+      "category": "体育学类",
+      "code": "040204",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040205",
+      "name": "运动人体科学",
+      "type": "major",
+      "category": "体育学类",
+      "code": "040205",
+      "group": 0
+    },
+    {
+      "id": "MAJ_040206",
+      "name": "运动康复",
+      "type": "major",
+      "category": "体育学类",
+      "code": "040206",
+      "group": 0
+    },
+    {
+      "id": "CAT_0501",
+      "name": "中国语言文学类",
+      "type": "category",
+      "category": "",
+      "code": "0501",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050101",
+      "name": "汉语言文学",
+      "type": "major",
+      "category": "中国语言文学类",
+      "code": "050101",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050102",
+      "name": "汉语言",
+      "type": "major",
+      "category": "中国语言文学类",
+      "code": "050102",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050103",
+      "name": "汉语国际教育",
+      "type": "major",
+      "category": "中国语言文学类",
+      "code": "050103",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050104",
+      "name": "中国少数民族语言文学",
+      "type": "major",
+      "category": "中国语言文学类",
+      "code": "050104",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050105",
+      "name": "古典文献学",
+      "type": "major",
+      "category": "中国语言文学类",
+      "code": "050105",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050106",
+      "name": "应用语言学",
+      "type": "major",
+      "category": "中国语言文学类",
+      "code": "050106",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050107",
+      "name": "秘书学",
+      "type": "major",
+      "category": "中国语言文学类",
+      "code": "050107",
+      "group": 0
+    },
+    {
+      "id": "CAT_0502",
+      "name": "外国语言文学类",
+      "type": "category",
+      "category": "",
+      "code": "0502",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050201",
+      "name": "英语",
+      "type": "major",
+      "category": "外国语言文学类",
+      "code": "050201",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050202",
+      "name": "俄语",
+      "type": "major",
+      "category": "外国语言文学类",
+      "code": "050202",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050203",
+      "name": "德语",
+      "type": "major",
+      "category": "外国语言文学类",
+      "code": "050203",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050204",
+      "name": "法语",
+      "type": "major",
+      "category": "外国语言文学类",
+      "code": "050204",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050205",
+      "name": "西班牙语",
+      "type": "major",
+      "category": "外国语言文学类",
+      "code": "050205",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050206",
+      "name": "阿拉伯语",
+      "type": "major",
+      "category": "外国语言文学类",
+      "code": "050206",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050207",
+      "name": "日语",
+      "type": "major",
+      "category": "外国语言文学类",
+      "code": "050207",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050262",
+      "name": "商务英语",
+      "type": "major",
+      "category": "外国语言文学类",
+      "code": "050262",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050261",
+      "name": "翻译",
+      "type": "major",
+      "category": "外国语言文学类",
+      "code": "050261",
+      "group": 0
+    },
+    {
+      "id": "CAT_0503",
+      "name": "新闻传播学类",
+      "type": "category",
+      "category": "",
+      "code": "0503",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050301",
+      "name": "新闻学",
+      "type": "major",
+      "category": "新闻传播学类",
+      "code": "050301",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050302",
+      "name": "广播电视学",
+      "type": "major",
+      "category": "新闻传播学类",
+      "code": "050302",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050303",
+      "name": "广告学",
+      "type": "major",
+      "category": "新闻传播学类",
+      "code": "050303",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050304",
+      "name": "传播学",
+      "type": "major",
+      "category": "新闻传播学类",
+      "code": "050304",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050305",
+      "name": "编辑出版学",
+      "type": "major",
+      "category": "新闻传播学类",
+      "code": "050305",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050306",
+      "name": "网络与新媒体",
+      "type": "major",
+      "category": "新闻传播学类",
+      "code": "050306",
+      "group": 0
+    },
+    {
+      "id": "MAJ_050307",
+      "name": "数字出版",
+      "type": "major",
+      "category": "新闻传播学类",
+      "code": "050307",
+      "group": 0
+    },
+    {
+      "id": "CAT_0701",
+      "name": "数学类",
+      "type": "category",
+      "category": "",
+      "code": "0701",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070101",
+      "name": "数学与应用数学",
+      "type": "major",
+      "category": "数学类",
+      "code": "070101",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070102",
+      "name": "信息与计算科学",
+      "type": "major",
+      "category": "数学类",
+      "code": "070102",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070103",
+      "name": "数理基础科学",
+      "type": "major",
+      "category": "数学类",
+      "code": "070103",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070104",
+      "name": "数据计算及应用",
+      "type": "major",
+      "category": "数学类",
+      "code": "070104",
+      "group": 0
+    },
+    {
+      "id": "CAT_0702",
+      "name": "物理学类",
+      "type": "category",
+      "category": "",
+      "code": "0702",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070201",
+      "name": "物理学",
+      "type": "major",
+      "category": "物理学类",
+      "code": "070201",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070202",
+      "name": "应用物理学",
+      "type": "major",
+      "category": "物理学类",
+      "code": "070202",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070203",
+      "name": "核物理",
+      "type": "major",
+      "category": "物理学类",
+      "code": "070203",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070204",
+      "name": "声学",
+      "type": "major",
+      "category": "物理学类",
+      "code": "070204",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070205",
+      "name": "系统科学与工程",
+      "type": "major",
+      "category": "物理学类",
+      "code": "070205",
+      "group": 0
+    },
+    {
+      "id": "CAT_0703",
+      "name": "化学类",
+      "type": "category",
+      "category": "",
+      "code": "0703",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070301",
+      "name": "化学",
+      "type": "major",
+      "category": "化学类",
+      "code": "070301",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070302",
+      "name": "应用化学",
+      "type": "major",
+      "category": "化学类",
+      "code": "070302",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070303",
+      "name": "化学生物学",
+      "type": "major",
+      "category": "化学类",
+      "code": "070303",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070304",
+      "name": "分子科学与工程",
+      "type": "major",
+      "category": "化学类",
+      "code": "070304",
+      "group": 0
+    },
+    {
+      "id": "MAJ_070305",
+      "name": "能源化学",
+      "type": "major",
+      "category": "化学类",
+      "code": "070305",
+      "group": 0
+    },
+    {
+      "id": "CAT_0710",
+      "name": "生物科学类",
+      "type": "category",
+      "category": "",
+      "code": "0710",
+      "group": 0
+    },
+    {
+      "id": "MAJ_071001",
+      "name": "生物科学",
+      "type": "major",
+      "category": "生物科学类",
+      "code": "071001",
+      "group": 0
+    },
+    {
+      "id": "MAJ_071002",
+      "name": "生物技术",
+      "type": "major",
+      "category": "生物科学类",
+      "code": "071002",
+      "group": 0
+    },
+    {
+      "id": "MAJ_071003",
+      "name": "生物信息学",
+      "type": "major",
+      "category": "生物科学类",
+      "code": "071003",
+      "group": 0
+    },
+    {
+      "id": "MAJ_071004",
+      "name": "生态学",
+      "type": "major",
+      "category": "生物科学类",
+      "code": "071004",
+      "group": 0
+    },
+    {
+      "id": "CAT_0712",
+      "name": "统计学类",
+      "type": "category",
+      "category": "",
+      "code": "0712",
+      "group": 0
+    },
+    {
+      "id": "MAJ_071201",
+      "name": "统计学",
+      "type": "major",
+      "category": "统计学类",
+      "code": "071201",
+      "group": 5
+    },
+    {
+      "id": "MAJ_071202",
+      "name": "应用统计学",
+      "type": "major",
+      "category": "统计学类",
+      "code": "071202",
+      "group": 5
+    },
+    {
+      "id": "MAJ_071203",
+      "name": "数据科学",
+      "type": "major",
+      "category": "统计学类",
+      "code": "071203",
+      "group": 5
+    },
+    {
+      "id": "MAJ_071204",
+      "name": "生物统计学",
+      "type": "major",
+      "category": "统计学类",
+      "code": "071204",
+      "group": 5
+    },
+    {
+      "id": "CAT_0809",
+      "name": "计算机类",
+      "type": "category",
+      "category": "",
+      "code": "0809",
+      "group": 0
+    },
+    {
+      "id": "MAJ_080901",
+      "name": "计算机科学与技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080901",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080902",
+      "name": "软件工程",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080902",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080903",
+      "name": "网络工程",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080903",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080904",
+      "name": "信息安全",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080904",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080905",
+      "name": "物联网工程",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080905",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080906",
+      "name": "数字媒体技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080906",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080907",
+      "name": "智能科学与技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080907",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080910",
+      "name": "数据科学与大数据技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080910",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080911",
+      "name": "网络空间安全",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080911",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080717",
+      "name": "人工智能",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080717",
+      "group": 6
+    },
+    {
+      "id": "CAT_0807",
+      "name": "电子信息类",
+      "type": "category",
+      "category": "",
+      "code": "0807",
+      "group": 0
+    },
+    {
+      "id": "MAJ_080701",
+      "name": "电子信息工程",
+      "type": "major",
+      "category": "电子信息类",
+      "code": "080701",
+      "group": 0
+    },
+    {
+      "id": "MAJ_080702",
+      "name": "电子科学与技术",
+      "type": "major",
+      "category": "电子信息类",
+      "code": "080702",
+      "group": 0
+    },
+    {
+      "id": "MAJ_080703",
+      "name": "通信工程",
+      "type": "major",
+      "category": "电子信息类",
+      "code": "080703",
+      "group": 0
+    },
+    {
+      "id": "MAJ_080704",
+      "name": "微电子科学与工程",
+      "type": "major",
+      "category": "电子信息类",
+      "code": "080704",
+      "group": 0
+    },
+    {
+      "id": "MAJ_080705",
+      "name": "光电信息科学与工程",
+      "type": "major",
+      "category": "电子信息类",
+      "code": "080705",
+      "group": 0
+    },
+    {
+      "id": "MAJ_080706",
+      "name": "信息工程",
+      "type": "major",
+      "category": "电子信息类",
+      "code": "080706",
+      "group": 0
+    },
+    {
+      "id": "CAT_1002",
+      "name": "临床医学类",
+      "type": "category",
+      "category": "",
+      "code": "1002",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100201",
+      "name": "临床医学",
+      "type": "major",
+      "category": "临床医学类",
+      "code": "100201",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100202",
+      "name": "麻醉学",
+      "type": "major",
+      "category": "临床医学类",
+      "code": "100202",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100203",
+      "name": "医学影像学",
+      "type": "major",
+      "category": "临床医学类",
+      "code": "100203",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100204",
+      "name": "眼视光医学",
+      "type": "major",
+      "category": "临床医学类",
+      "code": "100204",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100205",
+      "name": "精神医学",
+      "type": "major",
+      "category": "临床医学类",
+      "code": "100205",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100206",
+      "name": "放射医学",
+      "type": "major",
+      "category": "临床医学类",
+      "code": "100206",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100207",
+      "name": "儿科学",
+      "type": "major",
+      "category": "临床医学类",
+      "code": "100207",
+      "group": 0
+    },
+    {
+      "id": "CAT_1003",
+      "name": "口腔医学类",
+      "type": "category",
+      "category": "",
+      "code": "1003",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100301",
+      "name": "口腔医学",
+      "type": "major",
+      "category": "口腔医学类",
+      "code": "100301",
+      "group": 0
+    },
+    {
+      "id": "CAT_1004",
+      "name": "公共卫生与预防医学类",
+      "type": "category",
+      "category": "",
+      "code": "1004",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100401",
+      "name": "预防医学",
+      "type": "major",
+      "category": "公共卫生与预防医学类",
+      "code": "100401",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100402",
+      "name": "食品卫生与营养学",
+      "type": "major",
+      "category": "公共卫生与预防医学类",
+      "code": "100402",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100403",
+      "name": "妇幼保健医学",
+      "type": "major",
+      "category": "公共卫生与预防医学类",
+      "code": "100403",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100404",
+      "name": "卫生监督",
+      "type": "major",
+      "category": "公共卫生与预防医学类",
+      "code": "100404",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100405",
+      "name": "全球健康学",
+      "type": "major",
+      "category": "公共卫生与预防医学类",
+      "code": "100405",
+      "group": 0
+    },
+    {
+      "id": "CAT_1005",
+      "name": "中医学类",
+      "type": "category",
+      "category": "",
+      "code": "1005",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100501",
+      "name": "中医学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100501",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100502",
+      "name": "针灸推拿学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100502",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100503",
+      "name": "藏医学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100503",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100504",
+      "name": "蒙医学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100504",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100505",
+      "name": "维医学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100505",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100506",
+      "name": "壮医学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100506",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100507",
+      "name": "哈医学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100507",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100508",
+      "name": "傣医学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100508",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100509",
+      "name": "回医学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100509",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100510",
+      "name": "中医康复学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100510",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100511",
+      "name": "中医养生学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100511",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100512",
+      "name": "中医儿科学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100512",
+      "group": 0
+    },
+    {
+      "id": "MAJ_100513",
+      "name": "中医骨伤科学",
+      "type": "major",
+      "category": "中医学类",
+      "code": "100513",
+      "group": 0
+    },
+    {
+      "id": "CAT_1011",
+      "name": "护理学类",
+      "type": "category",
+      "category": "",
+      "code": "1011",
+      "group": 0
+    },
+    {
+      "id": "MAJ_101101",
+      "name": "护理学",
+      "type": "major",
+      "category": "护理学类",
+      "code": "101101",
+      "group": 0
+    },
+    {
+      "id": "MAJ_101102",
+      "name": "助产学",
+      "type": "major",
+      "category": "护理学类",
+      "code": "101102",
+      "group": 0
+    },
+    {
+      "id": "CAT_1201",
+      "name": "管理科学与工程类",
+      "type": "category",
+      "category": "",
+      "code": "1201",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120101",
+      "name": "管理科学",
+      "type": "major",
+      "category": "管理科学与工程类",
+      "code": "120101",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120102",
+      "name": "信息管理与信息系统",
+      "type": "major",
+      "category": "管理科学与工程类",
+      "code": "120102",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120103",
+      "name": "工程管理",
+      "type": "major",
+      "category": "管理科学与工程类",
+      "code": "120103",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120104",
+      "name": "房地产开发与管理",
+      "type": "major",
+      "category": "管理科学与工程类",
+      "code": "120104",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120105",
+      "name": "工程造价",
+      "type": "major",
+      "category": "管理科学与工程类",
+      "code": "120105",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120108",
+      "name": "大数据管理与应用",
+      "type": "major",
+      "category": "管理科学与工程类",
+      "code": "120108",
+      "group": 0
+    },
+    {
+      "id": "CAT_1202",
+      "name": "工商管理类",
+      "type": "category",
+      "category": "",
+      "code": "1202",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120201",
+      "name": "工商管理",
+      "type": "major",
+      "category": "工商管理类",
+      "code": "120201",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120202",
+      "name": "市场营销",
+      "type": "major",
+      "category": "工商管理类",
+      "code": "120202",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120203",
+      "name": "会计学",
+      "type": "major",
+      "category": "工商管理类",
+      "code": "120203",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120204",
+      "name": "财务管理",
+      "type": "major",
+      "category": "工商管理类",
+      "code": "120204",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120205",
+      "name": "国际商务",
+      "type": "major",
+      "category": "工商管理类",
+      "code": "120205",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120206",
+      "name": "人力资源管理",
+      "type": "major",
+      "category": "工商管理类",
+      "code": "120206",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120207",
+      "name": "审计学",
+      "type": "major",
+      "category": "工商管理类",
+      "code": "120207",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120208",
+      "name": "资产评估",
+      "type": "major",
+      "category": "工商管理类",
+      "code": "120208",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120209",
+      "name": "物业管理",
+      "type": "major",
+      "category": "工商管理类",
+      "code": "120209",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120210",
+      "name": "文化产业管理",
+      "type": "major",
+      "category": "工商管理类",
+      "code": "120210",
+      "group": 0
+    },
+    {
+      "id": "CAT_1204",
+      "name": "公共管理类",
+      "type": "category",
+      "category": "",
+      "code": "1204",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120401",
+      "name": "公共事业管理",
+      "type": "major",
+      "category": "公共管理类",
+      "code": "120401",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120402",
+      "name": "行政管理",
+      "type": "major",
+      "category": "公共管理类",
+      "code": "120402",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120403",
+      "name": "劳动与社会保障",
+      "type": "major",
+      "category": "公共管理类",
+      "code": "120403",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120404",
+      "name": "土地资源管理",
+      "type": "major",
+      "category": "公共管理类",
+      "code": "120404",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120405",
+      "name": "城市管理",
+      "type": "major",
+      "category": "公共管理类",
+      "code": "120405",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120406",
+      "name": "海关管理",
+      "type": "major",
+      "category": "公共管理类",
+      "code": "120406",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120407",
+      "name": "交通管理",
+      "type": "major",
+      "category": "公共管理类",
+      "code": "120407",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120408",
+      "name": "海事管理",
+      "type": "major",
+      "category": "公共管理类",
+      "code": "120408",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120409",
+      "name": "公共关系学",
+      "type": "major",
+      "category": "公共管理类",
+      "code": "120409",
+      "group": 0
+    },
+    {
+      "id": "MAJ_120410",
+      "name": "健康服务与管理",
+      "type": "major",
+      "category": "公共管理类",
+      "code": "120410",
+      "group": 0
+    }
+  ],
+  "links": [
+    {
+      "source": "MAJ_020101",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020102",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020102",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020103",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020103",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020104",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020104",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020105",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020105",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020106",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020106",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020107",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020107",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020108",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020108",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020109",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020109",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020201",
+      "target": "CAT_0202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020201",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020202",
+      "target": "CAT_0202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020202",
+      "target": "MAJ_020201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020202",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020203",
+      "target": "CAT_0202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020203",
+      "target": "MAJ_020202",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020301",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020301",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020302",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020302",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020303",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020303",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020304",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020304",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020304",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020305",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020305",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020306",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020306",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020306",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020307",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020307",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020307",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020308",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020308",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020309",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020309",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020310",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020310",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020401",
+      "target": "CAT_0204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020401",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020402",
+      "target": "CAT_0204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020402",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030101",
+      "target": "CAT_0301",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030102",
+      "target": "CAT_0301",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030102",
+      "target": "MAJ_030101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030103",
+      "target": "CAT_0301",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030103",
+      "target": "MAJ_030101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030104",
+      "target": "CAT_0301",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030104",
+      "target": "MAJ_030101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030104",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030105",
+      "target": "CAT_0301",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030105",
+      "target": "MAJ_030101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030106",
+      "target": "CAT_0301",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030106",
+      "target": "MAJ_030101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030107",
+      "target": "CAT_0301",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030107",
+      "target": "MAJ_030101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030201",
+      "target": "CAT_0302",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030202",
+      "target": "CAT_0302",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030203",
+      "target": "CAT_0302",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030203",
+      "target": "MAJ_030202",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030204",
+      "target": "CAT_0302",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030204",
+      "target": "MAJ_030202",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030204",
+      "target": "MAJ_030203",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030205",
+      "target": "CAT_0302",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030205",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030301",
+      "target": "CAT_0303",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030302",
+      "target": "CAT_0303",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030302",
+      "target": "MAJ_030301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030303",
+      "target": "CAT_0303",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030303",
+      "target": "MAJ_030301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030304",
+      "target": "CAT_0303",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030304",
+      "target": "MAJ_030301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030305",
+      "target": "CAT_0303",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030305",
+      "target": "MAJ_030301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_030501",
+      "target": "CAT_0305",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030502",
+      "target": "CAT_0305",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030503",
+      "target": "CAT_0305",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_030504",
+      "target": "CAT_0305",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040101",
+      "target": "CAT_0401",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040102",
+      "target": "CAT_0401",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040102",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040103",
+      "target": "CAT_0401",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040103",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040104",
+      "target": "CAT_0401",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040104",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040105",
+      "target": "CAT_0401",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040105",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040106",
+      "target": "CAT_0401",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040106",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040107",
+      "target": "CAT_0401",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040107",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040108",
+      "target": "CAT_0401",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040108",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040109",
+      "target": "CAT_0401",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040109",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040110",
+      "target": "CAT_0401",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040110",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040111",
+      "target": "CAT_0401",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040111",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040112",
+      "target": "CAT_0401",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040112",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040201",
+      "target": "CAT_0402",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040201",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040202",
+      "target": "CAT_0402",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040202",
+      "target": "MAJ_040201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_040203",
+      "target": "CAT_0402",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040204",
+      "target": "CAT_0402",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040205",
+      "target": "CAT_0402",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_040206",
+      "target": "CAT_0402",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050101",
+      "target": "CAT_0501",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050101",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050102",
+      "target": "CAT_0501",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050102",
+      "target": "MAJ_050101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050103",
+      "target": "CAT_0501",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050103",
+      "target": "MAJ_050101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050103",
+      "target": "MAJ_040101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050104",
+      "target": "CAT_0501",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050104",
+      "target": "MAJ_050101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050105",
+      "target": "CAT_0501",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050105",
+      "target": "MAJ_050101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050106",
+      "target": "CAT_0501",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050107",
+      "target": "CAT_0501",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050107",
+      "target": "MAJ_050101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050201",
+      "target": "CAT_0502",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050202",
+      "target": "CAT_0502",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050203",
+      "target": "CAT_0502",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050204",
+      "target": "CAT_0502",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050205",
+      "target": "CAT_0502",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050206",
+      "target": "CAT_0502",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050207",
+      "target": "CAT_0502",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050262",
+      "target": "CAT_0502",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050262",
+      "target": "MAJ_050201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050261",
+      "target": "CAT_0502",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050301",
+      "target": "CAT_0503",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050301",
+      "target": "MAJ_050101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050302",
+      "target": "CAT_0503",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050302",
+      "target": "MAJ_050301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050303",
+      "target": "CAT_0503",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050304",
+      "target": "CAT_0503",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050304",
+      "target": "MAJ_050301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050304",
+      "target": "MAJ_030301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050305",
+      "target": "CAT_0503",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050305",
+      "target": "MAJ_050301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050305",
+      "target": "MAJ_050101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050306",
+      "target": "CAT_0503",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050306",
+      "target": "MAJ_050304",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_050307",
+      "target": "CAT_0503",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_050307",
+      "target": "MAJ_050305",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_070101",
+      "target": "CAT_0701",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070102",
+      "target": "CAT_0701",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070103",
+      "target": "CAT_0701",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070104",
+      "target": "CAT_0701",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070201",
+      "target": "CAT_0702",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070202",
+      "target": "CAT_0702",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070202",
+      "target": "MAJ_070201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_070203",
+      "target": "CAT_0702",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070203",
+      "target": "MAJ_070201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_070204",
+      "target": "CAT_0702",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070204",
+      "target": "MAJ_070201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_070205",
+      "target": "CAT_0702",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070205",
+      "target": "MAJ_070201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_070301",
+      "target": "CAT_0703",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070302",
+      "target": "CAT_0703",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070302",
+      "target": "MAJ_070301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_070303",
+      "target": "CAT_0703",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070303",
+      "target": "MAJ_070301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_070304",
+      "target": "CAT_0703",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070304",
+      "target": "MAJ_070301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_070305",
+      "target": "CAT_0703",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_070305",
+      "target": "MAJ_070301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_071001",
+      "target": "CAT_0710",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_071002",
+      "target": "CAT_0710",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_071002",
+      "target": "MAJ_071001",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_071003",
+      "target": "CAT_0710",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_071004",
+      "target": "CAT_0710",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_071201",
+      "target": "CAT_0712",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_071201",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_071202",
+      "target": "CAT_0712",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_071202",
+      "target": "MAJ_071201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_071202",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_071203",
+      "target": "CAT_0712",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_071203",
+      "target": "MAJ_071201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_071204",
+      "target": "CAT_0712",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_071204",
+      "target": "MAJ_071201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_080901",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080902",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080903",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080904",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080905",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080906",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080907",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080910",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080910",
+      "target": "MAJ_071201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_080911",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080911",
+      "target": "MAJ_080904",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_080717",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080701",
+      "target": "CAT_0807",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080702",
+      "target": "CAT_0807",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080703",
+      "target": "CAT_0807",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080703",
+      "target": "MAJ_080903",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_080704",
+      "target": "CAT_0807",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080705",
+      "target": "CAT_0807",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080706",
+      "target": "CAT_0807",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100201",
+      "target": "CAT_1002",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100202",
+      "target": "CAT_1002",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100202",
+      "target": "MAJ_100201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100203",
+      "target": "CAT_1002",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100203",
+      "target": "MAJ_100201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100204",
+      "target": "CAT_1002",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100204",
+      "target": "MAJ_100201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100205",
+      "target": "CAT_1002",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100205",
+      "target": "MAJ_100201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100206",
+      "target": "CAT_1002",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100206",
+      "target": "MAJ_100201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100207",
+      "target": "CAT_1002",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100207",
+      "target": "MAJ_100201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100301",
+      "target": "CAT_1003",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100301",
+      "target": "MAJ_100201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100401",
+      "target": "CAT_1004",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100401",
+      "target": "MAJ_100201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100402",
+      "target": "CAT_1004",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100402",
+      "target": "MAJ_100401",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100403",
+      "target": "CAT_1004",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100403",
+      "target": "MAJ_100401",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100403",
+      "target": "MAJ_100201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100404",
+      "target": "CAT_1004",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100404",
+      "target": "MAJ_100401",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100405",
+      "target": "CAT_1004",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100405",
+      "target": "MAJ_100401",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100501",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100502",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100502",
+      "target": "MAJ_100501",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100503",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100503",
+      "target": "MAJ_100501",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100504",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100504",
+      "target": "MAJ_100501",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100505",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100505",
+      "target": "MAJ_100501",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100506",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100506",
+      "target": "MAJ_100501",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100507",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100507",
+      "target": "MAJ_100501",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100508",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100508",
+      "target": "MAJ_100501",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100509",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100509",
+      "target": "MAJ_100501",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100510",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100510",
+      "target": "MAJ_100501",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100511",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100511",
+      "target": "MAJ_100501",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100511",
+      "target": "MAJ_100401",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100512",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100512",
+      "target": "MAJ_100501",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100512",
+      "target": "MAJ_100207",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_100513",
+      "target": "CAT_1005",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_100513",
+      "target": "MAJ_100501",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_101101",
+      "target": "CAT_1011",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_101101",
+      "target": "MAJ_100201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_101102",
+      "target": "CAT_1011",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_101102",
+      "target": "MAJ_101101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_101102",
+      "target": "MAJ_100201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120101",
+      "target": "CAT_1201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120101",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120102",
+      "target": "CAT_1201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120103",
+      "target": "CAT_1201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120103",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120104",
+      "target": "CAT_1201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120104",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120105",
+      "target": "CAT_1201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120105",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120108",
+      "target": "CAT_1201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120108",
+      "target": "MAJ_071203",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120201",
+      "target": "CAT_1202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120202",
+      "target": "CAT_1202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120202",
+      "target": "MAJ_120201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120202",
+      "target": "MAJ_050303",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120203",
+      "target": "CAT_1202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120203",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120204",
+      "target": "CAT_1202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120204",
+      "target": "MAJ_120203",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120204",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120204",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120205",
+      "target": "CAT_1202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120205",
+      "target": "MAJ_120201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120206",
+      "target": "CAT_1202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120206",
+      "target": "MAJ_120201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120206",
+      "target": "MAJ_020107",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120207",
+      "target": "CAT_1202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120207",
+      "target": "MAJ_120203",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120207",
+      "target": "MAJ_120204",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120207",
+      "target": "MAJ_030101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120208",
+      "target": "CAT_1202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120208",
+      "target": "MAJ_120203",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120208",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120208",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120209",
+      "target": "CAT_1202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120209",
+      "target": "MAJ_120201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120210",
+      "target": "CAT_1202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120210",
+      "target": "MAJ_120201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120401",
+      "target": "CAT_1204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120401",
+      "target": "MAJ_030301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120402",
+      "target": "CAT_1204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120402",
+      "target": "MAJ_030101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120403",
+      "target": "CAT_1204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120403",
+      "target": "MAJ_120206",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120403",
+      "target": "MAJ_030301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120404",
+      "target": "CAT_1204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120404",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120405",
+      "target": "CAT_1204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120406",
+      "target": "CAT_1204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120406",
+      "target": "MAJ_030101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120407",
+      "target": "CAT_1204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120408",
+      "target": "CAT_1204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120408",
+      "target": "MAJ_030101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120409",
+      "target": "CAT_1204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_120409",
+      "target": "MAJ_050304",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_120410",
+      "target": "CAT_1204",
+      "type": "belongs_to"
+    }
+  ]
+};
+
+        // 颜色映射
+        const colorMap = {
+            0: '#95a5a6',
+            1: '#ff6b6b', 2: '#4ecdc4', 3: '#45b7d1',
+            4: '#96ceb4', 5: '#feca57', 6: '#ff9ff3',
+            7: '#54a0ff', 8: '#5f27cd', 9: '#00d2d3',
+            10: '#ff9f43', 11: '#ee5a24', 12: '#009432',
+            13: '#0652dd', 14: '#9980fa', 15: '#c56cf0',
+        };
+
+        // 对比专业
+        function compareMajors() {
+            const m1 = document.getElementById('major1').value;
+            const m2 = document.getElementById('major2').value;
+
+            if (!m1 || !m2) {
+                alert('请选择两个专业');
+                return;
+            }
+
+            const node1 = graphData.nodes.find(n => n.name === m1);
+            const node2 = graphData.nodes.find(n => n.name === m2);
+
+            if (!node1 || !node2) {
+                alert('专业未找到');
+                return;
+            }
+
+            // 计算关联度
+            let score = 0;
+            let level = '';
+            let suggestion = '';
+            let suggestionClass = '';
+
+            if (node1.category === node2.category) {
+                score = 100;
+                level = '完全相关';
+                suggestion = '[OK] ' + m1 + '和' + m2 + '同属' + node1.category + '，可以相互报考';
+                suggestionClass = 'ok';
+            } else if (isRelated(node1, node2)) {
+                score = 80;
+                level = '高度相关';
+                suggestion = '[OK] ' + m1 + '和' + m2 + '是相关专业，大概率可以报考';
+                suggestionClass = 'ok';
+            } else if (hasIndirectRelation(node1, node2)) {
+                score = 50;
+                level = '中度相关';
+                suggestion = '[MAYBE] ' + m1 + '和' + m2 + '有一定关联，建议咨询招考单位';
+                suggestionClass = 'maybe';
+            } else {
+                score = 0;
+                level = '低度相关';
+                suggestion = '[NO] ' + m1 + '和' + m2 + '专业差异较大，不建议跨专业报考';
+                suggestionClass = 'no';
+            }
+
+            // 更新显示
+            document.getElementById('compareResult').classList.add('show');
+
+            const scoreCard = document.getElementById('scoreCard');
+            scoreCard.className = 'score-card ' + (score >= 80 ? 'high' : score >= 50 ? 'medium' : 'low');
+            document.getElementById('scoreValue').textContent = score;
+            document.getElementById('scoreLabel').textContent = level;
+
+            document.getElementById('cat1').textContent = node1.category || '-';
+            document.getElementById('cat2').textContent = node2.category || '-';
+            document.getElementById('code1').textContent = node1.code || '-';
+            document.getElementById('code2').textContent = node2.code || '-';
+
+            // 路径显示
+            const pathSteps = document.getElementById('pathSteps');
+            if (score >= 80) {
+                pathSteps.innerHTML = '<span class="path-step">' + m1 + '</span>' +
+                    '<span class="path-arrow">→</span>' +
+                    '<span class="path-step">' + level + '</span>' +
+                    '<span class="path-arrow">→</span>' +
+                    '<span class="path-step">' + m2 + '</span>';
+            } else {
+                pathSteps.innerHTML = '<span class="path-step">' + m1 + '</span>' +
+                    '<span class="path-arrow">→</span>' +
+                    '<span class="path-step">' + node1.category + '</span>' +
+                    '<span class="path-arrow">→</span>' +
+                    '<span class="path-step">不同大类</span>' +
+                    '<span class="path-arrow">→</span>' +
+                    '<span class="path-step">' + node2.category + '</span>' +
+                    '<span class="path-arrow">→</span>' +
+                    '<span class="path-step">' + m2 + '</span>';
+            }
+
+            const sugDiv = document.getElementById('suggestion');
+            sugDiv.className = 'suggestion ' + suggestionClass;
+            sugDiv.textContent = suggestion;
+
+            // 高亮图谱
+            highlightGraph(node1.id, node2.id, score);
+        }
+
+        function isRelated(n1, n2) {
+            return graphData.links.some(l =>
+                (l.source === n1.id && l.target === n2.id) ||
+                (l.target === n1.id && l.source === n2.id)
+            );
+        }
+
+        function hasIndirectRelation(n1, n2) {
+            // 通过大类间接关联
+            return n1.category && n2.category;
+        }
+
+        // 初始化图谱
+        function initGraph() {
+            const width = document.getElementById('graph').clientWidth;
+            const height = 600;
+
+            const svg = d3.select('#graph')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            const g = svg.append('g');
+
+            svg.call(d3.zoom()
+                .extent([[0, 0], [width, height]])
+                .scaleExtent([0.2, 4])
+                .on('zoom', (event) => g.attr('transform', event.transform)));
+
+            const simulation = d3.forceSimulation(graphData.nodes)
+                .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(80))
+                .force('charge', d3.forceManyBody().strength(-200))
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('collision', d3.forceCollide().radius(d => d.type === 'category' ? 40 : 25));
+
+            const link = g.append('g')
+                .selectAll('line')
+                .data(graphData.links)
+                .enter().append('line')
+                .attr('stroke', '#999')
+                .attr('stroke-opacity', 0.4)
+                .attr('stroke-width', d => d.type === 'belongs_to' ? 2 : 1);
+
+            const node = g.append('g')
+                .selectAll('g')
+                .data(graphData.nodes)
+                .enter().append('g')
+                .call(d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended));
+
+            window.allNodes = node;
+            window.allLinks = link;
+
+            node.append('circle')
+                .attr('r', d => d.type === 'category' ? 30 : 18)
+                .attr('fill', d => colorMap[d.group] || '#95a5a6')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 2);
+
+            node.append('text')
+                .attr('dy', d => d.type === 'category' ? 45 : 28)
+                .attr('text-anchor', 'middle')
+                .style('font-size', d => d.type === 'category' ? '12px' : '10px')
+                .style('fill', '#333')
+                .text(d => d.name.length > 4 ? d.name.substring(0, 3) + '...' : d.name);
+
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+
+                node.attr('transform', d => `translate(${d.x},${d.y})`);
+            });
+
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+        }
+
+        // 高亮显示
+        function highlightGraph(id1, id2, score) {
+            window.allNodes.style('opacity', 0.2);
+            window.allLinks.style('opacity', 0.1);
+
+            // 高亮选中的两个节点
+            window.allNodes.filter(d => d.id === id1 || d.id === id2)
+                .style('opacity', 1)
+                .select('circle')
+                .attr('stroke', score >= 80 ? '#67c23a' : score >= 50 ? '#e6a23c' : '#f56c6c')
+                .attr('stroke-width', 4);
+
+            // 高亮连接线
+            window.allLinks.filter(l =>
+                (l.source.id === id1 && l.target.id === id2) ||
+                (l.source.id === id2 && l.target.id === id1)
+            ).style('opacity', 1)
+             .attr('stroke', score >= 80 ? '#67c23a' : score >= 50 ? '#e6a23c' : '#f56c6c')
+             .attr('stroke-width', 3);
+        }
+
+        initGraph();
+    </script>
+</body>
+</html>

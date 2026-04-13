@@ -1,0 +1,701 @@
+{
+  "majors": {
+    "economics": {
+      "name": "经济学",
+      "category": "经济学",
+      "subcategory": "经济学类",
+      "description": "研究资源配置和经济运行规律",
+      "related": [
+        "finance",
+        "accounting",
+        "statistics"
+      ],
+      "parents": [
+        "经济学类",
+        "人文社科类"
+      ]
+    },
+    "finance": {
+      "name": "金融学",
+      "category": "经济学",
+      "subcategory": "金融学类",
+      "description": "研究资金融通和金融市场",
+      "related": [
+        "economics",
+        "investment",
+        "insurance"
+      ],
+      "parents": [
+        "金融学类",
+        "经济学类"
+      ]
+    },
+    "investment": {
+      "name": "投资学",
+      "category": "经济学",
+      "subcategory": "金融学类",
+      "description": "研究投资决策和资产管理",
+      "related": [
+        "finance",
+        "economics"
+      ],
+      "parents": [
+        "金融学类"
+      ]
+    },
+    "insurance": {
+      "name": "保险学",
+      "category": "经济学",
+      "subcategory": "金融学类",
+      "description": "研究风险管理和保险机制",
+      "related": [
+        "finance",
+        "actuarial"
+      ],
+      "parents": [
+        "金融学类"
+      ]
+    },
+    "actuarial": {
+      "name": "精算学",
+      "category": "经济学",
+      "subcategory": "金融学类",
+      "description": "研究保险精算和风险评估",
+      "related": [
+        "insurance",
+        "statistics"
+      ],
+      "parents": [
+        "金融学类"
+      ]
+    },
+    "public_finance": {
+      "name": "财政学",
+      "category": "经济学",
+      "subcategory": "财政学类",
+      "description": "研究政府收支和公共财政",
+      "related": [
+        "economics",
+        "taxation"
+      ],
+      "parents": [
+        "财政学类",
+        "经济学类"
+      ]
+    },
+    "taxation": {
+      "name": "税收学",
+      "category": "经济学",
+      "subcategory": "财政学类",
+      "description": "研究税收制度和政策",
+      "related": [
+        "public_finance",
+        "accounting"
+      ],
+      "parents": [
+        "财政学类"
+      ]
+    },
+    "accounting": {
+      "name": "会计学",
+      "category": "管理学",
+      "subcategory": "工商管理类",
+      "description": "研究财务信息记录和报告",
+      "related": [
+        "economics",
+        "finance",
+        "auditing"
+      ],
+      "parents": [
+        "工商管理类",
+        "管理学类"
+      ]
+    },
+    "auditing": {
+      "name": "审计学",
+      "category": "管理学",
+      "subcategory": "工商管理类",
+      "description": "研究财务监督和审查",
+      "related": [
+        "accounting",
+        "finance"
+      ],
+      "parents": [
+        "工商管理类"
+      ]
+    },
+    "statistics": {
+      "name": "统计学",
+      "category": "理学",
+      "subcategory": "统计学类",
+      "description": "研究数据收集和分析方法",
+      "related": [
+        "economics",
+        "data_science",
+        "actuarial"
+      ],
+      "parents": [
+        "统计学类",
+        "理学类"
+      ]
+    },
+    "data_science": {
+      "name": "数据科学",
+      "category": "理学",
+      "subcategory": "统计学类",
+      "description": "研究大数据分析和挖掘",
+      "related": [
+        "statistics",
+        "computer_science"
+      ],
+      "parents": [
+        "统计学类"
+      ]
+    },
+    "law": {
+      "name": "法学",
+      "category": "法学",
+      "subcategory": "法学类",
+      "description": "研究法律规范和法律制度",
+      "related": [
+        "intellectual_property",
+        "prison_management"
+      ],
+      "parents": [
+        "法学类"
+      ]
+    },
+    "intellectual_property": {
+      "name": "知识产权",
+      "category": "法学",
+      "subcategory": "法学类",
+      "description": "研究知识产权保护和运用",
+      "related": [
+        "law",
+        "computer_science"
+      ],
+      "parents": [
+        "法学类"
+      ]
+    },
+    "prison_management": {
+      "name": "监狱学",
+      "category": "法学",
+      "subcategory": "法学类",
+      "description": "研究监狱管理和罪犯矫正",
+      "related": [
+        "law",
+        "sociology"
+      ],
+      "parents": [
+        "法学类"
+      ]
+    },
+    "sociology": {
+      "name": "社会学",
+      "category": "法学",
+      "subcategory": "社会学类",
+      "description": "研究社会结构和社会行为",
+      "related": [
+        "law",
+        "social_work"
+      ],
+      "parents": [
+        "社会学类",
+        "法学类"
+      ]
+    },
+    "social_work": {
+      "name": "社会工作",
+      "category": "法学",
+      "subcategory": "社会学类",
+      "description": "研究社会服务和福利保障",
+      "related": [
+        "sociology",
+        "psychology"
+      ],
+      "parents": [
+        "社会学类"
+      ]
+    },
+    "political_science": {
+      "name": "政治学与行政学",
+      "category": "法学",
+      "subcategory": "政治学类",
+      "description": "研究政治制度和行政管理",
+      "related": [
+        "law",
+        "public_administration"
+      ],
+      "parents": [
+        "政治学类",
+        "法学类"
+      ]
+    },
+    "public_administration": {
+      "name": "公共事业管理",
+      "category": "管理学",
+      "subcategory": "公共管理类",
+      "description": "研究公共事务管理和政策",
+      "related": [
+        "political_science",
+        "sociology"
+      ],
+      "parents": [
+        "公共管理类",
+        "管理学类"
+      ]
+    },
+    "education": {
+      "name": "教育学",
+      "category": "教育学",
+      "subcategory": "教育学类",
+      "description": "研究教育理论和教育方法",
+      "related": [
+        "preschool_edu",
+        "primary_edu",
+        "psychology"
+      ],
+      "parents": [
+        "教育学类"
+      ]
+    },
+    "preschool_edu": {
+      "name": "学前教育",
+      "category": "教育学",
+      "subcategory": "教育学类",
+      "description": "研究幼儿教育理论和实践",
+      "related": [
+        "education",
+        "psychology"
+      ],
+      "parents": [
+        "教育学类"
+      ]
+    },
+    "primary_edu": {
+      "name": "小学教育",
+      "category": "教育学",
+      "subcategory": "教育学类",
+      "description": "研究小学教育方法和课程",
+      "related": [
+        "education",
+        "chinese_lang"
+      ],
+      "parents": [
+        "教育学类"
+      ]
+    },
+    "special_edu": {
+      "name": "特殊教育",
+      "category": "教育学",
+      "subcategory": "教育学类",
+      "description": "研究特殊儿童教育方法",
+      "related": [
+        "education",
+        "psychology"
+      ],
+      "parents": [
+        "教育学类"
+      ]
+    },
+    "physical_edu": {
+      "name": "体育教育",
+      "category": "教育学",
+      "subcategory": "体育学类",
+      "description": "研究体育教学和训练方法",
+      "related": [
+        "education",
+        "sports_training"
+      ],
+      "parents": [
+        "体育学类",
+        "教育学类"
+      ]
+    },
+    "sports_training": {
+      "name": "运动训练",
+      "category": "教育学",
+      "subcategory": "体育学类",
+      "description": "研究竞技体育训练方法",
+      "related": [
+        "physical_edu"
+      ],
+      "parents": [
+        "体育学类"
+      ]
+    },
+    "psychology": {
+      "name": "心理学",
+      "category": "教育学",
+      "subcategory": "心理学类",
+      "description": "研究心理活动和行为规律",
+      "related": [
+        "education",
+        "sociology"
+      ],
+      "parents": [
+        "心理学类",
+        "教育学类"
+      ]
+    },
+    "applied_psychology": {
+      "name": "应用心理学",
+      "category": "教育学",
+      "subcategory": "心理学类",
+      "description": "研究心理学在实际中的应用",
+      "related": [
+        "psychology",
+        "human_resources"
+      ],
+      "parents": [
+        "心理学类"
+      ]
+    },
+    "clinical_medicine": {
+      "name": "临床医学",
+      "category": "医学",
+      "subcategory": "临床医学类",
+      "description": "研究疾病诊断和治疗方法",
+      "related": [
+        "nursing",
+        "pharmacy"
+      ],
+      "parents": [
+        "临床医学类",
+        "医学类"
+      ]
+    },
+    "nursing": {
+      "name": "护理学",
+      "category": "医学",
+      "subcategory": "护理学类",
+      "description": "研究护理理论和护理技术",
+      "related": [
+        "clinical_medicine"
+      ],
+      "parents": [
+        "护理学类",
+        "医学类"
+      ]
+    },
+    "pharmacy": {
+      "name": "药学",
+      "category": "医学",
+      "subcategory": "药学类",
+      "description": "研究药物研发和药物应用",
+      "related": [
+        "clinical_medicine",
+        "pharmaceutical_eng"
+      ],
+      "parents": [
+        "药学类",
+        "医学类"
+      ]
+    },
+    "pharmaceutical_eng": {
+      "name": "制药工程",
+      "category": "工学",
+      "subcategory": "化工与制药类",
+      "description": "研究药物生产工艺和设备",
+      "related": [
+        "pharmacy",
+        "chemical_eng"
+      ],
+      "parents": [
+        "化工与制药类",
+        "工学类"
+      ]
+    },
+    "stomatology": {
+      "name": "口腔医学",
+      "category": "医学",
+      "subcategory": "口腔医学类",
+      "description": "研究口腔疾病诊治",
+      "related": [
+        "clinical_medicine"
+      ],
+      "parents": [
+        "口腔医学类",
+        "医学类"
+      ]
+    },
+    "preventive_medicine": {
+      "name": "预防医学",
+      "category": "医学",
+      "subcategory": "公共卫生与预防医学类",
+      "description": "研究疾病预防和健康促进",
+      "related": [
+        "clinical_medicine",
+        "public_health"
+      ],
+      "parents": [
+        "公共卫生与预防医学类",
+        "医学类"
+      ]
+    },
+    "public_health": {
+      "name": "公共事业管理(卫生)",
+      "category": "管理学",
+      "subcategory": "公共管理类",
+      "description": "研究卫生事业管理和政策",
+      "related": [
+        "preventive_medicine",
+        "public_administration"
+      ],
+      "parents": [
+        "公共管理类",
+        "管理学类"
+      ]
+    },
+    "traditional_chinese_medicine": {
+      "name": "中医学",
+      "category": "医学",
+      "subcategory": "中医学类",
+      "description": "研究中医理论和诊疗方法",
+      "related": [
+        "clinical_medicine",
+        "chinese_pharmacy"
+      ],
+      "parents": [
+        "中医学类",
+        "医学类"
+      ]
+    },
+    "chinese_pharmacy": {
+      "name": "中药学",
+      "category": "医学",
+      "subcategory": "中药学类",
+      "description": "研究中药资源和药物开发",
+      "related": [
+        "traditional_chinese_medicine",
+        "pharmacy"
+      ],
+      "parents": [
+        "中药学类",
+        "医学类"
+      ]
+    },
+    "medical_imaging": {
+      "name": "医学影像学",
+      "category": "医学",
+      "subcategory": "临床医学类",
+      "description": "研究医学影像诊断技术",
+      "related": [
+        "clinical_medicine"
+      ],
+      "parents": [
+        "临床医学类",
+        "医学类"
+      ]
+    },
+    "computer_science": {
+      "name": "计算机科学与技术",
+      "category": "工学",
+      "subcategory": "计算机类",
+      "description": "研究计算机系统和软件开发",
+      "related": [
+        "software_eng",
+        "data_science",
+        "intellectual_property"
+      ],
+      "parents": [
+        "计算机类",
+        "工学类"
+      ]
+    },
+    "software_eng": {
+      "name": "软件工程",
+      "category": "工学",
+      "subcategory": "计算机类",
+      "description": "研究软件开发和工程管理",
+      "related": [
+        "computer_science",
+        "information_security"
+      ],
+      "parents": [
+        "计算机类",
+        "工学类"
+      ]
+    },
+    "information_security": {
+      "name": "信息安全",
+      "category": "工学",
+      "subcategory": "计算机类",
+      "description": "研究信息安全和密码技术",
+      "related": [
+        "computer_science",
+        "network_eng"
+      ],
+      "parents": [
+        "计算机类",
+        "工学类"
+      ]
+    },
+    "network_eng": {
+      "name": "网络工程",
+      "category": "工学",
+      "subcategory": "计算机类",
+      "description": "研究计算机网络和通信",
+      "related": [
+        "computer_science",
+        "information_security"
+      ],
+      "parents": [
+        "计算机类",
+        "工学类"
+      ]
+    },
+    "chinese_lang": {
+      "name": "汉语言文学",
+      "category": "文学",
+      "subcategory": "中国语言文学类",
+      "description": "研究汉语和中国文学",
+      "related": [
+        "primary_edu",
+        "journalism"
+      ],
+      "parents": [
+        "中国语言文学类",
+        "文学类"
+      ]
+    },
+    "journalism": {
+      "name": "新闻学",
+      "category": "文学",
+      "subcategory": "新闻传播学类",
+      "description": "研究新闻传播和媒体运营",
+      "related": [
+        "chinese_lang",
+        "advertising"
+      ],
+      "parents": [
+        "新闻传播学类",
+        "文学类"
+      ]
+    },
+    "advertising": {
+      "name": "广告学",
+      "category": "文学",
+      "subcategory": "新闻传播学类",
+      "description": "研究广告策划和创意设计",
+      "related": [
+        "journalism",
+        "marketing"
+      ],
+      "parents": [
+        "新闻传播学类",
+        "文学类"
+      ]
+    },
+    "marketing": {
+      "name": "市场营销",
+      "category": "管理学",
+      "subcategory": "工商管理类",
+      "description": "研究市场分析和营销策略",
+      "related": [
+        "advertising",
+        "business_admin"
+      ],
+      "parents": [
+        "工商管理类",
+        "管理学类"
+      ]
+    },
+    "business_admin": {
+      "name": "工商管理",
+      "category": "管理学",
+      "subcategory": "工商管理类",
+      "description": "研究企业管理和经营决策",
+      "related": [
+        [
+          "accounting",
+          "marketing",
+          "human_resources"
+        ]
+      ],
+      "parents": [
+        "工商管理类",
+        "管理学类"
+      ]
+    },
+    "human_resources": {
+      "name": "人力资源管理",
+      "category": "管理学",
+      "subcategory": "工商管理类",
+      "description": "研究人力资源开发和配置",
+      "related": [
+        "business_admin",
+        "applied_psychology"
+      ],
+      "parents": [
+        "工商管理类",
+        "管理学类"
+      ]
+    }
+  },
+  "categories": {
+    "经济学": [
+      "economics",
+      "finance",
+      "investment",
+      "insurance",
+      "actuarial",
+      "public_finance",
+      "taxation"
+    ],
+    "管理学": [
+      "accounting",
+      "auditing",
+      "public_administration",
+      "public_health",
+      "marketing",
+      "business_admin",
+      "human_resources"
+    ],
+    "理学": [
+      "statistics",
+      "data_science"
+    ],
+    "法学": [
+      "law",
+      "intellectual_property",
+      "prison_management",
+      "sociology",
+      "social_work",
+      "political_science"
+    ],
+    "教育学": [
+      "education",
+      "preschool_edu",
+      "primary_edu",
+      "special_edu",
+      "physical_edu",
+      "sports_training",
+      "psychology",
+      "applied_psychology"
+    ],
+    "医学": [
+      "clinical_medicine",
+      "nursing",
+      "pharmacy",
+      "stomatology",
+      "preventive_medicine",
+      "traditional_chinese_medicine",
+      "chinese_pharmacy",
+      "medical_imaging"
+    ],
+    "工学": [
+      "pharmaceutical_eng",
+      "computer_science",
+      "software_eng",
+      "information_security",
+      "network_eng"
+    ],
+    "文学": [
+      "chinese_lang",
+      "journalism",
+      "advertising"
+    ]
+  }
+}
