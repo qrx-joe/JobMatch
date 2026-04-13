@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-04-13 11:43:19",
+  "user_profile": {
+    "major": "金融学",
+    "education": "本科",
+    "degree": "学士"
+  },
+  "filter_criteria": {
+    "意向城市": [
+      "济南市",
+      "青岛市"
+    ],
+    "学历要求": "本科及以上",
+    "最大竞争比": 50
+  },
+  "summary": {
+    "total_jobs": 150,
+    "matched_jobs": 45,
+    "perfect_match": 12,
+    "partial_match": 33,
+    "avg_score": 72.5
+  },
+  "target_jobs": [
+    {
+      "unit": "某市财政局",
+      "city": "济南市",
+      "job_type": "支农",
+      "major": "经济学类",
+      "education": "本科及以上",
+      "recruit_count": 5,
+      "competition_ratio": "12:1",
+      "level": "完全符合",
+      "match_score": 95,
+      "match_reasons": [
+        "专业匹配：金融学属于经济学类",
+        "学历符合：本科符合要求",
+        "意向城市匹配"
+      ]
+    },
+    {
+      "unit": "某县统计局",
+      "city": "青岛市",
+      "job_type": "支农",
+      "major": "统计学类",
+      "education": "本科及以上",
+      "recruit_count": 3,
+      "competition_ratio": "8:1",
+      "level": "可能符合",
+      "match_score": 75,
+      "match_reasons": [
+        "专业相关：金融学与统计学高度相关",
+        "学历符合：本科符合要求"
+      ]
+    },
+    {
+      "unit": "某市教育局",
+      "city": "烟台市",
+      "job_type": "支教",
+      "major": "教育学类",
+      "education": "本科及以上",
+      "recruit_count": 10,
+      "competition_ratio": "25:1",
+      "level": "不符合",
+      "match_score": 30,
+      "match_reasons": [
+        "专业不匹配：金融学与教育学类差异较大"
+      ]
+    }
+  ]
+}
