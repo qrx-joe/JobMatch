@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专业关系图谱 - 智能选岗系统</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            padding: 30px 20px;
+        }
+        .header h1 { font-size: 32px; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 16px; }
+        .main {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 900px) {
+            .main { grid-template-columns: 1fr; }
+        }
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .panel h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        #graph {
+            width: 100%;
+            height: 700px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .controls {
+            margin-bottom: 15px;
+        }
+        .controls input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .info-box {
+            background: #f0f7ff;
+            border-left: 4px solid #409eff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+        .info-box h4 { margin-bottom: 10px; color: #409eff; }
+        .info-box p { font-size: 13px; color: #666; line-height: 1.6; }
+        .node-label {
+            font-size: 11px;
+            fill: #333;
+            pointer-events: none;
+        }
+        .link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 专业关系图谱</h1>
+            <p>可视化展示专业大类与具体专业之间的语义关联</p>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <h3>📊 图例说明</h3>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff6b6b;"></div>
+                        <span>经济学类</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4ecdc4;"></div>
+                        <span>财政学类</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #45b7d1;"></div>
+                        <span>金融学类</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #96ceb4;"></div>
+                        <span>经济与贸易类</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #feca57;"></div>
+                        <span>统计学类</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff9ff3;"></div>
+                        <span>计算机类</span>
+                    </div>
+                </div>
+
+                <h3>🔍 搜索专业</h3>
+                <div class="controls">
+                    <input type="text" id="searchInput" placeholder="输入专业名称，如：经济学">
+                </div>
+
+                <div class="info-box">
+                    <h4>💡 使用说明</h4>
+                    <p>
+                        • 大圆点 = 专业大类（如：经济学类）<br>
+                        • 小圆点 = 具体专业（如：经济学）<br>
+                        • 连线表示所属关系或专业关联<br>
+                        • 拖拽节点可调整布局<br>
+                        • 鼠标悬停查看详细信息
+                    </p>
+                </div>
+
+                <div class="info-box" id="selectedInfo" style="display: none;">
+                    <h4>📌 选中专业</h4>
+                    <p id="selectedText"></p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div id="graph"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const graphData = {
+  "nodes": [
+    {
+      "id": "CAT_0201",
+      "name": "经济学类",
+      "type": "category",
+      "category": "",
+      "code": "0201",
+      "group": 0
+    },
+    {
+      "id": "MAJ_020101",
+      "name": "经济学",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020101",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020102",
+      "name": "经济统计学",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020102",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020103",
+      "name": "国民经济管理",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020103",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020104",
+      "name": "资源与环境经济学",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020104",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020105",
+      "name": "商务经济学",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020105",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020106",
+      "name": "能源经济",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020106",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020107",
+      "name": "劳动经济学",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020107",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020108",
+      "name": "经济工程",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020108",
+      "group": 1
+    },
+    {
+      "id": "MAJ_020109",
+      "name": "数字经济",
+      "type": "major",
+      "category": "经济学类",
+      "code": "020109",
+      "group": 1
+    },
+    {
+      "id": "CAT_0202",
+      "name": "财政学类",
+      "type": "category",
+      "category": "",
+      "code": "0202",
+      "group": 0
+    },
+    {
+      "id": "MAJ_020201",
+      "name": "财政学",
+      "type": "major",
+      "category": "财政学类",
+      "code": "020201",
+      "group": 2
+    },
+    {
+      "id": "MAJ_020202",
+      "name": "税收学",
+      "type": "major",
+      "category": "财政学类",
+      "code": "020202",
+      "group": 2
+    },
+    {
+      "id": "MAJ_020203",
+      "name": "国际税收",
+      "type": "major",
+      "category": "财政学类",
+      "code": "020203",
+      "group": 2
+    },
+    {
+      "id": "CAT_0203",
+      "name": "金融学类",
+      "type": "category",
+      "category": "",
+      "code": "0203",
+      "group": 0
+    },
+    {
+      "id": "MAJ_020301",
+      "name": "金融学",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020301",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020302",
+      "name": "金融工程",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020302",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020303",
+      "name": "保险学",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020303",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020304",
+      "name": "投资学",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020304",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020305",
+      "name": "金融数学",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020305",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020306",
+      "name": "信用管理",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020306",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020307",
+      "name": "经济与金融",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020307",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020308",
+      "name": "精算学",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020308",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020309",
+      "name": "互联网金融",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020309",
+      "group": 3
+    },
+    {
+      "id": "MAJ_020310",
+      "name": "金融科技",
+      "type": "major",
+      "category": "金融学类",
+      "code": "020310",
+      "group": 3
+    },
+    {
+      "id": "CAT_0204",
+      "name": "经济与贸易类",
+      "type": "category",
+      "category": "",
+      "code": "0204",
+      "group": 0
+    },
+    {
+      "id": "MAJ_020401",
+      "name": "国际经济与贸易",
+      "type": "major",
+      "category": "经济与贸易类",
+      "code": "020401",
+      "group": 4
+    },
+    {
+      "id": "MAJ_020402",
+      "name": "贸易经济",
+      "type": "major",
+      "category": "经济与贸易类",
+      "code": "020402",
+      "group": 4
+    },
+    {
+      "id": "CAT_0712",
+      "name": "统计学类",
+      "type": "category",
+      "category": "",
+      "code": "0712",
+      "group": 0
+    },
+    {
+      "id": "MAJ_071201",
+      "name": "统计学",
+      "type": "major",
+      "category": "统计学类",
+      "code": "071201",
+      "group": 5
+    },
+    {
+      "id": "MAJ_071202",
+      "name": "应用统计学",
+      "type": "major",
+      "category": "统计学类",
+      "code": "071202",
+      "group": 5
+    },
+    {
+      "id": "MAJ_071203",
+      "name": "数据科学",
+      "type": "major",
+      "category": "统计学类",
+      "code": "071203",
+      "group": 5
+    },
+    {
+      "id": "MAJ_071204",
+      "name": "生物统计学",
+      "type": "major",
+      "category": "统计学类",
+      "code": "071204",
+      "group": 5
+    },
+    {
+      "id": "CAT_0809",
+      "name": "计算机类",
+      "type": "category",
+      "category": "",
+      "code": "0809",
+      "group": 0
+    },
+    {
+      "id": "MAJ_080901",
+      "name": "计算机科学与技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080901",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080902",
+      "name": "软件工程",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080902",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080903",
+      "name": "网络工程",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080903",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080904",
+      "name": "信息安全",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080904",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080905",
+      "name": "物联网工程",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080905",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080906",
+      "name": "数字媒体技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080906",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080907",
+      "name": "智能科学与技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080907",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080908",
+      "name": "空间信息与数字技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080908",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080909",
+      "name": "电子与计算机工程",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080909",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080910",
+      "name": "数据科学与大数据技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080910",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080911",
+      "name": "网络空间安全",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080911",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080912",
+      "name": "新媒体技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080912",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080913",
+      "name": "电影制作",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080913",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080914",
+      "name": "保密技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080914",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080915",
+      "name": "服务科学与工程",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080915",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080916",
+      "name": "虚拟现实技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080916",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080917",
+      "name": "区块链工程",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080917",
+      "group": 6
+    },
+    {
+      "id": "MAJ_080918",
+      "name": "密码科学与技术",
+      "type": "major",
+      "category": "计算机类",
+      "code": "080918",
+      "group": 6
+    }
+  ],
+  "links": [
+    {
+      "source": "MAJ_020101",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020102",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020102",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020103",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020103",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020104",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020104",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020105",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020105",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020106",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020106",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020107",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020107",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020108",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020108",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020109",
+      "target": "CAT_0201",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020109",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020201",
+      "target": "CAT_0202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020201",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020202",
+      "target": "CAT_0202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020202",
+      "target": "MAJ_020201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020202",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020203",
+      "target": "CAT_0202",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020203",
+      "target": "MAJ_020202",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020301",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020301",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020302",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020302",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020303",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020303",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020304",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020304",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020304",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020305",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020305",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020306",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020306",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020306",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020307",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020307",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020307",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020308",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020308",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020309",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020309",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020310",
+      "target": "CAT_0203",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020310",
+      "target": "MAJ_020301",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020401",
+      "target": "CAT_0204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020401",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_020402",
+      "target": "CAT_0204",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_020402",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_071201",
+      "target": "CAT_0712",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_071201",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_071202",
+      "target": "CAT_0712",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_071202",
+      "target": "MAJ_071201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_071202",
+      "target": "MAJ_020101",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_071203",
+      "target": "CAT_0712",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_071203",
+      "target": "MAJ_071201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_071204",
+      "target": "CAT_0712",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_071204",
+      "target": "MAJ_071201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_080901",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080902",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080903",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080904",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080904",
+      "target": "MAJ_080903",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_080905",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080906",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080907",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080908",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080909",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080910",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080910",
+      "target": "MAJ_071201",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_080911",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080911",
+      "target": "MAJ_080904",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_080912",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080913",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080914",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080914",
+      "target": "MAJ_080904",
+      "type": "related"
+    },
+    {
+      "source": "MAJ_080915",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080916",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080917",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    },
+    {
+      "source": "MAJ_080918",
+      "target": "CAT_0809",
+      "type": "belongs_to"
+    }
+  ]
+};
+
+        const width = document.getElementById('graph').clientWidth;
+        const height = 700;
+
+        // 颜色映射
+        const colorMap = {
+            0: '#95a5a6',
+            1: '#ff6b6b',  // 经济学类
+            2: '#4ecdc4',  // 财政学类
+            3: '#45b7d1',  // 金融学类
+            4: '#96ceb4',  // 经济与贸易类
+            5: '#feca57',  // 统计学类
+            6: '#ff9ff3',  // 计算机类
+        };
+
+        const svg = d3.select('#graph')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height);
+
+        // 添加缩放
+        const g = svg.append('g');
+        svg.call(d3.zoom()
+            .extent([[0, 0], [width, height]])
+            .scaleExtent([0.5, 4])
+            .on('zoom', (event) => g.attr('transform', event.transform)));
+
+        // 创建力导向模拟
+        const simulation = d3.forceSimulation(graphData.nodes)
+            .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(100))
+            .force('charge', d3.forceManyBody().strength(-300))
+            .force('center', d3.forceCenter(width / 2, height / 2))
+            .force('collision', d3.forceCollide().radius(d => d.type === 'category' ? 40 : 25));
+
+        // 绘制连线
+        const link = g.append('g')
+            .selectAll('line')
+            .data(graphData.links)
+            .enter().append('line')
+            .attr('class', 'link')
+            .attr('stroke-width', d => d.type === 'belongs_to' ? 2 : 1)
+            .attr('stroke-dasharray', d => d.type === 'related' ? '5,5' : null);
+
+        // 绘制节点
+        const node = g.append('g')
+            .selectAll('g')
+            .data(graphData.nodes)
+            .enter().append('g')
+            .call(d3.drag()
+                .on('start', dragstarted)
+                .on('drag', dragged)
+                .on('end', dragended));
+
+        // 节点圆圈
+        node.append('circle')
+            .attr('r', d => d.type === 'category' ? 30 : 18)
+            .attr('fill', d => colorMap[d.group] || '#95a5a6')
+            .attr('stroke', '#fff')
+            .attr('stroke-width', 2)
+            .style('cursor', 'pointer');
+
+        // 节点文字
+        node.append('text')
+            .attr('class', 'node-label')
+            .attr('dy', d => d.type === 'category' ? 45 : 28)
+            .attr('text-anchor', 'middle')
+            .text(d => d.name.length > 6 ? d.name.substring(0, 5) + '...' : d.name);
+
+        // 鼠标交互
+        node.on('mouseover', function(event, d) {
+            d3.select(this).select('circle').attr('stroke', '#333').attr('stroke-width', 3);
+
+            // 高亮相关节点
+            const connected = new Set();
+            graphData.links.forEach(l => {
+                if (l.source.id === d.id) connected.add(l.target.id);
+                if (l.target.id === d.id) connected.add(l.source.id);
+            });
+
+            node.style('opacity', n => n.id === d.id || connected.has(n.id) ? 1 : 0.2);
+            link.style('opacity', l => l.source.id === d.id || l.target.id === d.id ? 1 : 0.1);
+        })
+        .on('mouseout', function() {
+            d3.select(this).select('circle').attr('stroke', '#fff').attr('stroke-width', 2);
+            node.style('opacity', 1);
+            link.style('opacity', 1);
+        })
+        .on('click', function(event, d) {
+            const info = document.getElementById('selectedInfo');
+            const text = document.getElementById('selectedText');
+            info.style.display = 'block';
+
+            let html = `<strong>名称：</strong>${d.name}<br>`;
+            html += `<strong>类型：</strong>${d.type === 'category' ? '专业大类' : '具体专业'}<br>`;
+            if (d.code) html += `<strong>代码：</strong>${d.code}<br>`;
+            if (d.category) html += `<strong>所属大类：</strong>${d.category}<br>`;
+
+            // 查找关联专业
+            const related = graphData.links
+                .filter(l => l.source.id === d.id || l.target.id === d.id)
+                .map(l => l.source.id === d.id ? l.target.name : l.source.name);
+
+            if (related.length > 0) {
+                html += `<strong>关联专业：</strong>${related.slice(0, 5).join('、')}`;
+            }
+
+            text.innerHTML = html;
+        });
+
+        // 搜索功能
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const keyword = e.target.value.trim();
+            if (!keyword) {
+                node.style('opacity', 1);
+                link.style('opacity', 1);
+                return;
+            }
+
+            node.style('opacity', d => d.name.includes(keyword) ? 1 : 0.1);
+            link.style('opacity', 0.1);
+        });
+
+        // 更新位置
+        simulation.on('tick', () => {
+            link
+                .attr('x1', d => d.source.x)
+                .attr('y1', d => d.source.y)
+                .attr('x2', d => d.target.x)
+                .attr('y2', d => d.target.y);
+
+            node.attr('transform', d => `translate(${d.x},${d.y})`);
+        });
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+    </script>
+</body>
+</html>

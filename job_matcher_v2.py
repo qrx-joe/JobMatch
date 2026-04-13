@@ -76,7 +76,7 @@ class QualificationMatcher:
     }
 
     def __init__(self, user_qualifications: List[str]):
-        self.user_quals = [q.strip() for q in user_qualifications]
+        self.user_quals = [q.strip() for q in (user_qualifications or [])]
 
     def match(self, job_qual: str) -> Tuple[bool, str]:
         """
@@ -289,6 +289,10 @@ class JobMatcherV2:
         self.rules = self.config.get('rules', {})
         self.filter_config = self.config.get('filter', {})
 
+        # 初始化专业匹配器（LLM增强版）
+        from job_matcher_llm import LLMEnhancedMajorMatcher
+        self.major_matcher = LLMEnhancedMajorMatcher(self.profile.major, use_llm=False)
+
     def match(self, job: Job) -> Job:
         """对单个岗位进行匹配"""
         checks = {}
@@ -297,9 +301,7 @@ class JobMatcherV2:
         score = 0
 
         # 1. 专业匹配
-        from job_matcher import MajorMatcher
-        major_matcher = MajorMatcher(self.profile.major)
-        major_ok, major_msg = major_matcher.match(job.major)
+        major_ok, major_msg, major_source = self.major_matcher.match(job.major)
         checks['专业'] = major_ok
         if major_ok:
             score += 30
