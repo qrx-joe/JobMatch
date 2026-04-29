@@ -127,6 +127,7 @@ const recommendJobs = (profile, options = {}) => {
       profile: {
         major: profile.major || '',
         education: profile.education || '',
+        degree: profile.degree || '',
         gender: profile.gender || '',
         age: profile.age || 0,
         household: profile.household || '',
