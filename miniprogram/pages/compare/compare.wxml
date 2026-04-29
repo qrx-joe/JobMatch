@@ -1,0 +1,377 @@
+<!-- 岗位对比页 -->
+<view class="container">
+  <view class="header">
+    <text class="title">岗位对比</text>
+    <text class="subtitle">选择2-4个岗位进行对比分析</text>
+  </view>
+
+  <view class="compare-section">
+    <view class="compare-grid">
+      <!-- 表头 -->
+      <view class="compare-header">
+        <view class="header-label"></view>
+        <view
+          wx:for="{{jobs}}"
+          wx:key="id"
+          class="header-cell tier-{{item.recommendation_tier}}"
+        >
+          <text class="tier-badge">{{item.recommendation_tier}}</text>
+        </view>
+      </view>
+
+      <!-- 单位 -->
+      <view class="compare-row">
+        <view class="row-label">单位</view>
+        <view
+          wx:for="{{jobs}}"
+          wx:key="id"
+          class="row-cell"
+        >
+          <text class="cell-text">{{item.unit}}</text>
+        </view>
+      </view>
+
+      <!-- 城市 -->
+      <view class="compare-row">
+        <view class="row-label">城市</view>
+        <view
+          wx:for="{{jobs}}"
+          wx:key="id"
+          class="row-cell"
+        >
+          <text class="cell-text">{{item.city}}</text>
+        </view>
+      </view>
+
+      <!-- 岗位类型 -->
+      <view class="compare-row">
+        <view class="row-label">岗位类型</view>
+        <view
+          wx:for="{{jobs}}"
+          wx:key="id"
+          class="row-cell"
+        >
+          <text class="cell-text">{{item.job_type}}</text>
+        </view>
+      </view>
+
+      <!-- 竞争比 -->
+      <view class="compare-row highlight-row">
+        <view class="row-label">竞争比</view>
+        <view
+          wx:for="{{jobs}}"
+          wx:key="id"
+          class="row-cell {{item.isLowestRatio ? 'best' : ''}}"
+        >
+          <text class="cell-value">{{item.competition_ratio}}:1</text>
+          <text class="cell-indicator" wx:if="{{item.isLowestRatio}}">最低</text>
+        </view>
+      </view>
+
+      <!-- 招募人数 -->
+      <view class="compare-row">
+        <view class="row-label">招募人数</view>
+        <view
+          wx:for="{{jobs}}"
+          wx:key="id"
+          class="row-cell {{item.isHighestRecruit ? 'best' : ''}}"
+        >
+          <text class="cell-value">{{item.recruit_count}}</text>
+          <text class="cell-indicator" wx:if="{{item.isHighestRecruit}}">最多</text>
+        </view>
+      </view>
+
+      <!-- 学历要求 -->
+      <view class="compare-row">
+        <view class="row-label">学历</view>
+        <view
+          wx:for="{{jobs}}"
+          wx:key="id"
+          class="row-cell"
+        >
+          <text class="cell-text">{{item.education}}</text>
+        </view>
+      </view>
+
+      <!-- 专业要求 -->
+      <view class="compare-row">
+        <view class="row-label">专业</view>
+        <view
+          wx:for="{{jobs}}"
+          wx:key="id"
+          class="row-cell"
+        >
+          <text class="cell-text">{{item.major || '不限'}}</text>
+        </view>
+      </view>
+
+      <!-- 匹配度 -->
+      <view class="compare-row highlight-row">
+        <view class="row-label">匹配度</view>
+        <view
+          wx:for="{{jobs}}"
+          wx:key="id"
+          class="row-cell {{item.isHighestScore ? 'best' : ''}}"
+        >
+          <text class="cell-value score">{{item.match_score || '--'}}分</text>
+          <text class="cell-indicator" wx:if="{{item.isHighestScore}}">最高</text>
+        </view>
+      </view>
+
+      <!-- 上岸概率 -->
+      <view class="compare-row highlight-row">
+        <view class="row-label">预估上岸概率</view>
+        <view
+          wx:for="{{jobs}}"
+          wx:key="id"
+          class="row-cell {{item.isHighestProb ? 'best' : ''}}"
+        >
+          <text class="cell-value">{{item.pass_probability ? (item.pass_probability * 100).toFixed(0) + '%' : '--'}}</text>
+          <text class="cell-indicator" wx:if="{{item.isHighestProb}}">最高</text>
+        </view>
+      </view>
+
+      <!-- 推荐层级 -->
+      <view class="compare-row">
+        <view class="row-label">推荐层级</view>
+        <view
+          wx:for="{{jobs}}"
+          wx:key="id"
+          class="row-cell"
+        >
+          <text class="cell-text tier-text tier-{{item.recommendation_tier}}">{{item.recommendation_tier}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分析结论 -->
+  <view class="conclusion-section" wx:if="{{conclusion}}">
+    <view class="section-title">对比分析结论</view>
+    <view class="conclusion-content">
+      <text>{{conclusion}}</text>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="actions">
+    <button class="action-btn secondary" bindtap="goBack">返回</button>
+    <button class="action-btn primary" bindtap="selectJob" data-id="{{bestJobId}}">
+      查看最优岗位
+    </button>
+  </view>
+</view>
+
+<style>
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 120rpx;
+}
+
+.header {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: #fff;
+  padding: 40rpx 30rpx;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.subtitle {
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+.compare-section {
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 12rpx;
+  overflow-x: auto;
+}
+
+.compare-grid {
+  padding: 20rpx;
+  min-width: 600rpx;
+}
+
+.compare-header {
+  display: flex;
+  margin-bottom: 20rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.header-label {
+  width: 160rpx;
+  flex-shrink: 0;
+}
+
+.header-cell {
+  flex: 1;
+  text-align: center;
+  padding: 10rpx 0;
+  min-width: 140rpx;
+}
+
+.tier-badge {
+  display: inline-block;
+  padding: 6rpx 16rpx;
+  border-radius: 16rpx;
+  font-size: 22rpx;
+  color: #fff;
+}
+
+.tier-冲刺 { background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%); }
+.tier-稳妥 { background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%); }
+.tier-保底 { background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); }
+
+.compare-row {
+  display: flex;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.compare-row:last-child {
+  border-bottom: none;
+}
+
+.highlight-row {
+  background: #f6ffed;
+  margin: 0 -20rpx;
+  padding: 16rpx 20rpx;
+}
+
+.row-label {
+  width: 160rpx;
+  flex-shrink: 0;
+  font-size: 26rpx;
+  color: #666;
+  display: flex;
+  align-items: center;
+}
+
+.row-cell {
+  flex: 1;
+  text-align: center;
+  padding: 0 10rpx;
+  min-width: 140rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.row-cell.best {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  border-radius: 8rpx;
+}
+
+.row-cell.best .cell-value,
+.row-cell.best .cell-text {
+  color: #fff;
+}
+
+.row-cell.best .cell-indicator {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.cell-text {
+  font-size: 24rpx;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.cell-value {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.cell-value.score {
+  color: #52c41a;
+}
+
+.cell-indicator {
+  font-size: 20rpx;
+  color: #52c41a;
+  background: #f6ffed;
+  padding: 2rpx 10rpx;
+  border-radius: 10rpx;
+  margin-top: 4rpx;
+}
+
+.tier-text {
+  font-size: 24rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 8rpx;
+  color: #fff;
+}
+
+.tier-text.tier-冲刺 { background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%); }
+.tier-text.tier-稳妥 { background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%); }
+.tier-text.tier-保底 { background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); }
+
+.conclusion-section {
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 12rpx;
+  padding: 30rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+  color: #333;
+}
+
+.conclusion-content {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx;
+  background: #fff;
+  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.action-btn {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+}
+
+.action-btn.secondary {
+  background: #fff;
+  color: #666;
+  border: 1rpx solid #d9d9d9;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: #fff;
+  border: none;
+}
+</style>

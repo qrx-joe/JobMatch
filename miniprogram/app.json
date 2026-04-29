@@ -5,7 +5,8 @@
     "pages/results/results",
     "pages/detail/detail",
     "pages/favorites/favorites",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/compare/compare"
   ],
   "window": {
     "navigationBarTitleText": "JobMatch 智能选岗",

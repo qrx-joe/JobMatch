@@ -96,7 +96,10 @@ Page({
       return
     }
 
-    // TODO: 实现岗位对比功能
-    wx.showToast({ title: '对比功能开发中', icon: 'none' })
+    // 限制最多4个岗位进行对比
+    const jobsToCompare = this.data.favorites.slice(0, 4)
+    wx.navigateTo({
+      url: `/pages/compare/compare?jobs=${encodeURIComponent(JSON.stringify(jobsToCompare))}`
+    })
   }
 })

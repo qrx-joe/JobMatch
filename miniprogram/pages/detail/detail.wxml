@@ -39,28 +39,35 @@
     </view>
 
     <!-- 匹配信息 -->
-    <view class="section match">
+    <view class="section match" wx:if="{{job}}">
       <view class="section-title">匹配分析</view>
       <view class="match-score">
         <view class="score-circle">
-          <text class="score-value">{{job.match_score}}</text>
+          <text class="score-value">{{matchDetail.match_result.total_score || job.match_score || '--'}}</text>
           <text class="score-unit">分</text>
         </view>
         <view class="score-info">
-          <text class="match-level {{job.match_level}}">{{job.match_level}}</text>
-          <text class="pass-prob">预估上岸概率: {{(job.pass_probability * 100).toFixed(0)}}%</text>
+          <text class="match-level {{matchDetail.match_result.match_level || job.match_level}}">
+            {{matchDetail.match_result.match_level || job.match_level || '待分析'}}
+          </text>
+          <text class="pass-prob" wx:if="{{matchDetail.recommendation}}">
+            预估上岸概率: {{(matchDetail.recommendation.pass_probability * 100).toFixed(0)}}%
+          </text>
         </view>
       </view>
-      <view class="match-reasons">
+      <view class="match-reasons" wx:if="{{matchDetail.match_result.match_reasons && matchDetail.match_result.match_reasons.length > 0}}">
         <view class="reason-title">匹配理由：</view>
         <view
-          wx:for="{{job.match_reasons}}"
+          wx:for="{{matchDetail.match_result.match_reasons}}"
           wx:key="*this"
           class="reason-item"
         >
           ✓ {{item}}
         </view>
       </view>
+      <button class="view-match-btn" bindtap="viewMatchDetail" wx:if="{{!matchDetail}}">
+        查看详细匹配分析
+      </button>
     </view>
 
     <!-- 岗位要求 -->

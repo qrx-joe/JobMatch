@@ -433,7 +433,7 @@ async def get_job_detail(job_id: int):
         )
 
 
-@app.get("/api/jobs/{job_id}/match")
+@app.post("/api/jobs/{job_id}/match")
 async def match_job(job_id: int, profile: ProfileRequest):
     """
     对特定岗位进行匹配分析
@@ -487,7 +487,7 @@ async def match_job(job_id: int, profile: ProfileRequest):
                 "mismatch_reasons": result.mismatch_reasons,
             },
             "recommendation": {
-                "tier": tier_result.get("冲刺", []) and "冲刺" or tier_result.get("稳妥", []) and "稳妥" or "保底",
+                "tier": "冲刺" if tier_result.get("冲刺") else "稳妥" if tier_result.get("稳妥") else "保底",
                 "pass_probability": round(prob, 4),
             }
         }

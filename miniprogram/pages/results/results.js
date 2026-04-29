@@ -1,5 +1,6 @@
 /**
  * 结果页 - 岗位列表展示
+ * 对接真实后端API
  */
 
 const app = getApp()
@@ -7,7 +8,7 @@ const api = require('../../services/api.js')
 
 Page({
   data: {
-    platform: 'sanzhiyifu',
+    platform: '三支一扶',
     profile: null,
     jobs: [],
     filteredJobs: [],
@@ -18,6 +19,10 @@ Page({
     activeTab: 'all', // all | stretch | safe | bottom
     sortBy: 'competition_ratio', // competition_ratio | match_score
     sortOrder: 'asc',
+
+    // 错误状态
+    error: null,
+    usingMockData: false,
 
     // 统计数据
     stats: {
@@ -30,7 +35,14 @@ Page({
 
   onLoad(options) {
     if (options.platform) {
-      this.setData({ platform: options.platform })
+      // 转换平台名称
+      const platformMap = {
+        'sanzhiyifu': '三支一扶',
+        'gongwuyuan': '公务员',
+        'shiyedan': '事业编',
+        'jiaoshi': '教师'
+      }
+      this.setData({ platform: platformMap[options.platform] || options.platform })
     }
 
     if (options.profile) {
@@ -40,6 +52,16 @@ Page({
         this.loadJobs()
       } catch (e) {
         console.error('解析profile失败', e)
+        this.setData({ error: '参数解析失败' })
+      }
+    } else {
+      // 如果没有profile，尝试从缓存获取
+      const savedProfile = wx.getStorageSync('userProfile')
+      if (savedProfile) {
+        this.setData({ profile: savedProfile })
+        this.loadJobs()
+      } else {
+        this.setData({ error: '请先填写筛选条件', loading: false })
       }
     }
   },
@@ -51,9 +73,14 @@ Page({
   },
 
   loadJobs() {
-    this.setData({ loading: true })
-
     const { profile, platform } = this.data
+
+    if (!profile) {
+      this.setData({ error: '请先填写筛选条件', loading: false })
+      return
+    }
+
+    this.setData({ loading: true, error: null, usingMockData: false })
 
     // 调用推荐API
     api.recommendJobs(profile, { platform })
@@ -63,6 +90,18 @@ Page({
           ...(result.safe || []),
           ...(result.bottom || [])
         ]
+
+        if (jobs.length === 0) {
+          this.setData({
+            error: '没有找到符合条件的岗位',
+            loading: false,
+            jobs: [],
+            filteredJobs: [],
+            total: 0,
+            stats: { stretchCount: 0, safeCount: 0, bottomCount: 0, avgRatio: 0 }
+          })
+          return
+        }
 
         // 计算统计数据
         const stats = this.calcStats(result)
@@ -77,22 +116,22 @@ Page({
       })
       .catch(err => {
         console.error('加载岗位失败', err)
-        this.setData({ loading: false })
-        // 使用模拟数据
+        // API失败时使用模拟数据
+        this.setData({ usingMockData: true })
         this.loadMockData()
       })
   },
 
   loadMockData() {
-    // 模拟数据用于开发测试
+    // 模拟数据用于开发测试或API不可用时
     const mockJobs = [
       {
         id: 1,
         platform: '三支一扶',
         city: '太原市',
-        unit: '太原市某区教育局',
+        unit: '太原市小店区教育局',
         job_type: '支教',
-        major: '教育学',
+        major: '教育学类',
         education: '本科及以上',
         recruit_count: 2,
         competition_ratio: 8.5,
@@ -105,9 +144,9 @@ Page({
         id: 2,
         platform: '三支一扶',
         city: '吕梁市',
-        unit: '吕梁市农业农村局',
+        unit: '吕梁市离石区农业农村局',
         job_type: '支农',
-        major: '农学',
+        major: '农学类',
         education: '本科',
         recruit_count: 3,
         competition_ratio: 15.2,
@@ -145,6 +184,21 @@ Page({
         match_score: 60,
         recommendation_tier: '稳妥',
         pass_probability: 0.25
+      },
+      {
+        id: 5,
+        platform: '三支一扶',
+        city: '临汾市',
+        unit: '临汾市尧都区卫健局',
+        job_type: '支医',
+        major: '护理学',
+        education: '本科',
+        recruit_count: 2,
+        competition_ratio: 5.8,
+        match_level: '完全符合',
+        match_score: 95,
+        recommendation_tier: '冲刺',
+        pass_probability: 0.72
       }
     ]
 
@@ -160,7 +214,8 @@ Page({
       filteredJobs: mockJobs,
       total: mockJobs.length,
       stats,
-      loading: false
+      loading: false,
+      error: '（当前显示模拟数据，请启动后端服务获取真实数据）'
     })
   },
 
@@ -244,22 +299,37 @@ Page({
   toggleFavorite(e) {
     const { id } = e.currentTarget.dataset
     const openid = app.globalData.userInfo?.openid
-    if (!openid) return
+
+    if (!openid) {
+      wx.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
 
     const job = this.data.jobs.find(j => j.id === id)
     if (!job) return
 
-    const action = job.isFavorited ? 'removeFavorite' : 'addFavorite'
+    const isFavorited = job.isFavorited
+    const action = isFavorited ? 'removeFavorite' : 'addFavorite'
+
     api[action](openid, id)
       .then(() => {
-        job.isFavorited = !job.isFavorited
-        this.setData({ jobs: this.data.jobs })
+        // 更新本地状态
+        const updatedJobs = this.data.jobs.map(j => {
+          if (j.id === id) {
+            return { ...j, isFavorited: !isFavorited }
+          }
+          return j
+        })
+        this.setData({ jobs: updatedJobs })
+        this.applyFilter()
+
         wx.showToast({
-          title: job.isFavorited ? '已收藏' : '已取消收藏',
+          title: isFavorited ? '已取消收藏' : '已收藏',
           icon: 'success'
         })
       })
       .catch(err => {
+        console.error('收藏操作失败', err)
         wx.showToast({ title: '操作失败', icon: 'none' })
       })
   },

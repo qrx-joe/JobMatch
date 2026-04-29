@@ -10,7 +10,8 @@ Page({
     job: null,
     loading: true,
     isFavorited: false,
-    relatedJobs: []
+    relatedJobs: [],
+    matchDetail: null
   },
 
   onLoad(options) {
@@ -29,6 +30,9 @@ Page({
           job,
           loading: false
         })
+        // 加载匹配详情
+        this.loadMatchDetail(id)
+        // 检查收藏状态
         this.checkFavoriteStatus()
       })
       .catch(err => {
@@ -36,8 +40,22 @@ Page({
         // 使用模拟数据
         this.setData({
           job: this.getMockJob(id),
-          loading: false
+          loading: false,
+          matchDetail: this.getMockMatchDetail()
         })
+      })
+  },
+
+  loadMatchDetail(jobId) {
+    const profile = wx.getStorageSync('userProfile') || {}
+    if (!profile.major) return
+
+    api.matchJob(jobId, profile)
+      .then(result => {
+        this.setData({ matchDetail: result })
+      })
+      .catch(err => {
+        console.error('加载匹配详情失败', err)
       })
   },
 
@@ -46,7 +64,7 @@ Page({
       id: parseInt(id),
       platform: '三支一扶',
       city: '太原市',
-      unit: '太原市某区教育局',
+      unit: '太原市小店区教育局',
       job_type: '支教',
       service_category: '教育类',
       recruit_count: 2,
@@ -56,25 +74,29 @@ Page({
       age_limit: '30岁以下',
       political_requirement: '不限',
       qualifications: '教师资格证',
+      phone: '0351-1234567',
+      contact: '李老师',
       competition_ratio: 8.5,
       applicants: 120,
       approved: 45,
-      paid: 17,
-      match_level: '完全符合',
-      match_score: 92,
-      recommendation_tier: '冲刺',
-      pass_probability: 0.65,
-      phone: '0351-1234567',
-      contact: '李老师',
-      match_reasons: [
-        '专业完全匹配：教育学类',
-        '学历符合：本科 >= 本科及以上',
-        '竞争比较低(8.5:1)'
-      ],
-      historical_stats: [
-        { year: 2024, competition_ratio: 6.2, passing_score: 58 },
-        { year: 2023, competition_ratio: 5.8, passing_score: 55 }
-      ]
+      paid: 17
+    }
+  },
+
+  getMockMatchDetail() {
+    return {
+      match_result: {
+        total_score: 92,
+        match_level: '完全符合',
+        major_match: '专业完全匹配：教育学类',
+        education_match: '学历符合：本科 >= 本科及以上',
+        match_reasons: ['专业完全匹配', '学历符合要求', '竞争比较低(8.5:1)'],
+        mismatch_reasons: []
+      },
+      recommendation: {
+        tier: '冲刺',
+        pass_probability: 0.65
+      }
     }
   },
 
@@ -85,7 +107,12 @@ Page({
     api.getFavorites(openid)
       .then(res => {
         const favorites = res.favorites || []
-        this.setData({ isFavorited: favorites.includes(this.data.job.id) })
+        // favorites 是岗位对象数组，需要检查 id
+        const isFavorited = favorites.some(f => f.id === this.data.job.id)
+        this.setData({ isFavorited })
+      })
+      .catch(err => {
+        console.error('检查收藏状态失败', err)
       })
   },
 
@@ -107,7 +134,8 @@ Page({
           icon: 'success'
         })
       })
-      .catch(() => {
+      .catch(err => {
+        console.error('收藏操作失败', err)
         wx.showToast({ title: '操作失败', icon: 'none' })
       })
   },
@@ -129,10 +157,49 @@ Page({
   },
 
   viewHistory() {
-    // 跳转到历史分析页面或展示历史弹窗
+    // 展示历年数据
+    const job = this.data.job
+    if (!job) return
+
+    let content = '暂无历年数据'
+    if (job.historical_stats && job.historical_stats.length > 0) {
+      content = job.historical_stats.map(s =>
+        `${s.year}年: 竞争比 ${s.competition_ratio}:1, 进面分 ${s.passing_score}`
+      ).join('\n')
+    }
+
     wx.showModal({
       title: '历年数据',
-      content: JSON.stringify(this.data.job.historical_stats, null, 2),
+      content: content,
+      showCancel: false
+    })
+  },
+
+  viewMatchDetail() {
+    // 展示匹配详情
+    const detail = this.data.matchDetail
+    if (!detail) {
+      wx.showToast({ title: '暂无匹配详情', icon: 'none' })
+      return
+    }
+
+    const { match_result, recommendation } = detail
+    let content = `匹配分数: ${match_result.total_score}/100\n`
+    content += `匹配等级: ${match_result.match_level}\n\n`
+    content += `推荐层级: ${recommendation.tier}\n`
+    content += `上岸概率: ${(recommendation.pass_probability * 100).toFixed(0)}%\n\n`
+
+    if (match_result.match_reasons && match_result.match_reasons.length > 0) {
+      content += `匹配理由:\n${match_result.match_reasons.join('\n')}`
+    }
+
+    if (match_result.mismatch_reasons && match_result.mismatch_reasons.length > 0) {
+      content += `\n\n不匹配理由:\n${match_result.mismatch_reasons.join('\n')}`
+    }
+
+    wx.showModal({
+      title: '匹配分析',
+      content: content,
       showCancel: false
     })
   }
