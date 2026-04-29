@@ -21,3 +21,20 @@ error_log.txt
 .vscode/
 *.swp
 *.swo
+
+# Cache
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environment
+.env
+.env.local
+
+# Database
+*.db
+*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db
