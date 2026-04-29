@@ -1,0 +1,341 @@
+<!-- 筛选页 -->
+<view class="container">
+  <scroll-view scroll-y class="scroll-content">
+    <!-- 基本信息 -->
+    <view class="section">
+      <view class="section-title">基本信息</view>
+
+      <!-- 专业 -->
+      <view class="form-item">
+        <view class="form-label required">所学专业</view>
+        <input
+          class="form-input"
+          placeholder="请输入专业名称"
+          value="{{profile.major}}"
+          bindinput="onMajorInput"
+        />
+        <view class="error-tip" wx:if="{{errors.major}}">{{errors.major}}</view>
+      </view>
+
+      <!-- 学历 -->
+      <view class="form-item">
+        <view class="form-label required">学历</view>
+        <picker mode="selector" range="{{educationOptions}}" range-key="label" bindchange="onEducationChange">
+          <view class="picker-value {{profile.education ? '' : 'placeholder'}}">
+            {{profile.education || '请选择学历'}}
+          </view>
+        </picker>
+        <view class="error-tip" wx:if="{{errors.education}}">{{errors.education}}</view>
+      </view>
+
+      <!-- 性别 -->
+      <view class="form-item">
+        <view class="form-label">性别</view>
+        <radio-group bindchange="onGenderChange">
+          <label wx:for="{{genderOptions}}" wx:key="value" class="radio-label">
+            <radio value="{{item.value}}" checked="{{profile.gender === item.value}}"/>
+            <text>{{item.label}}</text>
+          </label>
+        </radio-group>
+      </view>
+
+      <!-- 年龄 -->
+      <view class="form-item">
+        <view class="form-label">年龄</view>
+        <input
+          class="form-input"
+          type="number"
+          placeholder="请输入年龄"
+          value="{{profile.age}}"
+          bindinput="onAgeChange"
+        />
+      </view>
+    </view>
+
+    <!-- 户籍与政治面貌 -->
+    <view class="section">
+      <view class="section-title">户籍与政治面貌</view>
+
+      <!-- 户籍 -->
+      <view class="form-item">
+        <view class="form-label">户籍所在地</view>
+        <picker mode="selector" range="{{cityOptions}}" bindchange="onHouseholdChange">
+          <view class="picker-value {{profile.household ? '' : 'placeholder'}}">
+            {{profile.household || '请选择户籍地'}}
+          </view>
+        </picker>
+      </view>
+
+      <!-- 政治面貌 -->
+      <view class="form-item">
+        <view class="form-label">政治面貌</view>
+        <picker mode="selector" range="{{partyStatusOptions}}" range-key="label" bindchange="onPartyStatusChange">
+          <view class="picker-value {{profile.party_status ? '' : 'placeholder'}}">
+            {{profile.party_status || '请选择政治面貌'}}
+          </view>
+        </picker>
+      </view>
+
+      <!-- 应届生 -->
+      <view class="form-item">
+        <checkbox-group bindchange="onFreshGraduateChange">
+          <label class="checkbox-label">
+            <checkbox value="true" checked="{{profile.is_fresh_graduate}}"/>
+            <text>我是应届生</text>
+          </label>
+        </checkbox-group>
+      </view>
+    </view>
+
+    <!-- 意向城市 -->
+    <view class="section">
+      <view class="section-title">
+        意向城市
+        <text class="section-hint">（可选，最多3个）</text>
+      </view>
+      <view class="city-grid">
+        <view
+          wx:for="{{hotCities}}"
+          wx:key="*this"
+          class="city-item {{profile.target_cities.includes(item) ? 'selected' : ''}}"
+          data-city="{{item}}"
+          bindtap="selectCity"
+        >
+          {{item}}
+        </view>
+      </view>
+      <view class="selected-cities" wx:if="{{profile.target_cities.length > 0}}">
+        <text>已选择：</text>
+        <text wx:for="{{profile.target_cities}}" wx:key="*this">{{item}} </text>
+        <text class="clear-btn" bindtap="clearCities">清空</text>
+      </view>
+    </view>
+
+    <!-- 预估分数 -->
+    <view class="section">
+      <view class="section-title">预估分数</view>
+      <view class="form-item">
+        <view class="form-label">预估考试成绩</view>
+        <input
+          class="form-input"
+          type="digit"
+          placeholder="用于推荐和预测"
+          value="{{profile.estimated_score}}"
+          bindinput="onScoreInput"
+        />
+      </view>
+    </view>
+
+    <!-- Excel上传 -->
+    <view class="section">
+      <view class="section-title">Excel上传</view>
+      <view class="upload-area" bindtap="uploadExcel">
+        <view class="upload-icon">📁</view>
+        <view class="upload-text">{{uploading ? '上传中...' : '点击上传岗位表'}}</view>
+        <view class="upload-hint">支持 .xlsx, .xls 格式</view>
+      </view>
+      <view class="upload-result" wx:if="{{uploadResult}}">
+        成功解析 {{uploadResult.total}} 个岗位
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部操作 -->
+  <view class="bottom-actions">
+    <button class="reset-btn" bindtap="resetForm">重置</button>
+    <button class="primary-btn" bindtap="startFilter" type="primary">开始筛选</button>
+  </view>
+</view>
+
+<style>
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+.scroll-content {
+  flex: 1;
+  padding: 20rpx;
+  padding-bottom: 120rpx;
+}
+
+.section {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 24rpx;
+}
+
+.section-hint {
+  font-size: 24rpx;
+  color: #999;
+  font-weight: normal;
+  margin-left: 12rpx;
+}
+
+.form-item {
+  margin-bottom: 30rpx;
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+
+.form-label.required::after {
+  content: ' *';
+  color: #f5222d;
+}
+
+.form-input {
+  height: 80rpx;
+  padding: 0 20rpx;
+  border: 1rpx solid #d9d9d9;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+}
+
+.picker-value {
+  height: 80rpx;
+  padding: 0 20rpx;
+  border: 1rpx solid #d9d9d9;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  line-height: 80rpx;
+}
+
+.picker-value.placeholder {
+  color: #bfbfbf;
+}
+
+.radio-label {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 40rpx;
+  font-size: 28rpx;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: 28rpx;
+}
+
+.error-tip {
+  color: #f5222d;
+  font-size: 24rpx;
+  margin-top: 8rpx;
+}
+
+.city-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.city-item {
+  padding: 16rpx 28rpx;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.city-item.selected {
+  background: #e6f7ff;
+  color: #1890ff;
+  border: 1rpx solid #1890ff;
+}
+
+.selected-cities {
+  margin-top: 20rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.clear-btn {
+  color: #1890ff;
+  margin-left: 20rpx;
+}
+
+.upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 0;
+  background: #fafafa;
+  border: 2rpx dashed #d9d9d9;
+  border-radius: 12rpx;
+}
+
+.upload-icon {
+  font-size: 60rpx;
+  margin-bottom: 16rpx;
+}
+
+.upload-text {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+}
+
+.upload-hint {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.upload-result {
+  margin-top: 20rpx;
+  font-size: 26rpx;
+  color: #52c41a;
+  text-align: center;
+}
+
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx;
+  background: #fff;
+  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.reset-btn {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #fff;
+  color: #666;
+  border: 1rpx solid #d9d9d9;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+}
+
+.primary-btn {
+  flex: 2;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 44rpx;
+  border: none;
+}
+</style>

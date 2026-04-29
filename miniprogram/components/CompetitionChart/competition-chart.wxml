@@ -1,0 +1,89 @@
+<!-- 竞争比图表组件 -->
+<view class="chart-container">
+  <view class="chart-title">{{title}}</view>
+  <view class="chart">
+    <view class="y-axis">
+      <text>{{maxRatio}}</text>
+      <text>{{(maxRatio / 2).toFixed(0)}}</text>
+      <text>0</text>
+    </view>
+    <view class="bars">
+      <view
+        wx:for="{{chartData}}"
+        wx:key="year"
+        class="bar-item"
+      >
+        <view
+          class="bar"
+          style="height: {{item.height}}%"
+        ></view>
+        <text class="bar-label">{{item.year}}</text>
+        <text class="bar-value">{{item.ratio}}:1</text>
+      </view>
+    </view>
+  </view>
+</view>
+
+<style>
+.chart-container {
+  background: #fff;
+  padding: 20rpx;
+  border-radius: 12rpx;
+}
+
+.chart-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+}
+
+.chart {
+  display: flex;
+  height: 200rpx;
+}
+
+.y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 20rpx;
+  color: #999;
+  padding-right: 16rpx;
+  text-align: right;
+  width: 60rpx;
+}
+
+.bars {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  border-left: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.bar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.bar {
+  width: 40rpx;
+  background: linear-gradient(180deg, #1890ff 0%, #91d5ff 100%);
+  border-radius: 4rpx 4rpx 0 0;
+  min-height: 4rpx;
+}
+
+.bar-label {
+  font-size: 22rpx;
+  color: #666;
+  margin-top: 8rpx;
+}
+
+.bar-value {
+  font-size: 20rpx;
+  color: #1890ff;
+}
+</style>

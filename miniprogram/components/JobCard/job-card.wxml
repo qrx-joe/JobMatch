@@ -1,0 +1,137 @@
+<!-- 岗位卡片组件 -->
+<view class="job-card" bindtap="onTap">
+  <!-- 推荐标签 -->
+  <view class="tier-badge tier-{{job.recommendation_tier}}">
+    {{job.recommendation_tier}}
+  </view>
+
+  <!-- 城市和竞争比 -->
+  <view class="card-header">
+    <text class="city">{{job.city}}</text>
+    <text class="competition">{{job.competition_ratio || 0}}:1</text>
+  </view>
+
+  <!-- 单位 -->
+  <view class="unit">{{job.unit}}</view>
+
+  <!-- 信息标签 -->
+  <view class="tags">
+    <text class="tag">{{job.job_type}}</text>
+    <text class="tag">{{job.major || '专业不限'}}</text>
+    <text class="tag">{{job.education}}</text>
+  </view>
+
+  <!-- 底部信息 -->
+  <view class="card-footer" wx:if="{{showActions}}">
+    <view class="stats">
+      <view class="stat">
+        <text class="label">匹配度</text>
+        <text class="value">{{job.match_score || 0}}分</text>
+      </view>
+      <view class="stat">
+        <text class="label">上岸概率</text>
+        <text class="value">{{((job.pass_probability || 0) * 100).toFixed(0)}}%</text>
+      </view>
+    </view>
+    <view class="favorite-btn {{job.isFavorited ? 'active' : ''}}" bindtap="onFavorite">
+      {{job.isFavorited ? '❤️' : '🤍'}}
+    </view>
+  </view>
+</view>
+
+<style>
+.job-card {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  position: relative;
+}
+
+.tier-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 8rpx 20rpx;
+  border-radius: 0 12rpx 0 12rpx;
+  font-size: 22rpx;
+  color: #fff;
+}
+
+.tier-冲刺 { background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%); }
+.tier-稳妥 { background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%); }
+.tier-保底 { background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.city {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.competition {
+  font-size: 26rpx;
+  color: #fa8c16;
+}
+
+.unit {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+  padding-right: 100rpx;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.tag {
+  font-size: 24rpx;
+  padding: 6rpx 16rpx;
+  background: #f5f5f5;
+  border-radius: 4rpx;
+  color: #666;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.stats {
+  display: flex;
+  gap: 30rpx;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.stat .label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.stat .value {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #52c41a;
+}
+
+.favorite-btn {
+  font-size: 40rpx;
+}
+</style>

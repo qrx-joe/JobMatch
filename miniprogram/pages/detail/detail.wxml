@@ -1,0 +1,407 @@
+<!-- 详情页 -->
+<view class="container">
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <view class="content" wx:elif="{{job}}">
+    <!-- 头部信息 -->
+    <view class="header">
+      <view class="tier-badge tier-{{job.recommendation_tier}}">
+        {{job.recommendation_tier}}
+      </view>
+      <view class="city">{{job.city}}</view>
+      <view class="unit">{{job.unit}}</view>
+      <view class="job-type">{{job.job_type}} · {{job.service_category}}</view>
+    </view>
+
+    <!-- 竞争数据 -->
+    <view class="section competition">
+      <view class="section-title">竞争情况</view>
+      <view class="competition-grid">
+        <view class="comp-item">
+          <view class="comp-value">{{job.recruit_count}}</view>
+          <view class="comp-label">招募人数</view>
+        </view>
+        <view class="comp-item">
+          <view class="comp-value">{{job.applicants}}</view>
+          <view class="comp-label">报名人数</view>
+        </view>
+        <view class="comp-item">
+          <view class="comp-value">{{job.paid}}</view>
+          <view class="comp-label">缴费人数</view>
+        </view>
+        <view class="comp-item highlight">
+          <view class="comp-value">{{job.competition_ratio}}:1</view>
+          <view class="comp-label">竞争比</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 匹配信息 -->
+    <view class="section match">
+      <view class="section-title">匹配分析</view>
+      <view class="match-score">
+        <view class="score-circle">
+          <text class="score-value">{{job.match_score}}</text>
+          <text class="score-unit">分</text>
+        </view>
+        <view class="score-info">
+          <text class="match-level {{job.match_level}}">{{job.match_level}}</text>
+          <text class="pass-prob">预估上岸概率: {{(job.pass_probability * 100).toFixed(0)}}%</text>
+        </view>
+      </view>
+      <view class="match-reasons">
+        <view class="reason-title">匹配理由：</view>
+        <view
+          wx:for="{{job.match_reasons}}"
+          wx:key="*this"
+          class="reason-item"
+        >
+          ✓ {{item}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 岗位要求 -->
+    <view class="section requirements">
+      <view class="section-title">岗位要求</view>
+      <view class="req-grid">
+        <view class="req-item">
+          <text class="req-label">学历</text>
+          <text class="req-value">{{job.education}}</text>
+        </view>
+        <view class="req-item">
+          <text class="req-label">学位</text>
+          <text class="req-value">{{job.degree || '不限'}}</text>
+        </view>
+        <view class="req-item">
+          <text class="req-label">专业</text>
+          <text class="req-value">{{job.major || '不限'}}</text>
+        </view>
+        <view class="req-item">
+          <text class="req-label">年龄</text>
+          <text class="req-value">{{job.age_limit || '不限'}}</text>
+        </view>
+        <view class="req-item">
+          <text class="req-label">政治面貌</text>
+          <text class="req-value">{{job.political_requirement || '不限'}}</text>
+        </view>
+        <view class="req-item">
+          <text class="req-label">资格证书</text>
+          <text class="req-value">{{job.qualifications || '不限'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 历年数据 -->
+    <view class="section history" wx:if="{{job.historical_stats && job.historical_stats.length > 0}}">
+      <view class="section-title">
+        历年数据
+        <text class="view-more" bindtap="viewHistory">查看全部</text>
+      </view>
+      <view class="history-list">
+        <view
+          wx:for="{{job.historical_stats}}"
+          wx:key="year"
+          class="history-item"
+        >
+          <text class="history-year">{{item.year}}年</text>
+          <text class="history-ratio">竞争比 {{item.competition_ratio}}:1</text>
+          <text class="history-score">进面分 {{item.passing_score}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 联系方式 -->
+    <view class="section contact" wx:if="{{job.phone || job.contact}}">
+      <view class="section-title">联系方式</view>
+      <view class="contact-info">
+        <text wx:if="{{job.contact}}">联系人：{{job.contact}}</text>
+        <text wx:if="{{job.phone}}">电话：{{job.phone}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="bottom-actions" wx:if="{{job}}">
+    <button class="action-btn share-btn" bindtap="shareJob" open-type="share">
+      分享
+    </button>
+    <button
+      class="action-btn favorite-btn {{isFavorited ? 'active' : ''}}"
+      bindtap="toggleFavorite"
+    >
+      {{isFavorited ? '已收藏' : '收藏'}}
+    </button>
+  </view>
+</view>
+
+<style>
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 120rpx;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  font-size: 28rpx;
+  color: #999;
+}
+
+.header {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: #fff;
+  padding: 40rpx 30rpx;
+  position: relative;
+}
+
+.tier-badge {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  padding: 8rpx 24rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.city {
+  font-size: 26rpx;
+  opacity: 0.9;
+  margin-bottom: 10rpx;
+}
+
+.unit {
+  font-size: 36rpx;
+  font-weight: bold;
+  margin-bottom: 10rpx;
+}
+
+.job-type {
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+.section {
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 12rpx;
+  padding: 30rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 24rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.view-more {
+  font-size: 26rpx;
+  color: #1890ff;
+  font-weight: normal;
+}
+
+.competition-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20rpx;
+}
+
+.comp-item {
+  text-align: center;
+  padding: 20rpx;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+}
+
+.comp-item.highlight {
+  background: #fff1f0;
+}
+
+.comp-item.highlight .comp-value {
+  color: #f5222d;
+}
+
+.comp-value {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.comp-label {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+.match-score {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.score-circle {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  margin-right: 30rpx;
+}
+
+.score-value {
+  font-size: 48rpx;
+  font-weight: bold;
+}
+
+.score-unit {
+  font-size: 24rpx;
+}
+
+.score-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.match-level {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.match-level.完全符合 { color: #52c41a; }
+.match-level.可能符合 { color: #fa8c16; }
+.match-level.不符合 { color: #f5222d; }
+
+.pass-prob {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.match-reasons {
+  background: #f6ffed;
+  padding: 20rpx;
+  border-radius: 8rpx;
+}
+
+.reason-title {
+  font-size: 26rpx;
+  color: #389e0d;
+  margin-bottom: 12rpx;
+}
+
+.reason-item {
+  font-size: 26rpx;
+  color: #52c41a;
+  line-height: 1.6;
+}
+
+.req-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+}
+
+.req-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.req-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.req-value {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 16rpx 20rpx;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+}
+
+.history-year {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.history-ratio {
+  font-size: 26rpx;
+  color: #fa8c16;
+}
+
+.history-score {
+  font-size: 26rpx;
+  color: #1890ff;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx;
+  background: #fff;
+  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.action-btn {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+}
+
+.share-btn {
+  background: #fff;
+  color: #666;
+  border: 1rpx solid #d9d9d9;
+}
+
+.favorite-btn {
+  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%);
+  color: #fff;
+  border: none;
+}
+
+.favorite-btn.active {
+  background: #d9d9d9;
+  color: #999;
+}
+</style>

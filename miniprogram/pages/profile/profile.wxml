@@ -1,0 +1,248 @@
+<!-- 我的页面 -->
+<view class="container">
+  <!-- 用户信息头部 -->
+  <view class="profile-header">
+    <view class="avatar">
+      <text class="avatar-text">{{userInfo ? userInfo.openid.substring(0, 2).toUpperCase() : '未'}}</text>
+    </view>
+    <view class="user-info">
+      <text class="user-name">{{profile.major || '未填写专业'}}</text>
+      <text class="user-desc">{{profile.education || ''}} · {{profile.household || ''}}</text>
+    </view>
+    <button class="edit-btn" bindtap="goToEditProfile">编辑</button>
+  </view>
+
+  <!-- 使用统计 -->
+  <view class="stats-section">
+    <view class="stat-item">
+      <text class="stat-value">{{stats.filterCount}}</text>
+      <text class="stat-label">筛选次数</text>
+    </view>
+    <view class="stat-item">
+      <text class="stat-value">{{stats.favoriteCount}}</text>
+      <text class="stat-label">收藏岗位</text>
+    </view>
+    <view class="stat-item">
+      <text class="stat-value">{{stats.viewCount}}</text>
+      <text class="stat-label">浏览记录</text>
+    </view>
+  </view>
+
+  <!-- 用户画像 -->
+  <view class="section" wx:if="{{profile && profile.major}}">
+    <view class="section-title">我的条件</view>
+    <view class="profile-grid">
+      <view class="profile-item" wx:if="{{profile.major}}">
+        <text class="item-label">专业</text>
+        <text class="item-value">{{profile.major}}</text>
+      </view>
+      <view class="profile-item" wx:if="{{profile.education}}">
+        <text class="item-label">学历</text>
+        <text class="item-value">{{profile.education}}</text>
+      </view>
+      <view class="profile-item" wx:if="{{profile.party_status}}">
+        <text class="item-label">政治面貌</text>
+        <text class="item-value">{{profile.party_status}}</text>
+      </view>
+      <view class="profile-item" wx:if="{{profile.age}}">
+        <text class="item-label">年龄</text>
+        <text class="item-value">{{profile.age}}岁</text>
+      </view>
+      <view class="profile-item" wx:if="{{profile.household}}">
+        <text class="item-label">户籍</text>
+        <text class="item-value">{{profile.household}}</text>
+      </view>
+      <view class="profile-item" wx:if="{{profile.target_cities && profile.target_cities.length > 0}}">
+        <text class="item-label">意向城市</text>
+        <text class="item-value">{{profile.target_cities.join(', ')}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="section menu-section">
+    <view class="menu-item" bindtap="goToEditProfile">
+      <text class="menu-icon">📝</text>
+      <text class="menu-text">编辑个人条件</text>
+      <text class="menu-arrow">></text>
+    </view>
+    <view class="menu-item" bindtap="clearCache">
+      <text class="menu-icon">🗑️</text>
+      <text class="menu-text">清空缓存</text>
+      <text class="menu-arrow">></text>
+    </view>
+    <view class="menu-item" bindtap="viewAbout">
+      <text class="menu-icon">ℹ️</text>
+      <text class="menu-text">关于</text>
+      <text class="menu-arrow">></text>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <view class="logout-section">
+    <button class="logout-btn" bindtap="logout">退出登录</button>
+  </view>
+</view>
+
+<style>
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 40rpx;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  padding: 50rpx 30rpx;
+}
+
+.avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+}
+
+.avatar-text {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #fff;
+}
+
+.user-info {
+  flex: 1;
+  color: #fff;
+}
+
+.user-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.user-desc {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+.edit-btn {
+  padding: 12rpx 30rpx;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 30rpx;
+  font-size: 26rpx;
+}
+
+.stats-section {
+  display: flex;
+  background: #fff;
+  padding: 30rpx 0;
+  margin-bottom: 20rpx;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+.section {
+  background: #fff;
+  margin: 0 20rpx 20rpx;
+  border-radius: 12rpx;
+  padding: 30rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 24rpx;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24rpx;
+}
+
+.profile-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.item-value {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.menu-section {
+  padding: 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-icon {
+  font-size: 36rpx;
+  margin-right: 20rpx;
+}
+
+.menu-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.menu-arrow {
+  font-size: 28rpx;
+  color: #ccc;
+}
+
+.logout-section {
+  padding: 0 20rpx;
+}
+
+.logout-btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #fff;
+  color: #ff4d4f;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+}
+</style>

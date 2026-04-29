@@ -1,0 +1,227 @@
+<!-- 收藏页 -->
+<view class="container">
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <view class="empty" wx:elif="{{empty}}">
+    <text class="empty-icon">🤍</text>
+    <text class="empty-text">暂无收藏</text>
+    <text class="empty-hint">在筛选结果页点击收藏按钮添加</text>
+    <button class="empty-btn" bindtap="goToFilter">去筛选</button>
+  </view>
+
+  <view class="content" wx:else>
+    <view class="list-header">
+      <text class="list-count">共 {{favorites.length}} 个收藏</text>
+      <button
+        class="compare-btn"
+        wx:if="{{favorites.length >= 2}}"
+        bindtap="compareJobs"
+      >
+        对比
+      </button>
+    </view>
+
+    <scroll-view scroll-y class="fav-list">
+      <view
+        wx:for="{{favorites}}"
+        wx:key="id"
+        class="fav-card"
+        data-id="{{item.id}}"
+        bindtap="goToDetail"
+      >
+        <view class="fav-tier tier-{{item.recommendation_tier}}">
+          {{item.recommendation_tier}}
+        </view>
+
+        <view class="fav-header">
+          <text class="fav-city">{{item.city}}</text>
+          <text class="fav-competition">{{item.competition_ratio}}:1</text>
+        </view>
+
+        <view class="fav-unit">{{item.unit}}</view>
+
+        <view class="fav-info">
+          <text>{{item.job_type}}</text>
+          <text>{{item.education}}</text>
+          <text>{{item.major || '专业不限'}}</text>
+        </view>
+
+        <view class="fav-footer">
+          <view class="fav-score">
+            <text>匹配度</text>
+            <text class="score">{{item.match_score}}分</text>
+          </view>
+          <view
+            class="remove-btn"
+            data-id="{{item.id}}"
+            catchtap="removeFavorite"
+          >
+            取消收藏
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>
+
+<style>
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+.loading, .empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon {
+  font-size: 100rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.empty-hint {
+  font-size: 26rpx;
+  color: #999;
+  margin-bottom: 40rpx;
+}
+
+.empty-btn {
+  padding: 20rpx 60rpx;
+  background: #1890ff;
+  color: #fff;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  background: #fff;
+}
+
+.list-count {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.compare-btn {
+  padding: 12rpx 30rpx;
+  background: #e6f7ff;
+  color: #1890ff;
+  border-radius: 30rpx;
+  font-size: 26rpx;
+}
+
+.fav-list {
+  flex: 1;
+  padding: 20rpx;
+}
+
+.fav-card {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  position: relative;
+}
+
+.fav-tier {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 8rpx 20rpx;
+  border-radius: 0 12rpx 0 12rpx;
+  font-size: 22rpx;
+  color: #fff;
+}
+
+.tier-冲刺 { background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%); }
+.tier-稳妥 { background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%); }
+.tier-保底 { background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); }
+
+.fav-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.fav-city {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.fav-competition {
+  font-size: 26rpx;
+  color: #fa8c16;
+}
+
+.fav-unit {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+  padding-right: 100rpx;
+}
+
+.fav-info {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.fav-info text {
+  font-size: 24rpx;
+  padding: 6rpx 16rpx;
+  background: #f5f5f5;
+  border-radius: 4rpx;
+  color: #666;
+}
+
+.fav-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.fav-score {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.fav-score .score {
+  color: #52c41a;
+  font-weight: 600;
+}
+
+.remove-btn {
+  font-size: 26rpx;
+  color: #ff4d4f;
+}
+</style>

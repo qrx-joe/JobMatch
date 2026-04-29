@@ -1,0 +1,395 @@
+<!-- 结果页 -->
+<view class="container">
+  <!-- 统计卡片 -->
+  <view class="stats-cards">
+    <view class="stat-card stretch">
+      <view class="stat-value">{{stats.stretchCount}}</view>
+      <view class="stat-label">冲刺</view>
+    </view>
+    <view class="stat-card safe">
+      <view class="stat-value">{{stats.safeCount}}</view>
+      <view class="stat-label">稳妥</view>
+    </view>
+    <view class="stat-card bottom">
+      <view class="stat-value">{{stats.bottomCount}}</view>
+      <view class="stat-label">保底</view>
+    </view>
+    <view class="stat-card total">
+      <view class="stat-value">{{total}}</view>
+      <view class="stat-label">总岗位</view>
+    </view>
+  </view>
+
+  <!-- Tab切换 -->
+  <view class="tabs">
+    <view
+      class="tab-item {{activeTab === 'all' ? 'active' : ''}}"
+      data-tab="all"
+      bindtap="switchTab"
+    >全部</view>
+    <view
+      class="tab-item {{activeTab === 'stretch' ? 'active' : ''}}"
+      data-tab="stretch"
+      bindtap="switchTab"
+    >冲刺</view>
+    <view
+      class="tab-item {{activeTab === 'safe' ? 'active' : ''}}"
+      data-tab="safe"
+      bindtap="switchTab"
+    >稳妥</view>
+    <view
+      class="tab-item {{activeTab === 'bottom' ? 'active' : ''}}"
+      data-tab="bottom"
+      bindtap="switchTab"
+    >保底</view>
+  </view>
+
+  <!-- 排序 -->
+  <view class="sort-bar">
+    <text class="sort-info">平均竞争比: {{stats.avgRatio}}:1</text>
+    <view class="sort-btns">
+      <view
+        class="sort-btn {{sortBy === 'competition_ratio' ? 'active' : ''}}"
+        data-field="competition_ratio"
+        bindtap="changeSort"
+      >
+        竞争比
+        <text class="arrow">{{sortBy === 'competition_ratio' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}}</text>
+      </view>
+      <view
+        class="sort-btn {{sortBy === 'match_score' ? 'active' : ''}}"
+        data-field="match_score"
+        bindtap="changeSort"
+      >
+        匹配度
+        <text class="arrow">{{sortBy === 'match_score' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:elif="{{filteredJobs.length === 0}}">
+    <text class="empty-icon">📭</text>
+    <text class="empty-text">暂无符合条件的岗位</text>
+    <button class="empty-btn" bindtap="refresh">刷新</button>
+  </view>
+
+  <!-- 岗位列表 -->
+  <scroll-view scroll-y class="job-list" wx:else>
+    <view
+      wx:for="{{filteredJobs}}"
+      wx:key="id"
+      class="job-card"
+      data-id="{{item.id}}"
+      bindtap="goToDetail"
+    >
+      <!-- 推荐标签 -->
+      <view class="job-tier tier-{{item.recommendation_tier}}">
+        {{item.recommendation_tier}}
+      </view>
+
+      <!-- 岗位信息 -->
+      <view class="job-header">
+        <view class="job-city">{{item.city}}</view>
+        <view class="job-competition">竞争比 {{item.competition_ratio}}:1</view>
+      </view>
+
+      <view class="job-unit">{{item.unit}}</view>
+
+      <view class="job-info">
+        <text class="job-type">{{item.job_type}}</text>
+        <text class="job-major">{{item.major || '专业不限'}}</text>
+        <text class="job-edu">{{item.education}}</text>
+      </view>
+
+      <view class="job-footer">
+        <view class="job-score">
+          <text class="score-label">匹配度</text>
+          <text class="score-value">{{item.match_score}}分</text>
+        </view>
+        <view class="job-prob">
+          <text class="prob-label">上岸概率</text>
+          <text class="prob-value">{{(item.pass_probability * 100).toFixed(0)}}%</text>
+        </view>
+        <view class="job-actions">
+          <view
+            class="action-btn favorite-btn {{item.isFavorited ? 'active' : ''}}"
+            data-id="{{item.id}}"
+            catchtap="toggleFavorite"
+          >
+            {{item.isFavorited ? '❤️' : '🤍'}}
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>
+
+<style>
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+.stats-cards {
+  display: flex;
+  padding: 20rpx;
+  gap: 12rpx;
+  background: #fff;
+}
+
+.stat-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx 0;
+  border-radius: 12rpx;
+}
+
+.stat-card.stretch {
+  background: linear-gradient(135deg, #fff1f0 0%, #ffccc7 100%);
+}
+
+.stat-card.safe {
+  background: linear-gradient(135deg, #f6ffed 0%, #b7eb8f 100%);
+}
+
+.stat-card.bottom {
+  background: linear-gradient(135deg, #e6f7ff 0%, #91d5ff 100%);
+}
+
+.stat-card.total {
+  background: linear-gradient(135deg, #fff7e6 0%, #ffd591 100%);
+}
+
+.stat-value {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #666;
+  margin-top: 4rpx;
+}
+
+.tabs {
+  display: flex;
+  background: #fff;
+  padding: 0 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+  color: #666;
+  position: relative;
+}
+
+.tab-item.active {
+  color: #1890ff;
+  font-weight: 600;
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 4rpx;
+  background: #1890ff;
+  border-radius: 2rpx;
+}
+
+.sort-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  background: #fff;
+  margin-bottom: 10rpx;
+}
+
+.sort-info {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.sort-btns {
+  display: flex;
+  gap: 20rpx;
+}
+
+.sort-btn {
+  font-size: 24rpx;
+  color: #666;
+  padding: 8rpx 16rpx;
+  background: #f5f5f5;
+  border-radius: 20rpx;
+}
+
+.sort-btn.active {
+  color: #1890ff;
+  background: #e6f7ff;
+}
+
+.arrow {
+  margin-left: 4rpx;
+}
+
+.loading, .empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon {
+  font-size: 100rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 30rpx;
+}
+
+.empty-btn {
+  padding: 16rpx 40rpx;
+  background: #1890ff;
+  color: #fff;
+  border-radius: 30rpx;
+  font-size: 28rpx;
+}
+
+.job-list {
+  flex: 1;
+  padding: 0 20rpx 20rpx;
+}
+
+.job-card {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  position: relative;
+}
+
+.job-tier {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 8rpx 20rpx;
+  border-radius: 0 12rpx 0 12rpx;
+  font-size: 22rpx;
+  color: #fff;
+}
+
+.tier-冲刺 {
+  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%);
+}
+
+.tier-稳妥 {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+}
+
+.tier-保底 {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+}
+
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.job-city {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.job-competition {
+  font-size: 26rpx;
+  color: #fa8c16;
+}
+
+.job-unit {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+  padding-right: 100rpx;
+}
+
+.job-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.job-info text {
+  font-size: 24rpx;
+  padding: 6rpx 16rpx;
+  background: #f5f5f5;
+  border-radius: 4rpx;
+  color: #666;
+}
+
+.job-footer {
+  display: flex;
+  align-items: center;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.job-score, .job-prob {
+  display: flex;
+  flex-direction: column;
+  margin-right: 40rpx;
+}
+
+.score-label, .prob-label {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.score-value {
+  font-size: 28rpx;
+  color: #52c41a;
+  font-weight: 600;
+}
+
+.prob-value {
+  font-size: 28rpx;
+  color: #1890ff;
+  font-weight: 600;
+}
+
+.job-actions {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  font-size: 40rpx;
+  padding: 10rpx;
+}
+</style>
