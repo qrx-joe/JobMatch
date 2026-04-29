@@ -36,7 +36,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import axios from 'axios'
+import { uploadAndFilter } from './services/api'
 import FilterPanel from './components/FilterPanel.vue'
 import ResultPanel from './components/ResultPanel.vue'
 
@@ -55,19 +55,17 @@ const filteredJobs = computed(() => {
 const handleFilter = async (formData) => {
   loading.value = true
   try {
-    const response = await axios.post(`${API_BASE}/upload-and-filter`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    const response = await uploadAndFilter(formData)
 
-    jobs.value = response.data.jobs
+    jobs.value = response.jobs
     stats.value = {
-      total: response.data.total,
-      perfect: response.data.perfect,
-      partial: response.data.partial,
-      mismatch: response.data.mismatch
+      total: response.total,
+      perfect: response.perfect,
+      partial: response.partial,
+      mismatch: response.mismatch
     }
-    excelBase64.value = response.data.excel_base64
-    excelFilename.value = response.data.excel_filename
+    excelBase64.value = response.excel_base64
+    excelFilename.value = response.excel_filename
 
   } catch (error) {
     console.error('筛选失败:', error)

@@ -197,7 +197,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import axios from 'axios'
+import { getCities, getQualifications } from '../services/api'
 
 const API_BASE = import.meta.env.DEV ? '/api' : ''
 
@@ -234,11 +234,11 @@ const canSubmit = computed(() => {
 onMounted(async () => {
   try {
     const [citiesRes, qualRes] = await Promise.all([
-      axios.get(`${API_BASE}/cities`),
-      axios.get(`${API_BASE}/qualifications`)
+      getCities(),
+      getQualifications()
     ])
-    cities.value = citiesRes.data.cities
-    qualifications.value = qualRes.data.qualifications
+    cities.value = citiesRes.cities
+    qualifications.value = qualRes.qualifications
   } catch (e) {
     // 使用默认值
     cities.value = ['太原市', '大同市', '朔州市', '忻州市', '吕梁市', '晋中市', '阳泉市', '长治市', '晋城市', '临汾市', '运城市']
