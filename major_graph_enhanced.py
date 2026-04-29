@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 专业关系图谱 - 增强版
 添加专业匹配模拟、智能推荐功能
 """
-import json
+
 import os
+
 from major_graph import MajorRelationGraph
 
 
@@ -23,7 +23,7 @@ class EnhancedMajorGraph(MajorRelationGraph):
         """生成增强版HTML可视化"""
         graph_data = self.to_json()
 
-        html_content = f'''<!DOCTYPE html>
+        html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -774,13 +774,13 @@ class EnhancedMajorGraph(MajorRelationGraph):
         initGraph();
     </script>
 </body>
-</html>'''
+</html>"""
 
         # 替换数据
-        html_content = html_content.replace('{graph_data}', graph_data)
+        html_content = html_content.replace("{graph_data}", graph_data)
 
         # 写入文件
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(html_content)
 
         print(f"增强版图谱已生成: {output_path}")
@@ -801,12 +801,12 @@ def main():
 
     print(f"\n[OK] 文件已生成: {output}")
     print(f"   文件大小: {os.path.getsize(output) / 1024:.1f} KB")
-    print(f"\n新增功能:")
-    print(f"   1. 专业匹配模拟器 - 测试你的专业能报哪些大类")
-    print(f"   2. 实时匹配结果展示 - 完全符合/可能符合/不符合")
-    print(f"   3. 图谱联动高亮 - 匹配结果可视化呈现")
-    print(f"   4. 物理模拟开关 - 控制节点运动")
-    print(f"\n请用浏览器打开查看")
+    print("\n新增功能:")
+    print("   1. 专业匹配模拟器 - 测试你的专业能报哪些大类")
+    print("   2. 实时匹配结果展示 - 完全符合/可能符合/不符合")
+    print("   3. 图谱联动高亮 - 匹配结果可视化呈现")
+    print("   4. 物理模拟开关 - 控制节点运动")
+    print("\n请用浏览器打开查看")
 
 
 if __name__ == "__main__":

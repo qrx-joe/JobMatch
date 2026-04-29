@@ -1,24 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 岗位筛选匹配引擎 V3 - 集成语义匹配
 支持学历、户籍、工作年限的语义理解
 """
-import pandas as pd
-import re
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Tuple
-from enum import Enum
 
 # 导入语义匹配器
-from semantic_matcher import (
-    EducationMatcher,
-    HouseholdMatcher,
-    ExperienceMatcher,
-    SemanticMatcher,
-    MatchResult
-)
-from job_matcher_v2 import JobMatcherV2, Job, UserProfile, MatchLevel
+from job_matcher_v2 import Job, JobMatcherV2, MatchLevel
+from semantic_matcher import EducationMatcher, ExperienceMatcher, HouseholdMatcher, SemanticMatcher
 
 
 class JobMatcherV3(JobMatcherV2):
@@ -35,15 +23,15 @@ class JobMatcherV3(JobMatcherV2):
     def _init_semantic_matcher(self):
         """初始化语义匹配器"""
         profile = {
-            'education': self.profile.education,
-            'household': self.profile.household,
-            'gender': self.profile.gender,
-            'work_years': self.profile.work_years,
-            'is_fresh_graduate': self.profile.is_fresh_graduate
+            "education": self.profile.education,
+            "household": self.profile.household,
+            "gender": self.profile.gender,
+            "work_years": self.profile.work_years,
+            "is_fresh_graduate": self.profile.is_fresh_graduate,
         }
         self.semantic_matcher = SemanticMatcher(profile)
 
-    def _match_education_semantic(self, job_education: str) -> Tuple[bool, str]:
+    def _match_education_semantic(self, job_education: str) -> tuple[bool, str]:
         """
         使用语义匹配学历
 
@@ -57,7 +45,7 @@ class JobMatcherV3(JobMatcherV2):
         result = matcher.match(job_education)
         return result.match, result.reason
 
-    def _match_household_semantic(self, other_field: str) -> Tuple[bool, str]:
+    def _match_household_semantic(self, other_field: str) -> tuple[bool, str]:
         """
         使用语义匹配户籍
 
@@ -76,7 +64,7 @@ class JobMatcherV3(JobMatcherV2):
 
         return True, result.reason
 
-    def _match_experience_semantic(self, other_field: str) -> Tuple[bool, str]:
+    def _match_experience_semantic(self, other_field: str) -> tuple[bool, str]:
         """
         使用语义匹配工作年限
 
@@ -86,10 +74,7 @@ class JobMatcherV3(JobMatcherV2):
         Returns:
             (是否匹配, 原因)
         """
-        matcher = ExperienceMatcher(
-            self.profile.work_years,
-            self.profile.is_fresh_graduate
-        )
+        matcher = ExperienceMatcher(self.profile.work_years, self.profile.is_fresh_graduate)
         result = matcher.match(other_field)
         return result.match, result.reason
 
@@ -108,7 +93,7 @@ class JobMatcherV3(JobMatcherV2):
         semantic_checks = []
 
         # 1. 学历语义匹配（如果父类没匹配好）
-        if '及以上' in job.education or '以上' in job.education:
+        if "及以上" in job.education or "以上" in job.education:
             match, reason = self._match_education_semantic(job.education)
             if match:
                 if reason not in job.match_reasons:
@@ -117,7 +102,7 @@ class JobMatcherV3(JobMatcherV2):
                 semantic_checks.append(f"学历语义不匹配: {reason}")
 
         # 2. 户籍语义匹配
-        if job.other and ('户籍' in job.other or '户口' in job.other):
+        if job.other and ("户籍" in job.other or "户口" in job.other):
             match, reason = self._match_household_semantic(job.other)
             if not match:
                 semantic_checks.append(f"户籍语义不匹配: {reason}")
@@ -127,7 +112,7 @@ class JobMatcherV3(JobMatcherV2):
                     job.match_reasons.append(f"[语义匹配] {reason}")
 
         # 3. 工作年限语义匹配
-        if job.other and ('年' in job.other or '应届' in job.other):
+        if job.other and ("年" in job.other or "应届" in job.other):
             match, reason = self._match_experience_semantic(job.other)
             if not match:
                 semantic_checks.append(f"工作年限语义不匹配: {reason}")
@@ -137,7 +122,7 @@ class JobMatcherV3(JobMatcherV2):
                     job.match_reasons.append(f"[语义匹配] {reason}")
 
         # 4. 性别语义匹配
-        if job.other and ('限男性' in job.other or '限女性' in job.other):
+        if job.other and ("限男性" in job.other or "限女性" in job.other):
             matcher = HouseholdMatcher(self.profile.household, self.profile.gender)
             result = matcher.match_gender(job.other)
             if not result.match:
@@ -158,8 +143,8 @@ def test_v3_matcher():
     print("=" * 80)
 
     # 创建测试用的配置
-    import tempfile
     import os
+    import tempfile
 
     config_content = """
 profile:
@@ -189,8 +174,8 @@ filter:
 """
 
     # 写入临时配置文件
-    config_path = tempfile.mktemp(suffix='.yaml')
-    with open(config_path, 'w', encoding='utf-8') as f:
+    config_path = tempfile.mktemp(suffix=".yaml")
+    with open(config_path, "w", encoding="utf-8") as f:
         f.write(config_content)
 
     try:
@@ -216,7 +201,7 @@ filter:
                 "recruit_count": 5,
                 "applicants": 60,
                 "approved": 45,
-                "paid": 40
+                "paid": 40,
             },
             {
                 "sheet_name": "青岛市",
@@ -229,7 +214,7 @@ filter:
                 "recruit_count": 3,
                 "applicants": 30,
                 "approved": 25,
-                "paid": 20
+                "paid": 20,
             },
             {
                 "sheet_name": "烟台市",
@@ -242,7 +227,7 @@ filter:
                 "recruit_count": 10,
                 "applicants": 250,
                 "approved": 200,
-                "paid": 180
+                "paid": 180,
             },
             {
                 "sheet_name": "济南市",
@@ -255,8 +240,8 @@ filter:
                 "recruit_count": 2,
                 "applicants": 40,
                 "approved": 30,
-                "paid": 25
-            }
+                "paid": 25,
+            },
         ]
 
         print("\n" + "-" * 80)
@@ -274,12 +259,12 @@ filter:
             print(f"   匹配分数: {result.match_score}")
 
             if result.match_reasons:
-                print(f"   ✓ 匹配原因:")
+                print("   ✓ 匹配原因:")
                 for reason in result.match_reasons[-3:]:  # 只显示最后3条
                     print(f"     • {reason}")
 
             if result.mismatch_reasons:
-                print(f"   ✗ 不匹配原因:")
+                print("   ✗ 不匹配原因:")
                 for reason in result.mismatch_reasons:
                     print(f"     • {reason}")
 

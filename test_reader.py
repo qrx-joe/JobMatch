@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-import sys
-import io
 import glob
+import io
 import os
+import sys
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 # 导入读取器
 from excel_reader_v2 import SimpleJobReader
 
 # 找到文件
-files = glob.glob('*.xlsx')
-files = [f for f in files if '岗位汇总表' in f and not f.startswith('~$')]
+files = glob.glob("*.xlsx")
+files = [f for f in files if "岗位汇总表" in f and not f.startswith("~$")]
 
 if not files:
     print("未找到岗位表文件")
@@ -27,12 +26,12 @@ reader = SimpleJobReader(file_path)
 
 # 测试读取单个sheet
 print("\n=== 测试读取太原市 ===")
-jobs = reader._read_sheet('太原市')
+jobs = reader._read_sheet("太原市")
 print(f"读取到 {len(jobs)} 个岗位")
 
 if jobs:
     for i, job in enumerate(jobs[:3]):
-        print(f"\n岗位 {i+1}:")
+        print(f"\n岗位 {i + 1}:")
         print(f"  单位: {job.unit}")
         print(f"  岗位: {job.job_type}")
         print(f"  专业: {job.major}")

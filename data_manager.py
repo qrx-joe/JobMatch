@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 数据管理器 - 支持用户自定义专业和关联关系
 提供CRUD操作和数据持久化
 """
+
 import json
 import os
-from pathlib import Path
-from typing import List, Dict, Optional, Set
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
+from pathlib import Path
 
 
 @dataclass
 class CustomMajor:
     """用户自定义专业"""
+
     id: str
     name: str
     category: str  # 所属大类
     subcategory: str  # 专业类
     description: str = ""
-    related_majors: List[str] = None  # 关联专业ID列表
+    related_majors: list[str] = None  # 关联专业ID列表
     created_at: str = ""
     updated_at: str = ""
     source: str = "custom"  # custom | builtin
@@ -37,6 +37,7 @@ class CustomMajor:
 @dataclass
 class CustomRelation:
     """用户自定义关联关系"""
+
     id: str
     from_major: str
     to_major: str
@@ -60,9 +61,9 @@ class DataManager:
         self.relations_file = self.data_dir / "custom_relations.json"
         self.history_file = self.data_dir / "edit_history.json"
 
-        self.majors: Dict[str, CustomMajor] = {}
-        self.relations: Dict[str, CustomRelation] = {}
-        self.history: List[Dict] = []
+        self.majors: dict[str, CustomMajor] = {}
+        self.relations: dict[str, CustomRelation] = {}
+        self.history: list[dict] = []
 
         self._load_data()
 
@@ -71,7 +72,7 @@ class DataManager:
         # 加载专业
         if self.majors_file.exists():
             try:
-                with open(self.majors_file, 'r', encoding='utf-8') as f:
+                with open(self.majors_file, encoding="utf-8") as f:
                     data = json.load(f)
                     for mid, mdata in data.items():
                         self.majors[mid] = CustomMajor(**mdata)
@@ -81,7 +82,7 @@ class DataManager:
         # 加载关系
         if self.relations_file.exists():
             try:
-                with open(self.relations_file, 'r', encoding='utf-8') as f:
+                with open(self.relations_file, encoding="utf-8") as f:
                     data = json.load(f)
                     for rid, rdata in data.items():
                         self.relations[rid] = CustomRelation(**rdata)
@@ -91,7 +92,7 @@ class DataManager:
         # 加载历史
         if self.history_file.exists():
             try:
-                with open(self.history_file, 'r', encoding='utf-8') as f:
+                with open(self.history_file, encoding="utf-8") as f:
                     self.history = json.load(f)
             except:
                 pass
@@ -100,32 +101,40 @@ class DataManager:
         """保存所有数据"""
         # 保存专业
         majors_data = {mid: asdict(m) for mid, m in self.majors.items()}
-        with open(self.majors_file, 'w', encoding='utf-8') as f:
+        with open(self.majors_file, "w", encoding="utf-8") as f:
             json.dump(majors_data, f, ensure_ascii=False, indent=2)
 
         # 保存关系
         relations_data = {rid: asdict(r) for rid, r in self.relations.items()}
-        with open(self.relations_file, 'w', encoding='utf-8') as f:
+        with open(self.relations_file, "w", encoding="utf-8") as f:
             json.dump(relations_data, f, ensure_ascii=False, indent=2)
 
         # 保存历史
-        with open(self.history_file, 'w', encoding='utf-8') as f:
+        with open(self.history_file, "w", encoding="utf-8") as f:
             json.dump(self.history[-100:], f, ensure_ascii=False, indent=2)  # 只保留最近100条
 
     def _add_history(self, action: str, item_type: str, item_id: str, details: dict):
         """添加编辑历史"""
-        self.history.append({
-            "action": action,
-            "type": item_type,
-            "id": item_id,
-            "details": details,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.history.append(
+            {
+                "action": action,
+                "type": item_type,
+                "id": item_id,
+                "details": details,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
     # ========== 专业管理 ==========
 
-    def add_major(self, name: str, category: str, subcategory: str,
-                  description: str = "", related_majors: List[str] = None) -> CustomMajor:
+    def add_major(
+        self,
+        name: str,
+        category: str,
+        subcategory: str,
+        description: str = "",
+        related_majors: list[str] = None,
+    ) -> CustomMajor:
         """
         添加新专业
 
@@ -153,7 +162,7 @@ class DataManager:
             category=category,
             subcategory=subcategory,
             description=description,
-            related_majors=related_majors or []
+            related_majors=related_majors or [],
         )
 
         self.majors[mid] = major
@@ -169,7 +178,7 @@ class DataManager:
 
         major = self.majors[major_id]
 
-        allowed_fields = ['name', 'category', 'subcategory', 'description', 'related_majors']
+        allowed_fields = ["name", "category", "subcategory", "description", "related_majors"]
         for key, value in kwargs.items():
             if key in allowed_fields:
                 setattr(major, key, value)
@@ -192,18 +201,18 @@ class DataManager:
 
         return True
 
-    def get_major(self, major_id: str) -> Optional[CustomMajor]:
+    def get_major(self, major_id: str) -> CustomMajor | None:
         """获取专业"""
         return self.majors.get(major_id)
 
-    def find_major_by_name(self, name: str) -> Optional[CustomMajor]:
+    def find_major_by_name(self, name: str) -> CustomMajor | None:
         """通过名称查找专业"""
         for m in self.majors.values():
             if m.name == name:
                 return m
         return None
 
-    def list_majors(self, category: str = None) -> List[CustomMajor]:
+    def list_majors(self, category: str = None) -> list[CustomMajor]:
         """列出所有专业"""
         majors = list(self.majors.values())
         if category:
@@ -212,8 +221,9 @@ class DataManager:
 
     # ========== 关系管理 ==========
 
-    def add_relation(self, from_major: str, to_major: str,
-                     relation_type: str = "related", description: str = "") -> CustomRelation:
+    def add_relation(
+        self, from_major: str, to_major: str, relation_type: str = "related", description: str = ""
+    ) -> CustomRelation:
         """
         添加专业关联关系
 
@@ -230,7 +240,7 @@ class DataManager:
             from_major=from_major,
             to_major=to_major,
             relation_type=relation_type,
-            description=description
+            description=description,
         )
 
         self.relations[rid] = relation
@@ -239,8 +249,9 @@ class DataManager:
         if from_major in self.majors and to_major not in self.majors[from_major].related_majors:
             self.majors[from_major].related_majors.append(to_major)
 
-        self._add_history("add", "relation", rid,
-                         {"from": from_major, "to": to_major, "type": relation_type})
+        self._add_history(
+            "add", "relation", rid, {"from": from_major, "to": to_major, "type": relation_type}
+        )
         self._save_data()
 
         return relation
@@ -251,18 +262,21 @@ class DataManager:
             return False
 
         relation = self.relations.pop(relation_id)
-        self._add_history("delete", "relation", relation_id,
-                         {"from": relation.from_major, "to": relation.to_major})
+        self._add_history(
+            "delete",
+            "relation",
+            relation_id,
+            {"from": relation.from_major, "to": relation.to_major},
+        )
         self._save_data()
 
         return True
 
-    def list_relations(self, major_id: str = None) -> List[CustomRelation]:
+    def list_relations(self, major_id: str = None) -> list[CustomRelation]:
         """列出关系"""
         relations = list(self.relations.values())
         if major_id:
-            relations = [r for r in relations
-                        if r.from_major == major_id or r.to_major == major_id]
+            relations = [r for r in relations if r.from_major == major_id or r.to_major == major_id]
         return relations
 
     # ========== 数据导入导出 ==========
@@ -273,17 +287,17 @@ class DataManager:
             "export_time": datetime.now().isoformat(),
             "majors": {mid: asdict(m) for mid, m in self.majors.items()},
             "relations": {rid: asdict(r) for rid, r in self.relations.items()},
-            "history": self.history[-50:]  # 最近50条历史
+            "history": self.history[-50:],  # 最近50条历史
         }
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
         return filepath
 
     def import_from_json(self, filepath: str, merge: bool = True):
         """从JSON导入数据"""
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, encoding="utf-8") as f:
             data = json.load(f)
 
         if not merge:
@@ -306,27 +320,22 @@ class DataManager:
     def get_statistics(self) -> dict:
         """获取数据统计"""
         return {
-            "majors": {
-                "total": len(self.majors),
-                "by_category": self._count_by_category()
-            },
-            "relations": {
-                "total": len(self.relations)
-            },
+            "majors": {"total": len(self.majors), "by_category": self._count_by_category()},
+            "relations": {"total": len(self.relations)},
             "history": {
                 "total": len(self.history),
-                "recent": self.history[-5:] if self.history else []
-            }
+                "recent": self.history[-5:] if self.history else [],
+            },
         }
 
-    def _count_by_category(self) -> Dict[str, int]:
+    def _count_by_category(self) -> dict[str, int]:
         """按类别统计专业数量"""
         counts = {}
         for m in self.majors.values():
             counts[m.category] = counts.get(m.category, 0) + 1
         return counts
 
-    def get_edit_history(self, limit: int = 20) -> List[Dict]:
+    def get_edit_history(self, limit: int = 20) -> list[dict]:
         """获取编辑历史"""
         return self.history[-limit:][::-1]  # 倒序返回
 
@@ -416,7 +425,7 @@ def interactive_manager():
             major = manager.find_major_by_name(name)
             if major:
                 confirm = input(f"确认删除 '{name}'? (y/N): ").strip().lower()
-                if confirm == 'y':
+                if confirm == "y":
                     manager.delete_major(major.id)
                     print(f"[OK] 已删除 '{name}'")
             else:
@@ -437,7 +446,9 @@ def interactive_manager():
                 print("[错误] 专业未找到，请先添加专业")
 
         elif choice == "5":
-            filepath = input("导出文件路径 (默认: data/export.json): ").strip() or "data/export.json"
+            filepath = (
+                input("导出文件路径 (默认: data/export.json): ").strip() or "data/export.json"
+            )
             manager.export_to_json(filepath)
             print(f"[OK] 数据已导出到 {filepath}")
 

@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Claude API演示脚本
 展示AI智能专业匹配的实际效果
 """
-import os
-import sys
+
 from api_config import APIConfig
 
 
@@ -28,7 +26,7 @@ def test_with_claude_api():
     # 初始化匹配器
     try:
         matcher = ClaudeMajorMatcher(config.anthropic_api_key)
-        print(f"[OK] Claude API连接成功")
+        print("[OK] Claude API连接成功")
         print(f"模型: {matcher.model}")
         print()
     except Exception as e:
@@ -85,12 +83,12 @@ def test_with_claude_api():
             print(f"  [错误] {e}")
 
     print("\n" + "=" * 80)
-    print(f"测试结果: {correct}/{len(test_cases)} = {correct/len(test_cases)*100:.1f}%")
+    print(f"测试结果: {correct}/{len(test_cases)} = {correct / len(test_cases) * 100:.1f}%")
     print(f"总估算成本: ${total_cost:.4f}")
 
     # 显示API统计
     stats = matcher.get_stats()
-    print(f"\nAPI统计:")
+    print("\nAPI统计:")
     print(f"  总Token: {stats['total_tokens']}")
     print(f"  缓存使用: {'是' if stats['cache_used'] else '否'}")
 
@@ -183,6 +181,7 @@ def compare_matching_methods():
         print("-" * 80)
 
         from llm_matcher_api import ClaudeMajorMatcher
+
         matcher = ClaudeMajorMatcher(config.anthropic_api_key)
 
         for user, job in test_cases:
@@ -203,8 +202,9 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Claude API演示")
-    parser.add_argument("--mode", choices=["api", "local", "compare", "all"],
-                        default="all", help="测试模式")
+    parser.add_argument(
+        "--mode", choices=["api", "local", "compare", "all"], default="all", help="测试模式"
+    )
     args = parser.parse_args()
 
     config = APIConfig()

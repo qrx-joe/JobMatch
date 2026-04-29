@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 API配置管理器
 处理Claude API的配置和密钥管理
 """
+
 import os
 from pathlib import Path
-from typing import Optional
 
 
 class APIConfig:
@@ -19,15 +18,15 @@ class APIConfig:
     def _load_env(self):
         """加载.env文件"""
         if self.env_file.exists():
-            with open(self.env_file, 'r', encoding='utf-8') as f:
+            with open(self.env_file, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
-                    if line and not line.startswith('#') and '=' in line:
-                        key, value = line.split('=', 1)
+                    if line and not line.startswith("#") and "=" in line:
+                        key, value = line.split("=", 1)
                         os.environ.setdefault(key, value)
 
     @property
-    def anthropic_api_key(self) -> Optional[str]:
+    def anthropic_api_key(self) -> str | None:
         """获取Anthropic API Key"""
         return os.getenv("ANTHROPIC_API_KEY")
 
@@ -55,7 +54,7 @@ class APIConfig:
             # 读取现有内容
             lines = []
             if self.env_file.exists():
-                with open(self.env_file, 'r', encoding='utf-8') as f:
+                with open(self.env_file, encoding="utf-8") as f:
                     lines = f.readlines()
 
             # 更新或添加API key
@@ -72,7 +71,7 @@ class APIConfig:
                 new_lines.append(f"ANTHROPIC_API_KEY={api_key}\n")
 
             # 写回文件
-            with open(self.env_file, 'w', encoding='utf-8') as f:
+            with open(self.env_file, "w", encoding="utf-8") as f:
                 f.writelines(new_lines)
 
             # 更新环境变量
@@ -94,7 +93,7 @@ class APIConfig:
             "key_present": bool(key),
             "key_prefix": key[:12] + "..." if key and len(key) > 12 else None,
             "env_file_exists": self.env_file.exists(),
-            "env_file_path": str(self.env_file.absolute())
+            "env_file_path": str(self.env_file.absolute()),
         }
 
 
@@ -109,11 +108,11 @@ def interactive_setup():
     status = config.get_status()
 
     if status["configured"]:
-        print(f"[OK] API已配置")
+        print("[OK] API已配置")
         print(f"   Key: {status['key_prefix']}")
         print()
         response = input("是否重新配置? (y/N): ").strip().lower()
-        if response != 'y':
+        if response != "y":
             return
 
     print("请从 https://console.anthropic.com/ 获取API Key")

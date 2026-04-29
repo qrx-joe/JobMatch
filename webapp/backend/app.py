@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 岗位筛选后端 API (FastAPI)
 """
-import os
-import io
+
 import base64
-from typing import List, Dict, Optional
-from fastapi import FastAPI, File, UploadFile, Form
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import pandas as pd
-import uvicorn
+import os
 
 # 导入现有模块
 import sys
+
+import uvicorn
+from fastapi import FastAPI, File, Form, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from job_matcher_v2 import JobMatcherV2, Job, MatchLevel
-from excel_reader_v2 import SimpleJobReader
 from excel_exporter import ExcelExporter
+from excel_reader_v2 import SimpleJobReader
+from job_matcher_v2 import JobMatcherV2, MatchLevel
 
 app = FastAPI(title="三支一扶岗位筛选系统", version="1.0.0")
 
@@ -31,6 +30,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # 数据模型
 class UserProfile(BaseModel):
     major: str = "经济学"
@@ -40,15 +40,17 @@ class UserProfile(BaseModel):
     household: str = "吕梁市"
     is_fresh_graduate: bool = False
     political_status: str = "群众"
-    qualifications: List[str] = []
+    qualifications: list[str] = []
     work_years: int = 0
-    target_cities: List[str] = []
+    target_cities: list[str] = []
+
 
 class FilterConfig(BaseModel):
     gender_strict: bool = True
     household_strict: bool = False
     qualification_strict: bool = False
     max_ratio: int = 100
+
 
 class JobResponse(BaseModel):
     sheet_name: str
@@ -67,17 +69,19 @@ class JobResponse(BaseModel):
     match_level: str
     match_score: int
     competition_ratio: float
-    match_reasons: List[str]
-    mismatch_reasons: List[str]
+    match_reasons: list[str]
+    mismatch_reasons: list[str]
+
 
 @app.get("/")
 def root():
     return {"message": "三支一扶岗位筛选API", "version": "1.0.0"}
 
+
 @app.post("/upload-and-filter")
 async def upload_and_filter(
     job_file: UploadFile = File(...),
-    stats_file: Optional[UploadFile] = File(None),
+    stats_file: UploadFile | None = File(None),
     major: str = Form("经济学"),
     education: str = Form("本科"),
     degree: str = Form("学士"),
@@ -118,54 +122,57 @@ async def upload_and_filter(
     # 关联统计数据
     if stats_path:
         from excel_reader_v2 import StatsReader
+
         stats_reader = StatsReader(stats_path)
         stats_reader.read()
         for job in jobs:
             stats = stats_reader.match_job(job)
             if stats:
-                job.applicants = stats['applicants']
-                job.approved = stats['approved']
-                job.paid = stats['paid']
+                job.applicants = stats["applicants"]
+                job.approved = stats["approved"]
+                job.paid = stats["paid"]
 
     # 创建临时配置文件
     config = {
-        'profile': {
-            '专业': major,
-            '学历': education,
-            '学位': degree,
-            '性别': gender,
-            '户籍': household,
-            '是否应届': is_fresh_graduate,
-            '政治面貌': political_status,
-            '相关资格': qual_list,
-            '工作年限': work_years,
+        "profile": {
+            "专业": major,
+            "学历": education,
+            "学位": degree,
+            "性别": gender,
+            "户籍": household,
+            "是否应届": is_fresh_graduate,
+            "政治面貌": political_status,
+            "相关资格": qual_list,
+            "工作年限": work_years,
         },
-        'preference': {
-            '意向城市': city_list,
-            '服务类别': []
+        "preference": {"意向城市": city_list, "服务类别": []},
+        "rules": {
+            "专业匹配模式": "智能",
+            "学历匹配": "向下兼容",
+            "户籍匹配": {"模式": "strict" if household_strict else "loose", "优先显示户籍地": True},
+            "性别限制": {"模式": "strict" if gender_strict else "loose"},
+            "相关资格匹配": {"模式": "strict" if False else "loose"},
+            "应届生匹配": {"模式": "loose"},
+            "政治面貌匹配": {"模式": "loose"},
         },
-        'rules': {
-            '专业匹配模式': '智能',
-            '学历匹配': '向下兼容',
-            '户籍匹配': {'模式': 'strict' if household_strict else 'loose', '优先显示户籍地': True},
-            '性别限制': {'模式': 'strict' if gender_strict else 'loose'},
-            '相关资格匹配': {'模式': 'strict' if False else 'loose'},
-            '应届生匹配': {'模式': 'loose'},
-            '政治面貌匹配': {'模式': 'loose'}
+        "filter": {"最大竞争比": 100, "最低招募人数": 1, "排除关键词": []},
+        "output": {
+            "排序方式": "匹配度降序",
+            "输出模式": "全量标记",
+            "显示字段": [
+                "所属地市",
+                "服务单位",
+                "岗位类型",
+                "专业要求",
+                "学历要求",
+                "竞争比",
+                "匹配度",
+            ],
         },
-        'filter': {
-            '最大竞争比': 100,
-            '最低招募人数': 1,
-            '排除关键词': []
-        },
-        'output': {
-            '排序方式': '匹配度降序',
-            '输出模式': '全量标记',
-            '显示字段': ['所属地市', '服务单位', '岗位类型', '专业要求', '学历要求', '竞争比', '匹配度']
-        }
     }
 
     import yaml
+
     config_path = "/tmp/config_temp.yaml"
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(config, f, allow_unicode=True)
@@ -178,26 +185,30 @@ async def upload_and_filter(
     # 转换为响应格式
     results = []
     for job in jobs:
-        results.append({
-            "sheet_name": job.sheet_name,
-            "index": job.index,
-            "unit": job.unit,
-            "job_type": job.job_type,
-            "service_category": job.service_category,
-            "recruit_count": job.recruit_count,
-            "education": job.education,
-            "degree": job.degree,
-            "major": job.major,
-            "qualifications": job.qualifications,
-            "other": job.other,
-            "phone": job.phone,
-            "paid": job.paid,
-            "match_level": job.match_level.value,
-            "match_score": job.match_score,
-            "competition_ratio": round(job.competition_ratio, 2) if job.recruit_count > 0 else 0,
-            "match_reasons": job.match_reasons,
-            "mismatch_reasons": job.mismatch_reasons
-        })
+        results.append(
+            {
+                "sheet_name": job.sheet_name,
+                "index": job.index,
+                "unit": job.unit,
+                "job_type": job.job_type,
+                "service_category": job.service_category,
+                "recruit_count": job.recruit_count,
+                "education": job.education,
+                "degree": job.degree,
+                "major": job.major,
+                "qualifications": job.qualifications,
+                "other": job.other,
+                "phone": job.phone,
+                "paid": job.paid,
+                "match_level": job.match_level.value,
+                "match_score": job.match_score,
+                "competition_ratio": round(job.competition_ratio, 2)
+                if job.recruit_count > 0
+                else 0,
+                "match_reasons": job.match_reasons,
+                "mismatch_reasons": job.mismatch_reasons,
+            }
+        )
 
     # 生成Excel
     exporter = ExcelExporter(config_path)
@@ -220,19 +231,29 @@ async def upload_and_filter(
         "mismatch": mismatch,
         "jobs": results,
         "excel_base64": excel_base64,
-        "excel_filename": "筛选结果.xlsx"
+        "excel_filename": "筛选结果.xlsx",
     }
+
 
 @app.get("/cities")
 def get_cities():
     """获取所有地市列表"""
     return {
         "cities": [
-            "太原市", "大同市", "朔州市", "忻州市",
-            "吕梁市", "晋中市", "阳泉市", "长治市",
-            "晋城市", "临汾市", "运城市"
+            "太原市",
+            "大同市",
+            "朔州市",
+            "忻州市",
+            "吕梁市",
+            "晋中市",
+            "阳泉市",
+            "长治市",
+            "晋城市",
+            "临汾市",
+            "运城市",
         ]
     }
+
 
 @app.get("/qualifications")
 def get_qualifications():
@@ -245,9 +266,10 @@ def get_qualifications():
             "护士资格证",
             "会计证",
             "注册会计师",
-            "建造师证"
+            "建造师证",
         ]
     }
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

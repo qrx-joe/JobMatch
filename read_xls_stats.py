@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-import pandas as pd
-import warnings
-import sys
 import io
-warnings.filterwarnings('ignore')
+import sys
+import warnings
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+import pandas as pd
+
+warnings.filterwarnings("ignore")
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 # 读取.xls统计数据文件
-stats_file = r'D:\EdgeDownload\QQ音乐\three-zhi-one-fu\P020260410598205300172.xls'
+stats_file = r"D:\EdgeDownload\QQ音乐\three-zhi-one-fu\P020260410598205300172.xls"
 
 # 读取所有sheet
 xl = pd.ExcelFile(stats_file)
 print(f"统计文件包含的sheet: {xl.sheet_names}")
 
 # 读取数据
-df = pd.read_excel(stats_file, sheet_name='sheet1', header=None)
+df = pd.read_excel(stats_file, sheet_name="sheet1", header=None)
 print(f"\n行数: {len(df)}, 列数: {len(df.columns)}")
 
 # 查看前几行

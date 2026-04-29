@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 简化版Excel读取器 - 更可靠
 """
+
 import pandas as pd
-import glob
-import os
-from typing import List, Dict, Optional
+
 from job_matcher import Job
 
 
@@ -16,13 +14,13 @@ class SimpleJobReader:
     def __init__(self, file_path: str):
         self.file_path = file_path
 
-    def read_all(self) -> List[Job]:
+    def read_all(self) -> list[Job]:
         """读取所有岗位"""
         jobs = []
 
         xl = pd.ExcelFile(self.file_path)
         for sheet_name in xl.sheet_names:
-            if sheet_name == '省林草局':
+            if sheet_name == "省林草局":
                 continue
 
             sheet_jobs = self._read_sheet(sheet_name)
@@ -31,7 +29,7 @@ class SimpleJobReader:
 
         return jobs
 
-    def _read_sheet(self, sheet_name: str) -> List[Job]:
+    def _read_sheet(self, sheet_name: str) -> list[Job]:
         """读取单个Sheet"""
         jobs = []
 
@@ -42,8 +40,8 @@ class SimpleJobReader:
             # 找表头行
             header_row = None
             for idx in range(min(10, len(df_raw))):
-                row_text = ' '.join([str(v) for v in df_raw.iloc[idx].values if pd.notna(v)])
-                if '序号' in row_text and '服务' in row_text:
+                row_text = " ".join([str(v) for v in df_raw.iloc[idx].values if pd.notna(v)])
+                if "序号" in row_text and "服务" in row_text:
                     header_row = idx
                     break
 
@@ -64,7 +62,7 @@ class SimpleJobReader:
 
         return jobs
 
-    def _parse_row(self, row: pd.Series, sheet_name: str) -> Optional[Job]:
+    def _parse_row(self, row: pd.Series, sheet_name: str) -> Job | None:
         """解析一行"""
         try:
             # 获取第一列（序号）
@@ -86,32 +84,32 @@ class SimpleJobReader:
             cols = list(row.index)
 
             # 按位置或名称查找字段
-            job.unit = self._find_value(row, cols, ['服务单位', '服务单位名称'])
+            job.unit = self._find_value(row, cols, ["服务单位", "服务单位名称"])
             if not job.unit or len(job.unit) < 3:
                 return None
 
-            job.job_type = self._find_value(row, cols, ['岗位类型', '岗位名称'])
-            job.service_category = self._find_value(row, cols, ['服务类别', '服务类型'])
-            job.recruit_count = self._parse_int(self._find_value(row, cols, ['招募人数']))
-            job.education = self._find_value(row, cols, ['学历'])
-            job.degree = self._find_value(row, cols, ['学位'])
-            job.major = self._find_value(row, cols, ['专业'])
-            job.qualifications = self._find_value(row, cols, ['相关资格'])
-            job.other = self._find_value(row, cols, ['其他'])
-            job.phone = self._find_value(row, cols, ['联系电话', '电话'])
-            job.contact = self._find_value(row, cols, ['联系人'])
+            job.job_type = self._find_value(row, cols, ["岗位类型", "岗位名称"])
+            job.service_category = self._find_value(row, cols, ["服务类别", "服务类型"])
+            job.recruit_count = self._parse_int(self._find_value(row, cols, ["招募人数"]))
+            job.education = self._find_value(row, cols, ["学历"])
+            job.degree = self._find_value(row, cols, ["学位"])
+            job.major = self._find_value(row, cols, ["专业"])
+            job.qualifications = self._find_value(row, cols, ["相关资格"])
+            job.other = self._find_value(row, cols, ["其他"])
+            job.phone = self._find_value(row, cols, ["联系电话", "电话"])
+            job.contact = self._find_value(row, cols, ["联系人"])
 
             return job
 
-        except Exception as e:
+        except Exception:
             return None
 
-    def _find_value(self, row: pd.Series, cols: list, possible_names: list, default='') -> str:
+    def _find_value(self, row: pd.Series, cols: list, possible_names: list, default="") -> str:
         """查找字段值"""
         # 先按列名查找
         for name in possible_names:
             for col in cols:
-                col_str = str(col).replace('\n', '').replace(' ', '')
+                col_str = str(col).replace("\n", "").replace(" ", "")
                 if name in col_str or col_str in name:
                     val = row[col]
                     if pd.notna(val):
@@ -119,7 +117,7 @@ class SimpleJobReader:
 
         # 如果没找到，按列位置估计
         # 服务单位通常在第2列（索引1）
-        if '服务单位' in possible_names and len(row) > 1:
+        if "服务单位" in possible_names and len(row) > 1:
             val = row.iloc[1]
             if pd.notna(val):
                 return str(val).strip()
@@ -148,16 +146,20 @@ class StatsReader:
 
             for _, row in df.iterrows():
                 try:
-                    unit = str(row.get('服务单位', '')).strip()
-                    job_type = str(row.get('岗位类型', '')).strip()
-                    paid = int(row.get('缴费人数', 0)) if pd.notna(row.get('缴费人数')) else 0
+                    unit = str(row.get("服务单位", "")).strip()
+                    job_type = str(row.get("岗位类型", "")).strip()
+                    paid = int(row.get("缴费人数", 0)) if pd.notna(row.get("缴费人数")) else 0
 
                     if unit and job_type:
                         key = (unit, job_type)
                         self.stats[key] = {
-                            'applicants': int(row.get('填报信息人数', 0)) if pd.notna(row.get('填报信息人数')) else 0,
-                            'approved': int(row.get('初审通过人数', 0)) if pd.notna(row.get('初审通过人数')) else 0,
-                            'paid': paid,
+                            "applicants": int(row.get("填报信息人数", 0))
+                            if pd.notna(row.get("填报信息人数"))
+                            else 0,
+                            "approved": int(row.get("初审通过人数", 0))
+                            if pd.notna(row.get("初审通过人数"))
+                            else 0,
+                            "paid": paid,
                         }
                 except:
                     continue
@@ -167,7 +169,7 @@ class StatsReader:
 
         return self.stats
 
-    def match_job(self, job: Job) -> Optional[dict]:
+    def match_job(self, job: Job) -> dict | None:
         """匹配岗位统计"""
         # 精确匹配
         key = (f"{job.sheet_name}-{job.unit}", job.job_type)

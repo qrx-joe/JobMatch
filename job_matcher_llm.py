@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 岗位筛选匹配引擎 - LLM增强版
 
@@ -10,20 +9,15 @@
 2. LLM模式: JobMatcher(config_path, use_llm=True)
 3. 需要设置 ANTHROPIC_API_KEY 环境变量
 """
+
 import os
-import sys
-import json
 import re
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Tuple
-from enum import Enum
-from datetime import datetime
 
 # 导入原模块
 from job_matcher import (
-    MatchLevel, Job, UserProfile,
-    EducationMatcher, GenderMatcher, HouseholdMatcher, JobMatcher as BaseJobMatcher
+    Job,
 )
+from job_matcher import JobMatcher as BaseJobMatcher
 from llm_matcher_real import RealLLMMajorMatcher
 
 
@@ -55,25 +49,43 @@ class LLMEnhancedMajorMatcher:
         """初始化基础规则"""
         # 专业大类映射
         self.major_categories = {
-            '经济学类': ['经济学', '经济统计学', '国民经济管理', '资源与环境经济学',
-                      '商务经济学', '能源经济', '劳动经济学', '数字经济'],
-            '财政学类': ['财政学', '税收学', '国际税收'],
-            '金融学类': ['金融学', '金融工程', '保险学', '投资学', '金融数学',
-                      '信用管理', '经济与金融', '精算学', '互联网金融', '金融科技'],
-            '经济与贸易类': ['国际经济与贸易', '贸易经济'],
-            '统计学类': ['统计学', '应用统计学', '数据科学', '生物统计学'],
+            "经济学类": [
+                "经济学",
+                "经济统计学",
+                "国民经济管理",
+                "资源与环境经济学",
+                "商务经济学",
+                "能源经济",
+                "劳动经济学",
+                "数字经济",
+            ],
+            "财政学类": ["财政学", "税收学", "国际税收"],
+            "金融学类": [
+                "金融学",
+                "金融工程",
+                "保险学",
+                "投资学",
+                "金融数学",
+                "信用管理",
+                "经济与金融",
+                "精算学",
+                "互联网金融",
+                "金融科技",
+            ],
+            "经济与贸易类": ["国际经济与贸易", "贸易经济"],
+            "统计学类": ["统计学", "应用统计学", "数据科学", "生物统计学"],
         }
 
         # 代码映射
         self.code_map = {
-            '0201': '经济学类',
-            '0202': '财政学类',
-            '0203': '金融学类',
-            '0204': '经济与贸易类',
-            '0712': '统计学类',
+            "0201": "经济学类",
+            "0202": "财政学类",
+            "0203": "金融学类",
+            "0204": "经济与贸易类",
+            "0712": "统计学类",
         }
 
-    def match(self, job_major: str) -> Tuple[bool, str, str]:
+    def match(self, job_major: str) -> tuple[bool, str, str]:
         """
         三级匹配
 
@@ -94,10 +106,10 @@ class LLMEnhancedMajorMatcher:
         # 未启用LLM时，使用本地语义规则
         return self._local_semantic_match(job_major)
 
-    def _rule_match(self, job_major: str) -> Optional[Tuple[bool, str]]:
+    def _rule_match(self, job_major: str) -> tuple[bool, str] | None:
         """规则匹配 - 明确情况"""
         # 1. 不限
-        if not job_major or "不限" in job_major or job_major.lower() in ['无', 'nan', '', 'none']:
+        if not job_major or "不限" in job_major or job_major.lower() in ["无", "nan", "", "none"]:
             return (True, "专业不限")
 
         # 2. 完全相等
@@ -123,7 +135,7 @@ class LLMEnhancedMajorMatcher:
 
         return None
 
-    def _match_by_code(self, job_major: str) -> Optional[Tuple[bool, str]]:
+    def _match_by_code(self, job_major: str) -> tuple[bool, str] | None:
         """通过专业代码匹配"""
         # 用户专业所属类别
         user_cats = []
@@ -133,9 +145,8 @@ class LLMEnhancedMajorMatcher:
 
         # 检查岗位代码
         for code, category in self.code_map.items():
-            if code in job_major:
-                if category in user_cats:
-                    return (True, f"代码匹配：{code}→{category}")
+            if code in job_major and category in user_cats:
+                return (True, f"代码匹配：{code}→{category}")
 
         return None
 
@@ -144,7 +155,6 @@ class LLMEnhancedMajorMatcher:
         # 简单关键词判断
         medical = ["医学", "临床", "护理", "药学", "口腔"]
         law = ["法学", "法律", "律师"]
-        edu = ["教育", "师范", "学前"]
 
         user = self.user_major
 
@@ -154,17 +164,13 @@ class LLMEnhancedMajorMatcher:
                 return True
 
         # 用户是法学，岗位非法学
-        if any(k in user for k in law):
-            if not any(k in job_major for k in law + ["不限"]):
-                return True
+        return bool(any(k in user for k in law) and not any(k in job_major for k in law + ["不限"]))
 
-        return False
-
-    def _local_semantic_match(self, job_major: str) -> Tuple[bool, str, str]:
+    def _local_semantic_match(self, job_major: str) -> tuple[bool, str, str]:
         """本地语义匹配（无LLM时使用）"""
         # 提取核心词
         user_core = self._extract_core(self.user_major)
-        job_parts = re.split(r'[、，,；;]', job_major)
+        job_parts = re.split(r"[、，,；;]", job_major)
         job_cores = [self._extract_core(p) for p in job_parts]
 
         # 检查是否同一大类
@@ -183,13 +189,13 @@ class LLMEnhancedMajorMatcher:
 
     def _extract_core(self, text: str) -> str:
         """提取专业核心词"""
-        text = re.sub(r'[（(].*?[）)]', '', text)
+        text = re.sub(r"[（(].*?[）)]", "", text)
         for suffix in ["类", "专业", "方向"]:
             if text.endswith(suffix):
-                text = text[:-len(suffix)]
+                text = text[: -len(suffix)]
         return text.strip()
 
-    def _get_category(self, major: str) -> Optional[str]:
+    def _get_category(self, major: str) -> str | None:
         """获取专业类别"""
         categories = [
             ("经济金融", ["经济", "金融", "财政", "税务", "贸易", "保险", "投资", "统计"]),
@@ -234,10 +240,7 @@ class JobMatcherLLM(BaseJobMatcher):
         super().__init__(config_path)
 
         # 替换专业匹配器为LLM增强版
-        self.major_matcher = LLMEnhancedMajorMatcher(
-            self.profile.major,
-            use_llm=use_llm
-        )
+        self.major_matcher = LLMEnhancedMajorMatcher(self.profile.major, use_llm=use_llm)
 
         self.use_llm = use_llm
         self.match_stats = {"rule": 0, "cache": 0, "llm": 0, "semantic": 0}
@@ -264,7 +267,7 @@ class JobMatcherLLM(BaseJobMatcher):
 
         return job
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """获取匹配统计"""
         return self.match_stats.copy()
 

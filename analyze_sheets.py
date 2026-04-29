@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-import pandas as pd
 import glob
-import warnings
 import io
-import sys
 import os
-warnings.filterwarnings('ignore')
+import sys
+import warnings
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+import pandas as pd
+
+warnings.filterwarnings("ignore")
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 # 使用glob获取文件
-dir_path = r'D:\EdgeDownload\QQ音乐\three-zhi-one-fu'
+dir_path = r"D:\EdgeDownload\QQ音乐\three-zhi-one-fu"
 
 # 获取第一个xlsx文件（排除临时文件）
-xlsx_files = [f for f in glob.glob(dir_path + '\\*.xlsx') if not os.path.basename(f).startswith('~$')]
+xlsx_files = [
+    f for f in glob.glob(dir_path + "\\*.xlsx") if not os.path.basename(f).startswith("~$")
+]
 print(f"找到的xlsx文件: {xlsx_files}")
 
 if not xlsx_files:
@@ -32,9 +35,9 @@ print("=" * 80)
 
 # 读取每个sheet的前几行
 for sheet_name in xl.sheet_names:
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"Sheet: {sheet_name}")
-    print('=' * 80)
+    print("=" * 80)
 
     df = pd.read_excel(file1, sheet_name=sheet_name, header=None)
     print(f"行数: {len(df)}, 列数: {len(df.columns)}")

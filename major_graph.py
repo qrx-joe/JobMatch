@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 专业关系图谱可视化
 展示专业大类与具体专业之间的语义关系
 """
+
 import json
 import os
-from dataclasses import dataclass, asdict
-from typing import List, Dict, Set, Tuple
-import math
+from dataclasses import dataclass
 
 
 @dataclass
 class MajorNode:
     """专业节点"""
+
     id: str
     name: str
     type: str  # 'category' | 'major'
     category: str = ""  # 所属大类
     code: str = ""  # 专业代码
-    related: List[str] = None  # 关联专业
+    related: list[str] = None  # 关联专业
 
     def __post_init__(self):
         if self.related is None:
@@ -37,8 +36,8 @@ class MajorRelationGraph:
     """
 
     def __init__(self):
-        self.nodes: Dict[str, MajorNode] = {}
-        self.edges: List[Tuple[str, str, str]] = []  # (from, to, relation_type)
+        self.nodes: dict[str, MajorNode] = {}
+        self.edges: list[tuple[str, str, str]] = []  # (from, to, relation_type)
         self._build_graph()
 
     def _build_graph(self):
@@ -52,13 +51,21 @@ class MajorRelationGraph:
                     {"name": "经济学", "code": "020101", "related": ["金融学", "财政学"]},
                     {"name": "经济统计学", "code": "020102", "related": ["统计学", "经济学"]},
                     {"name": "国民经济管理", "code": "020103", "related": ["经济学", "管理学"]},
-                    {"name": "资源与环境经济学", "code": "020104", "related": ["经济学", "环境科学"]},
+                    {
+                        "name": "资源与环境经济学",
+                        "code": "020104",
+                        "related": ["经济学", "环境科学"],
+                    },
                     {"name": "商务经济学", "code": "020105", "related": ["经济学", "国际贸易"]},
                     {"name": "能源经济", "code": "020106", "related": ["经济学", "能源工程"]},
                     {"name": "劳动经济学", "code": "020107", "related": ["经济学", "人力资源管理"]},
                     {"name": "经济工程", "code": "020108", "related": ["经济学", "工程管理"]},
-                    {"name": "数字经济", "code": "020109", "related": ["经济学", "数据科学", "计算机"]},
-                ]
+                    {
+                        "name": "数字经济",
+                        "code": "020109",
+                        "related": ["经济学", "数据科学", "计算机"],
+                    },
+                ],
             },
             "财政学类": {
                 "code": "0202",
@@ -66,7 +73,7 @@ class MajorRelationGraph:
                     {"name": "财政学", "code": "020201", "related": ["税收学", "经济学", "金融学"]},
                     {"name": "税收学", "code": "020202", "related": ["财政学", "会计学", "经济学"]},
                     {"name": "国际税收", "code": "020203", "related": ["税收学", "国际经济与贸易"]},
-                ]
+                ],
             },
             "金融学类": {
                 "code": "0203",
@@ -80,29 +87,45 @@ class MajorRelationGraph:
                     {"name": "经济与金融", "code": "020307", "related": ["经济学", "金融学"]},
                     {"name": "精算学", "code": "020308", "related": ["金融学", "数学", "统计学"]},
                     {"name": "互联网金融", "code": "020309", "related": ["金融学", "计算机"]},
-                    {"name": "金融科技", "code": "020310", "related": ["金融学", "计算机", "数据科学"]},
-                ]
+                    {
+                        "name": "金融科技",
+                        "code": "020310",
+                        "related": ["金融学", "计算机", "数据科学"],
+                    },
+                ],
             },
             "经济与贸易类": {
                 "code": "0204",
                 "majors": [
                     {"name": "国际经济与贸易", "code": "020401", "related": ["经济学", "商务英语"]},
                     {"name": "贸易经济", "code": "020402", "related": ["经济学", "国际贸易"]},
-                ]
+                ],
             },
             "统计学类": {
                 "code": "0712",
                 "majors": [
                     {"name": "统计学", "code": "071201", "related": ["数学", "经济学", "数据科学"]},
-                    {"name": "应用统计学", "code": "071202", "related": ["统计学", "计算机", "经济学"]},
+                    {
+                        "name": "应用统计学",
+                        "code": "071202",
+                        "related": ["统计学", "计算机", "经济学"],
+                    },
                     {"name": "数据科学", "code": "071203", "related": ["统计学", "计算机", "数学"]},
-                    {"name": "生物统计学", "code": "071204", "related": ["统计学", "生物学", "医学"]},
-                ]
+                    {
+                        "name": "生物统计学",
+                        "code": "071204",
+                        "related": ["统计学", "生物学", "医学"],
+                    },
+                ],
             },
             "计算机类": {
                 "code": "0809",
                 "majors": [
-                    {"name": "计算机科学与技术", "code": "080901", "related": ["软件工程", "网络工程"]},
+                    {
+                        "name": "计算机科学与技术",
+                        "code": "080901",
+                        "related": ["软件工程", "网络工程"],
+                    },
                     {"name": "软件工程", "code": "080902", "related": ["计算机", "网络工程"]},
                     {"name": "网络工程", "code": "080903", "related": ["计算机", "信息安全"]},
                     {"name": "信息安全", "code": "080904", "related": ["计算机", "网络工程"]},
@@ -111,7 +134,11 @@ class MajorRelationGraph:
                     {"name": "智能科学与技术", "code": "080907", "related": ["计算机", "人工智能"]},
                     {"name": "空间信息与数字技术", "code": "080908", "related": ["计算机", "地理"]},
                     {"name": "电子与计算机工程", "code": "080909", "related": ["计算机", "电子"]},
-                    {"name": "数据科学与大数据技术", "code": "080910", "related": ["计算机", "统计学", "数学"]},
+                    {
+                        "name": "数据科学与大数据技术",
+                        "code": "080910",
+                        "related": ["计算机", "统计学", "数学"],
+                    },
                     {"name": "网络空间安全", "code": "080911", "related": ["计算机", "信息安全"]},
                     {"name": "新媒体技术", "code": "080912", "related": ["计算机", "传媒"]},
                     {"name": "电影制作", "code": "080913", "related": ["计算机", "影视"]},
@@ -120,7 +147,7 @@ class MajorRelationGraph:
                     {"name": "虚拟现实技术", "code": "080916", "related": ["计算机", "设计"]},
                     {"name": "区块链工程", "code": "080917", "related": ["计算机", "金融"]},
                     {"name": "密码科学与技术", "code": "080918", "related": ["计算机", "数学"]},
-                ]
+                ],
             },
         }
 
@@ -129,36 +156,33 @@ class MajorRelationGraph:
             # 创建大类节点
             cat_id = f"CAT_{data['code']}"
             self.nodes[cat_id] = MajorNode(
-                id=cat_id,
-                name=category,
-                type="category",
-                code=data['code']
+                id=cat_id, name=category, type="category", code=data["code"]
             )
 
             # 创建具体专业节点
-            for major in data['majors']:
+            for major in data["majors"]:
                 major_id = f"MAJ_{major['code']}"
                 self.nodes[major_id] = MajorNode(
                     id=major_id,
-                    name=major['name'],
+                    name=major["name"],
                     type="major",
                     category=category,
-                    code=major['code'],
-                    related=major.get('related', [])
+                    code=major["code"],
+                    related=major.get("related", []),
                 )
 
                 # 添加边：专业 -> 大类
                 self.edges.append((major_id, cat_id, "belongs_to"))
 
                 # 添加边：专业之间的关联
-                for related_name in major.get('related', []):
+                for related_name in major.get("related", []):
                     # 查找相关专业的ID
                     for node_id, node in self.nodes.items():
                         if node.name == related_name and node.type == "major":
                             self.edges.append((major_id, node_id, "related"))
                             break
 
-    def find_path(self, from_major: str, to_major: str) -> List[str]:
+    def find_path(self, from_major: str, to_major: str) -> list[str]:
         """
         查找两个专业之间的关联路径
         """
@@ -189,7 +213,7 @@ class MajorRelationGraph:
 
         return []
 
-    def get_related_majors(self, major_name: str, depth: int = 1) -> Set[str]:
+    def get_related_majors(self, major_name: str, depth: int = 1) -> set[str]:
         """
         获取关联专业
         depth: 关联深度
@@ -227,23 +251,21 @@ class MajorRelationGraph:
         # 转换节点
         nodes_json = []
         for node in self.nodes.values():
-            nodes_json.append({
-                "id": node.id,
-                "name": node.name,
-                "type": node.type,
-                "category": node.category,
-                "code": node.code,
-                "group": self._get_category_code(node.category) if node.category else 0
-            })
+            nodes_json.append(
+                {
+                    "id": node.id,
+                    "name": node.name,
+                    "type": node.type,
+                    "category": node.category,
+                    "code": node.code,
+                    "group": self._get_category_code(node.category) if node.category else 0,
+                }
+            )
 
         # 转换边
         links_json = []
         for edge in self.edges:
-            links_json.append({
-                "source": edge[0],
-                "target": edge[1],
-                "type": edge[2]
-            })
+            links_json.append({"source": edge[0], "target": edge[1], "type": edge[2]})
 
         return json.dumps({"nodes": nodes_json, "links": links_json}, ensure_ascii=False, indent=2)
 
@@ -266,7 +288,7 @@ class MajorRelationGraph:
         """
         graph_data = self.to_json()
 
-        html_content = f'''<!DOCTYPE html>
+        html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -582,13 +604,13 @@ class MajorRelationGraph:
         }}
     </script>
 </body>
-</html>'''
+</html>"""
 
         # 替换数据
-        html_content = html_content.replace('{graph_data}', graph_data)
+        html_content = html_content.replace("{graph_data}", graph_data)
 
         # 写入文件
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(html_content)
 
         return output_path
@@ -603,7 +625,7 @@ def main():
     # 创建图谱
     graph = MajorRelationGraph()
 
-    print(f"\n图谱统计:")
+    print("\n图谱统计:")
     print(f"  节点数: {len(graph.nodes)}")
     print(f"  关系数: {len(graph.edges)}")
 
@@ -625,7 +647,7 @@ def main():
 
     print(f"\n可视化文件已生成: {output_file}")
     print(f"  文件大小: {os.path.getsize(output_file) / 1024:.1f} KB")
-    print(f"\n用浏览器打开查看交互式图谱")
+    print("\n用浏览器打开查看交互式图谱")
 
     return graph
 

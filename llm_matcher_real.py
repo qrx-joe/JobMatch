@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 真实LLM语义专业匹配器 - 使用Claude API
 
@@ -7,10 +6,10 @@
 1. 设置环境变量: ANTHROPIC_API_KEY=your_key
 2. 或者创建 .env 文件
 """
-import os
+
 import json
+import os
 import re
-from typing import Tuple, Dict, List
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -18,6 +17,7 @@ from datetime import datetime
 @dataclass
 class MatchResult:
     """匹配结果"""
+
     match: bool
     reason: str
     source: str  # rule / cache / llm
@@ -41,11 +41,11 @@ class RealLLMMajorMatcher:
         self.cache = self._load_cache()
         self.stats = {"rule": 0, "cache": 0, "llm": 0, "api_calls": 0}
 
-    def _load_cache(self) -> Dict:
+    def _load_cache(self) -> dict:
         """加载语义缓存"""
         if os.path.exists(self.cache_file):
             try:
-                with open(self.cache_file, 'r', encoding='utf-8') as f:
+                with open(self.cache_file, encoding="utf-8") as f:
                     return json.load(f)
             except:
                 return {}
@@ -53,14 +53,14 @@ class RealLLMMajorMatcher:
 
     def _save_cache(self):
         """保存语义缓存"""
-        with open(self.cache_file, 'w', encoding='utf-8') as f:
+        with open(self.cache_file, "w", encoding="utf-8") as f:
             json.dump(self.cache, f, ensure_ascii=False, indent=2)
 
     def _get_cache_key(self, job_major: str) -> str:
         """生成缓存key - 归一化处理"""
         # 移除空格和标点，统一小写
-        user = re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9]', '', self.user_major).lower()
-        job = re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9]', '', job_major).lower()
+        user = re.sub(r"[^\u4e00-\u9fa5a-zA-Z0-9]", "", self.user_major).lower()
+        job = re.sub(r"[^\u4e00-\u9fa5a-zA-Z0-9]", "", job_major).lower()
         return f"{user}|||{job}"
 
     def match(self, job_major: str) -> MatchResult:
@@ -80,7 +80,9 @@ class RealLLMMajorMatcher:
         if cache_key in self.cache:
             self.stats["cache"] += 1
             cached = self.cache[cache_key]
-            return MatchResult(cached["match"], cached["reason"], "cache", cached.get("confidence", 0.9))
+            return MatchResult(
+                cached["match"], cached["reason"], "cache", cached.get("confidence", 0.9)
+            )
 
         # === Layer 3: LLM匹配（智能判断）===
         if self.api_key:
@@ -92,7 +94,7 @@ class RealLLMMajorMatcher:
                 "confidence": llm_result.confidence,
                 "timestamp": datetime.now().isoformat(),
                 "user_major": self.user_major,
-                "job_major": job_major
+                "job_major": job_major,
             }
             self._save_cache()
             self.stats["llm"] += 1
@@ -103,7 +105,7 @@ class RealLLMMajorMatcher:
             self.stats["llm"] += 1
             return MatchResult(local_result[0], local_result[1], "llm", 0.7)
 
-    def _rule_match(self, job_major: str) -> Tuple[bool, str]:
+    def _rule_match(self, job_major: str) -> tuple[bool, str]:
         """
         第一层：硬规则匹配
         返回None表示需要进入下一层
@@ -137,7 +139,7 @@ class RealLLMMajorMatcher:
 
         return None
 
-    def _match_by_code(self, job_major: str) -> Tuple[bool, str]:
+    def _match_by_code(self, job_major: str) -> tuple[bool, str]:
         """通过专业代码匹配"""
         # 专业代码映射表
         code_to_category = {
@@ -153,13 +155,12 @@ class RealLLMMajorMatcher:
 
         # 检查岗位代码
         for code, category in code_to_category.items():
-            if code in job_major:
-                if category in user_categories:
-                    return (True, f"专业代码匹配：{code}对应{category}")
+            if code in job_major and category in user_categories:
+                return (True, f"专业代码匹配：{code}对应{category}")
 
         return None
 
-    def _get_major_categories(self, major: str) -> List[str]:
+    def _get_major_categories(self, major: str) -> list[str]:
         """获取专业所属类别"""
         categories = {
             "经济学类": ["经济学", "经济统计学", "国民经济管理"],
@@ -180,8 +181,6 @@ class RealLLMMajorMatcher:
         # 提取专业领域关键词
         medical_keywords = ["医学", "临床", "护理", "药学", "口腔", "中医", "西医"]
         law_keywords = ["法学", "法律", "知识产权"]
-        edu_keywords = ["教育", "师范", "教学", "学前"]
-        tech_keywords = ["计算机", "软件", "网络", "信息", "电子", "通信"]
 
         user = self.user_major
 
@@ -203,23 +202,6 @@ class RealLLMMajorMatcher:
         """
         try:
             # 构建prompt
-            prompt = f"""你是一个专业匹配专家。请判断以下两个专业是否匹配。
-
-用户专业：{self.user_major}
-岗位要求：{job_major}
-
-判断规则：
-1. 如果用户专业属于岗位要求的大类，算匹配
-2. 如果用户专业与岗位要求专业属于同一大类且高度相关，算匹配
-3. 如果两者专业领域完全不同，算不匹配
-4. 如果岗位要求是具体专业名，用户专业是另一个完全不同的具体专业，算不匹配
-
-请用JSON格式回复：
-{{
-    "match": true/false,
-    "reason": "简短的匹配/不匹配原因说明",
-    "confidence": 0.0-1.0 的置信度
-}}"""
 
             # 这里应该调用真实的Claude API
             # 为了演示，先使用模拟结果
@@ -244,7 +226,7 @@ class RealLLMMajorMatcher:
             # 模拟LLM判断（实际使用时删除这段）
             return self._local_semantic_match(job_major, return_full=True)
 
-        except Exception as e:
+        except Exception:
             # LLM调用失败时回退到本地规则
             result = self._local_semantic_match(job_major)
             return MatchResult(result[0], f"{result[1]} (LLM回退)", "llm", 0.5)
@@ -253,7 +235,7 @@ class RealLLMMajorMatcher:
         """本地语义匹配（LLM的简化版）"""
         # 提取核心词
         user_core = self._extract_core(self.user_major)
-        job_cores = [self._extract_core(m) for m in re.split(r'[、，,；;]', job_major)]
+        job_cores = [self._extract_core(m) for m in re.split(r"[、，,；;]", job_major)]
 
         # 判断大类
         user_cat = self._get_semantic_category(user_core)
@@ -266,7 +248,7 @@ class RealLLMMajorMatcher:
                     True,
                     f"语义匹配：{self.user_major}属于{user_cat}，岗位要求包含该大类",
                     "llm",
-                    0.85
+                    0.85,
                 )
             return (True, f"语义匹配：{self.user_major}属于{user_cat}")
 
@@ -275,43 +257,148 @@ class RealLLMMajorMatcher:
             if self._is_semantically_related(user_core, job_core):
                 if return_full:
                     return MatchResult(
-                        True,
-                        f"语义关联：{self.user_major}与{job_major}属于相关专业",
-                        "llm",
-                        0.75
+                        True, f"语义关联：{self.user_major}与{job_major}属于相关专业", "llm", 0.75
                     )
                 return (True, f"语义关联：{self.user_major}与{job_major}属于相关专业")
 
         if return_full:
             return MatchResult(
-                False,
-                f"语义判定不匹配：{self.user_major}与{job_major}专业差异较大",
-                "llm",
-                0.8
+                False, f"语义判定不匹配：{self.user_major}与{job_major}专业差异较大", "llm", 0.8
             )
         return (False, f"语义判定不匹配：{self.user_major}与{job_major}专业差异较大")
 
     def _extract_core(self, major: str) -> str:
         """提取专业核心词"""
         # 移除代码和括号
-        major = re.sub(r'[（(].*?[）)]', '', major)
+        major = re.sub(r"[（(].*?[）)]", "", major)
         # 移除通用后缀
         for suffix in ["类", "专业", "方向"]:
             if major.endswith(suffix):
-                major = major[:-len(suffix)]
+                major = major[: -len(suffix)]
         return major.strip()
 
     def _get_semantic_category(self, major: str) -> str:
         """获取语义类别"""
         categories = [
-            ("经济金融", ["经济", "金融", "财政", "税务", "贸易", "保险", "投资", "会计", "审计", "统计", "资产评估"]),
+            (
+                "经济金融",
+                [
+                    "经济",
+                    "金融",
+                    "财政",
+                    "税务",
+                    "贸易",
+                    "保险",
+                    "投资",
+                    "会计",
+                    "审计",
+                    "统计",
+                    "资产评估",
+                ],
+            ),
             ("法学", ["法学", "法律", "知识产权", "监狱", "律师"]),
-            ("教育学", ["教育", "师范", "学前", "小学", "中学", "教学", "心理", "体育", "艺术", "音乐", "美术"]),
-            ("文学", ["中文", "汉语", "文学", "外语", "英语", "日语", "翻译", "新闻", "传播", "广告", "编辑"]),
-            ("理学", ["数学", "物理", "化学", "生物", "地理", "天文", "地质", "心理", "统计", "应用数学"]),
-            ("工学", ["计算机", "软件", "网络", "信息", "电子", "通信", "自动化", "机械", "土木", "建筑", "化工", "材料", "能源", "环境", "生物工程"]),
-            ("医学", ["临床", "医学", "护理", "药学", "口腔", "中医", "西医", "预防", "检验", "影像", "麻醉", "精神", "康复"]),
-            ("管理学", ["管理", "行政", "工商", "人力", "资源", "公共", "旅游", "酒店", "物流", "供应链", "电子商务", "信息管理与信息系统"]),
+            (
+                "教育学",
+                [
+                    "教育",
+                    "师范",
+                    "学前",
+                    "小学",
+                    "中学",
+                    "教学",
+                    "心理",
+                    "体育",
+                    "艺术",
+                    "音乐",
+                    "美术",
+                ],
+            ),
+            (
+                "文学",
+                [
+                    "中文",
+                    "汉语",
+                    "文学",
+                    "外语",
+                    "英语",
+                    "日语",
+                    "翻译",
+                    "新闻",
+                    "传播",
+                    "广告",
+                    "编辑",
+                ],
+            ),
+            (
+                "理学",
+                [
+                    "数学",
+                    "物理",
+                    "化学",
+                    "生物",
+                    "地理",
+                    "天文",
+                    "地质",
+                    "心理",
+                    "统计",
+                    "应用数学",
+                ],
+            ),
+            (
+                "工学",
+                [
+                    "计算机",
+                    "软件",
+                    "网络",
+                    "信息",
+                    "电子",
+                    "通信",
+                    "自动化",
+                    "机械",
+                    "土木",
+                    "建筑",
+                    "化工",
+                    "材料",
+                    "能源",
+                    "环境",
+                    "生物工程",
+                ],
+            ),
+            (
+                "医学",
+                [
+                    "临床",
+                    "医学",
+                    "护理",
+                    "药学",
+                    "口腔",
+                    "中医",
+                    "西医",
+                    "预防",
+                    "检验",
+                    "影像",
+                    "麻醉",
+                    "精神",
+                    "康复",
+                ],
+            ),
+            (
+                "管理学",
+                [
+                    "管理",
+                    "行政",
+                    "工商",
+                    "人力",
+                    "资源",
+                    "公共",
+                    "旅游",
+                    "酒店",
+                    "物流",
+                    "供应链",
+                    "电子商务",
+                    "信息管理与信息系统",
+                ],
+            ),
             ("农学", ["农学", "林学", "园艺", "植保", "畜牧", "兽医", "水产", "农业", "林业"]),
         ]
 
@@ -324,8 +411,29 @@ class RealLLMMajorMatcher:
         """判断两个专业是否语义相关"""
         # 定义专业关联网络
         related_network = [
-            {"经济学", "金融学", "财政学", "税收学", "保险学", "投资学", "国际经济与贸易", "贸易经济", "统计学", "应用统计学", "经济统计学"},
-            {"计算机科学", "软件工程", "网络工程", "信息安全", "物联网", "大数据", "人工智能", "数据科学"},
+            {
+                "经济学",
+                "金融学",
+                "财政学",
+                "税收学",
+                "保险学",
+                "投资学",
+                "国际经济与贸易",
+                "贸易经济",
+                "统计学",
+                "应用统计学",
+                "经济统计学",
+            },
+            {
+                "计算机科学",
+                "软件工程",
+                "网络工程",
+                "信息安全",
+                "物联网",
+                "大数据",
+                "人工智能",
+                "数据科学",
+            },
             {"法学", "知识产权", "监狱学", "律师"},
         ]
 
@@ -336,7 +444,7 @@ class RealLLMMajorMatcher:
                 return True
         return False
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """获取匹配统计"""
         total = sum(self.stats.values())
         return {
@@ -362,28 +470,23 @@ def benchmark():
         ("经济学", "不限", True),
         ("经济学", "经济学", True),
         ("经济学", "经济学类", True),
-
         # 包含情况
         ("经济学", "经济学、金融学", True),
         ("经济学", "经济学类（0201）、财政学类（0202）", True),
-
         # 语义模糊情况 - 需要LLM
         ("金融学", "经济学类", True),
         ("经济统计学", "经济学类", True),
         ("国际经济与贸易", "经济与贸易类", True),
         ("保险学", "金融学类", True),
         ("投资学", "经济学类", True),
-
         # 复杂岗位要求
         ("经济学", "本科及以上，经济学类（0201）、财政学类（0202）、金融学类（0203）", True),
         ("金融学", "本科：经济学类（0201）、金融学类（0203）", True),
-
         # 不匹配情况
         ("经济学", "临床医学", False),
         ("经济学", "法学类", False),
         ("计算机科学", "临床医学", False),
         ("护理学", "经济学类", False),
-
         # 边缘情况
         ("经济学", "不限专业", True),
         ("经济学", "", True),
@@ -407,16 +510,20 @@ def benchmark():
             correct += 1
 
         status = "[OK]" if is_correct else "[FAIL]"
-        results_by_source[result.source].append({
-            "user": user_major,
-            "job": job_major[:40],
-            "expected": expected,
-            "got": result.match,
-            "confidence": result.confidence
-        })
+        results_by_source[result.source].append(
+            {
+                "user": user_major,
+                "job": job_major[:40],
+                "expected": expected,
+                "got": result.match,
+                "confidence": result.confidence,
+            }
+        )
 
         print(f"{status} [{result.source}] {user_major} vs {job_major[:30]}...")
-        print(f"       结果: {'匹配' if result.match else '不匹配'} (期望: {'匹配' if expected else '不匹配'})")
+        print(
+            f"       结果: {'匹配' if result.match else '不匹配'} (期望: {'匹配' if expected else '不匹配'})"
+        )
         print(f"       说明: {result.reason}")
         print(f"       置信度: {result.confidence:.2f}")
         print()
@@ -425,26 +532,26 @@ def benchmark():
     print("=" * 80)
     print("测试结果统计")
     print("=" * 80)
-    print(f"\n总准确率: {correct}/{len(test_cases)} = {correct/len(test_cases)*100:.1f}%")
+    print(f"\n总准确率: {correct}/{len(test_cases)} = {correct / len(test_cases) * 100:.1f}%")
 
     stats = matcher.get_stats()
-    print(f"\n匹配来源分布:")
+    print("\n匹配来源分布:")
     print(f"  规则匹配: {stats['rule_hit']} 次 ({stats['rule_rate']})")
     print(f"  缓存命中: {stats['cache_hit']} 次 ({stats['cache_rate']})")
     print(f"  LLM调用:  {stats['llm_calls']} 次")
     print(f"  缓存大小: {stats['cache_size']} 条")
 
-    print(f"\n性能预估:")
+    print("\n性能预估:")
     rule_time = stats["rule_hit"] * 0.001  # 1ms
     cache_time = stats["cache_hit"] * 0.0001  # 0.1ms
     llm_time = stats["llm_calls"] * 0.5  # 500ms
     total_time = rule_time + cache_time + llm_time
     avg_time = total_time / stats["total"] * 1000 if stats["total"] > 0 else 0
 
-    print(f"  规则耗时: {rule_time*1000:.1f}ms")
-    print(f"  缓存耗时: {cache_time*1000:.1f}ms")
-    print(f"  LLM耗时:  {llm_time*1000:.1f}ms")
-    print(f"  总耗时:   {total_time*1000:.1f}ms")
+    print(f"  规则耗时: {rule_time * 1000:.1f}ms")
+    print(f"  缓存耗时: {cache_time * 1000:.1f}ms")
+    print(f"  LLM耗时:  {llm_time * 1000:.1f}ms")
+    print(f"  总耗时:   {total_time * 1000:.1f}ms")
     print(f"  平均每条: {avg_time:.2f}ms")
 
     print("\n" + "=" * 80)

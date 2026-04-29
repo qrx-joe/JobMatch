@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 真实LLM API匹配器 - 使用Claude API进行专业语义匹配
 
@@ -9,18 +8,19 @@
 3. 结构化输出（Structured Output）保证格式
 4. 自适应思考（Adaptive Thinking）提升准确率
 """
-import os
+
 import json
+import os
 import time
 from dataclasses import dataclass
-from typing import Tuple, Optional
-from datetime import datetime
+
 import anthropic
 
 
 @dataclass
 class LLMMatchResult:
     """LLM匹配结果"""
+
     match: bool
     reason: str
     confidence: float
@@ -119,7 +119,7 @@ class ClaudeMajorMatcher:
                 {
                     "type": "text",
                     "text": system_content,
-                    "cache_control": {"type": "ephemeral"}  # 启用缓存
+                    "cache_control": {"type": "ephemeral"},  # 启用缓存
                 }
             ]
 
@@ -128,9 +128,7 @@ class ClaudeMajorMatcher:
                 model=self.model,
                 max_tokens=500,
                 system=system_messages,
-                messages=[
-                    {"role": "user", "content": user_message}
-                ],
+                messages=[{"role": "user", "content": user_message}],
                 thinking={"type": "adaptive"},  # 自适应思考
                 output_config={
                     "format": {
@@ -142,13 +140,19 @@ class ClaudeMajorMatcher:
                                 "reason": {"type": "string"},
                                 "confidence": {"type": "number"},
                                 "category_match": {"type": "boolean"},
-                                "related": {"type": "boolean"}
+                                "related": {"type": "boolean"},
                             },
-                            "required": ["match", "reason", "confidence", "category_match", "related"],
-                            "additionalProperties": False
-                        }
+                            "required": [
+                                "match",
+                                "reason",
+                                "confidence",
+                                "category_match",
+                                "related",
+                            ],
+                            "additionalProperties": False,
+                        },
                     }
-                }
+                },
             )
 
             # 解析响应
@@ -159,7 +163,7 @@ class ClaudeMajorMatcher:
             self.total_tokens += response.usage.input_tokens + response.usage.output_tokens
 
             # 检查是否使用了缓存
-            if hasattr(response.usage, 'cache_creation_input_tokens'):
+            if hasattr(response.usage, "cache_creation_input_tokens"):
                 if response.usage.cache_creation_input_tokens > 0:
                     self.cache_used = True
 
@@ -172,7 +176,7 @@ class ClaudeMajorMatcher:
                 category_match=result_json.get("category_match", False),
                 related=result_json.get("related", False),
                 llm_model=self.model,
-                response_time=response_time
+                response_time=response_time,
             )
 
         except anthropic.BadRequestError as e:
@@ -197,7 +201,7 @@ class ClaudeMajorMatcher:
             category_match=False,
             related=source == "semantic",
             llm_model="local_fallback",
-            response_time=0.0
+            response_time=0.0,
         )
 
     def get_stats(self) -> dict:
@@ -205,7 +209,7 @@ class ClaudeMajorMatcher:
         return {
             "total_tokens": self.total_tokens,
             "cache_used": self.cache_used,
-            "model": self.model
+            "model": self.model,
         }
 
 
@@ -258,12 +262,14 @@ def test_claude_matcher():
         if use_api:
             result = matcher.match(user_major, job_major)
             # 估算成本 (Opus 4.6: $5/1M input, $25/1M output)
-            cost = (result.response_time * 0)  # 简化估算
+            result.response_time * 0  # 简化估算
             total_cost += 0.002  # 假设每次约$0.002
 
             status = "[OK]" if result.match == expected else "[FAIL]"
-            print(f"  {status} 结果: {'匹配' if result.match else '不匹配'} "
-                  f"(期望: {'匹配' if expected else '不匹配'})")
+            print(
+                f"  {status} 结果: {'匹配' if result.match else '不匹配'} "
+                f"(期望: {'匹配' if expected else '不匹配'})"
+            )
             print(f"      原因: {result.reason}")
             print(f"      置信度: {result.confidence:.2f}")
             print(f"      同大类: {'是' if result.category_match else '否'}")
@@ -275,6 +281,7 @@ def test_claude_matcher():
         else:
             # 本地模式
             from job_matcher_llm import LLMEnhancedMajorMatcher
+
             local_matcher = LLMEnhancedMajorMatcher(user_major, use_llm=False)
             match, reason, source = local_matcher.match(job_major)
             status = "[OK]" if match == expected else "[FAIL]"
@@ -284,11 +291,11 @@ def test_claude_matcher():
                 correct += 1
 
     print("\n" + "=" * 80)
-    print(f"测试结果: {correct}/{len(test_cases)} = {correct/len(test_cases)*100:.1f}%")
+    print(f"测试结果: {correct}/{len(test_cases)} = {correct / len(test_cases) * 100:.1f}%")
 
     if use_api:
         stats = matcher.get_stats()
-        print(f"\nAPI统计:")
+        print("\nAPI统计:")
         print(f"  总Token: {stats['total_tokens']}")
         print(f"  缓存使用: {'是' if stats['cache_used'] else '否'}")
         print(f"  估算成本: ~${total_cost:.4f}")

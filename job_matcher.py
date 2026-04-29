@@ -1,67 +1,68 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 岗位筛选匹配引擎
 """
-import pandas as pd
+
 import re
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Tuple
 from enum import Enum
+
 import yaml
 
 
 class MatchLevel(Enum):
-    PERFECT = "完全符合"      # 绿色
-    PARTIAL = "可能符合"      # 黄色
-    MISMATCH = "不符合"       # 红色
+    PERFECT = "完全符合"  # 绿色
+    PARTIAL = "可能符合"  # 黄色
+    MISMATCH = "不符合"  # 红色
 
 
 @dataclass
 class Job:
     """岗位数据模型"""
+
     # 基本信息
-    sheet_name: str = ""           # 所属地市（Sheet名）
-    index: int = 0                 # 序号
-    unit: str = ""                 # 服务单位
-    job_type: str = ""             # 岗位类型
-    service_category: str = ""     # 服务类别
-    recruit_count: int = 1         # 招募人数
+    sheet_name: str = ""  # 所属地市（Sheet名）
+    index: int = 0  # 序号
+    unit: str = ""  # 服务单位
+    job_type: str = ""  # 岗位类型
+    service_category: str = ""  # 服务类别
+    recruit_count: int = 1  # 招募人数
 
     # 要求
-    education: str = ""            # 学历要求
-    degree: str = ""               # 学位要求
-    major: str = ""                # 专业要求
-    qualifications: str = ""       # 相关资格
-    other: str = ""                # 其他要求（性别/户籍等）
-    phone: str = ""                # 联系电话
-    contact: str = ""              # 联系人
-    description: str = ""          # 岗位描述
-    benefits: str = ""             # 福利待遇
+    education: str = ""  # 学历要求
+    degree: str = ""  # 学位要求
+    major: str = ""  # 专业要求
+    qualifications: str = ""  # 相关资格
+    other: str = ""  # 其他要求（性别/户籍等）
+    phone: str = ""  # 联系电话
+    contact: str = ""  # 联系人
+    description: str = ""  # 岗位描述
+    benefits: str = ""  # 福利待遇
 
     # 竞争数据
-    applicants: int = 0            # 填报信息人数
-    approved: int = 0              # 初审通过人数
-    paid: int = 0                  # 缴费人数
+    applicants: int = 0  # 填报信息人数
+    approved: int = 0  # 初审通过人数
+    paid: int = 0  # 缴费人数
 
     # 匹配结果
     match_level: MatchLevel = MatchLevel.MISMATCH
-    match_score: int = 0           # 匹配分数（用于排序）
-    match_reasons: List[str] = field(default_factory=list)
-    mismatch_reasons: List[str] = field(default_factory=list)
+    match_score: int = 0  # 匹配分数（用于排序）
+    match_reasons: list[str] = field(default_factory=list)
+    mismatch_reasons: list[str] = field(default_factory=list)
     competition_ratio: float = 0.0
 
 
 @dataclass
 class UserProfile:
     """用户档案"""
+
     major: str = ""
     education: str = ""
     degree: str = ""
     gender: str = ""
     household: str = ""
-    qualifications: List[str] = field(default_factory=list)
-    target_cities: List[str] = field(default_factory=list)
+    qualifications: list[str] = field(default_factory=list)
+    target_cities: list[str] = field(default_factory=list)
 
 
 class MajorMatcher:
@@ -69,35 +70,48 @@ class MajorMatcher:
 
     # 专业大类映射（教育部专业目录代码）
     MAJOR_CATEGORIES = {
-        '经济学类': [
-            '经济学', '经济统计学', '国民经济管理', '资源与环境经济学',
-            '商务经济学', '能源经济', '劳动经济学', '经济工程', '数字经济'
+        "经济学类": [
+            "经济学",
+            "经济统计学",
+            "国民经济管理",
+            "资源与环境经济学",
+            "商务经济学",
+            "能源经济",
+            "劳动经济学",
+            "经济工程",
+            "数字经济",
         ],
-        '财政学类': ['财政学', '税收学', '国际税收'],
-        '金融学类': [
-            '金融学', '金融工程', '保险学', '投资学', '金融数学',
-            '信用管理', '经济与金融', '精算学', '互联网金融', '金融科技'
+        "财政学类": ["财政学", "税收学", "国际税收"],
+        "金融学类": [
+            "金融学",
+            "金融工程",
+            "保险学",
+            "投资学",
+            "金融数学",
+            "信用管理",
+            "经济与金融",
+            "精算学",
+            "互联网金融",
+            "金融科技",
         ],
-        '经济与贸易类': [
-            '国际经济与贸易', '贸易经济'
-        ],
+        "经济与贸易类": ["国际经济与贸易", "贸易经济"],
     }
 
     # 专业代码映射（部分常见代码）
     MAJOR_CODES = {
-        '经济学类': ['0201'],
-        '经济学': ['020101'],
-        '经济统计学': ['020102'],
-        '财政学类': ['0202'],
-        '金融学类': ['0203'],
-        '经济与贸易类': ['0204'],
+        "经济学类": ["0201"],
+        "经济学": ["020101"],
+        "经济统计学": ["020102"],
+        "财政学类": ["0202"],
+        "金融学类": ["0203"],
+        "经济与贸易类": ["0204"],
     }
 
     def __init__(self, user_major: str):
         self.user_major = user_major.strip()
         self.user_categories = self._get_categories(user_major)
 
-    def _get_categories(self, major: str) -> List[str]:
+    def _get_categories(self, major: str) -> list[str]:
         """获取专业所属的大类"""
         categories = []
         for cat, majors in self.MAJOR_CATEGORIES.items():
@@ -105,7 +119,7 @@ class MajorMatcher:
                 categories.append(cat)
         return categories
 
-    def match(self, job_major: str) -> Tuple[bool, str]:
+    def match(self, job_major: str) -> tuple[bool, str]:
         """
         匹配专业
         返回: (是否匹配, 匹配说明)
@@ -113,7 +127,7 @@ class MajorMatcher:
         job_major = str(job_major).strip()
 
         # 情况1: 不限
-        if '不限' in job_major or job_major in ['无', 'nan', '', 'None']:
+        if "不限" in job_major or job_major in ["无", "nan", "", "None"]:
             return True, "专业不限"
 
         # 情况2: 完全相等
@@ -147,14 +161,14 @@ class EducationMatcher:
 
     # 学历层级
     EDU_LEVELS = {
-        '大专': 1,
-        '专科': 1,
-        '高职': 1,
-        '本科': 2,
-        '大学': 2,
-        '研究生': 3,
-        '硕士': 3,
-        '博士': 3,
+        "大专": 1,
+        "专科": 1,
+        "高职": 1,
+        "本科": 2,
+        "大学": 2,
+        "研究生": 3,
+        "硕士": 3,
+        "博士": 3,
     }
 
     def __init__(self, user_edu: str):
@@ -168,7 +182,7 @@ class EducationMatcher:
                 return level
         return 0
 
-    def match(self, job_edu: str) -> Tuple[bool, str]:
+    def match(self, job_edu: str) -> tuple[bool, str]:
         """
         匹配学历
         规则：用户学历 >= 岗位要求学历
@@ -184,7 +198,7 @@ class EducationMatcher:
                 break
 
         # 检查"及以上"
-        if '及以上' in job_edu:
+        if "及以上" in job_edu:
             if self.user_level >= job_min_level:
                 return True, f"学历符合：{self._level_to_str(self.user_level)} >= {job_edu}"
             else:
@@ -194,7 +208,10 @@ class EducationMatcher:
             if self.user_level == job_min_level:
                 return True, f"学历符合：{self._level_to_str(self.user_level)}"
             else:
-                return False, f"学历不匹配：你是{self._level_to_str(self.user_level)}，要求{job_edu}"
+                return (
+                    False,
+                    f"学历不匹配：你是{self._level_to_str(self.user_level)}，要求{job_edu}",
+                )
 
     def _level_to_str(self, level: int) -> str:
         """学历等级转字符串"""
@@ -208,7 +225,7 @@ class GenderMatcher:
     def __init__(self, user_gender: str):
         self.user_gender = user_gender.strip()
 
-    def match(self, other_field: str) -> Tuple[bool, str]:
+    def match(self, other_field: str) -> tuple[bool, str]:
         """
         匹配性别要求
         other_field: "其他"列的内容
@@ -216,14 +233,14 @@ class GenderMatcher:
         other = str(other_field).strip()
 
         # 检查是否有性别限制
-        if '限男性' in other:
-            if self.user_gender == '男':
+        if "限男性" in other:
+            if self.user_gender == "男":
                 return True, "性别符合：限男性"
             else:
                 return False, "性别不符合：限男性"
 
-        if '限女性' in other:
-            if self.user_gender == '女':
+        if "限女性" in other:
+            if self.user_gender == "女":
                 return True, "性别符合：限女性"
             else:
                 return False, "性别不符合：限女性"
@@ -237,16 +254,16 @@ class HouseholdMatcher:
     def __init__(self, user_household: str):
         self.user_household = user_household.strip()
 
-    def match(self, other_field: str) -> Tuple[bool, str]:
+    def match(self, other_field: str) -> tuple[bool, str]:
         """
         匹配户籍要求
         """
         other = str(other_field).strip()
 
         # 检查是否有户籍限制
-        if '限' in other and '户籍' in other:
+        if "限" in other and "户籍" in other:
             # 提取限制的户籍地
-            match = re.search(r'限(.*?)户籍', other)
+            match = re.search(r"限(.*?)户籍", other)
             if match:
                 required = match.group(1)
                 if required in self.user_household:
@@ -261,17 +278,17 @@ class JobMatcher:
     """岗位匹配引擎"""
 
     def __init__(self, config_path: str = "config.yaml"):
-        with open(config_path, 'r', encoding='utf-8') as f:
+        with open(config_path, encoding="utf-8") as f:
             self.config = yaml.safe_load(f)
 
         self.profile = UserProfile(
-            major=self.config['profile']['专业'],
-            education=self.config['profile']['学历'],
-            degree=self.config['profile']['学位'],
-            gender=self.config['profile']['性别'],
-            household=self.config['profile']['户籍'],
-            qualifications=self.config['profile'].get('相关资格', []),
-            target_cities=self.config['preference'].get('意向城市', [])
+            major=self.config["profile"]["专业"],
+            education=self.config["profile"]["学历"],
+            degree=self.config["profile"]["学位"],
+            gender=self.config["profile"]["性别"],
+            household=self.config["profile"]["户籍"],
+            qualifications=self.config["profile"].get("相关资格", []),
+            target_cities=self.config["preference"].get("意向城市", []),
         )
 
         # 初始化各匹配器
@@ -291,7 +308,7 @@ class JobMatcher:
 
         # 1. 专业匹配
         major_ok, major_msg = self.major_matcher.match(job.major)
-        checks['专业'] = major_ok
+        checks["专业"] = major_ok
         if major_ok:
             score += 40
             match_reasons.append(major_msg)
@@ -300,7 +317,7 @@ class JobMatcher:
 
         # 2. 学历匹配
         edu_ok, edu_msg = self.edu_matcher.match(job.education)
-        checks['学历'] = edu_ok
+        checks["学历"] = edu_ok
         if edu_ok:
             score += 30
             match_reasons.append(edu_msg)
@@ -309,7 +326,7 @@ class JobMatcher:
 
         # 3. 性别匹配
         gender_ok, gender_msg = self.gender_matcher.match(job.other)
-        checks['性别'] = gender_ok
+        checks["性别"] = gender_ok
         if gender_ok:
             score += 15
             match_reasons.append(gender_msg)
@@ -318,7 +335,7 @@ class JobMatcher:
 
         # 4. 户籍匹配
         household_ok, household_msg = self.household_matcher.match(job.other)
-        checks['户籍'] = household_ok
+        checks["户籍"] = household_ok
         if household_ok:
             score += 15
             match_reasons.append(household_msg)
@@ -335,7 +352,7 @@ class JobMatcher:
                 match_reasons.append(f"非意向城市：{job.sheet_name}")
 
         # 判断是否匹配
-        must_checks = ['专业', '学历', '性别', '户籍']
+        must_checks = ["专业", "学历", "性别", "户籍"]
         all_must_ok = all(checks.get(k, False) for k in must_checks)
 
         if all_must_ok:

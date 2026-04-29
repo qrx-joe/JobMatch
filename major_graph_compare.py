@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 专业对比可视化工具
 包含完整的28个专业大类 + 专业对比功能
 """
+
+from pathlib import Path
+
 from major_graph_complete import CompleteMajorGraph
 
 
@@ -17,7 +19,7 @@ class MajorCompareVisualizer(CompleteMajorGraph):
         # 获取所有专业名称用于下拉选择
         all_majors = sorted([n.name for n in self.nodes.values() if n.type == "major"])
 
-        html_content = f'''<!DOCTYPE html>
+        html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -236,14 +238,14 @@ class MajorCompareVisualizer(CompleteMajorGraph):
                             <label>你的专业</label>
                             <select id="major1">
                                 <option value="">请选择</option>
-                                {''.join([f'<option value="{m}">{m}</option>' for m in all_majors])}
+                                {"".join([f'<option value="{m}">{m}</option>' for m in all_majors])}
                             </select>
                         </div>
                         <div class="input-group">
                             <label>岗位要求的专业</label>
                             <select id="major2">
                                 <option value="">请选择</option>
-                                {''.join([f'<option value="{m}">{m}</option>' for m in all_majors])}
+                                {"".join([f'<option value="{m}">{m}</option>' for m in all_majors])}
                             </select>
                         </div>
                         <button class="btn" onclick="compareMajors()">开始对比分析</button>
@@ -511,13 +513,13 @@ class MajorCompareVisualizer(CompleteMajorGraph):
         initGraph();
     </script>
 </body>
-</html>'''
+</html>"""
 
         # 替换数据
-        html_content = html_content.replace('{graph_data}', graph_data)
+        html_content = html_content.replace("{graph_data}", graph_data)
 
         # 写入文件
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(html_content)
 
         return output_path
@@ -535,11 +537,11 @@ if __name__ == "__main__":
     output = visualizer.generate_compare_html()
 
     print(f"\n[OK] 文件已生成: {output}")
-    print(f"   文件大小: {len(open(output, 'r', encoding='utf-8').read()) / 1024:.1f} KB")
-    print(f"\n功能说明:")
-    print(f"   1. 选择两个专业进行对比")
-    print(f"   2. 显示关联度评分(0-100分)")
-    print(f"   3. 可视化展示关联路径")
-    print(f"   4. 提供报考建议")
-    print(f"\n包含28个专业大类，共206个专业")
-    print(f"用浏览器打开即可使用")
+    print(f"   文件大小: {len(Path(output).read_text(encoding='utf-8')) / 1024:.1f} KB")
+    print("\n功能说明:")
+    print("   1. 选择两个专业进行对比")
+    print("   2. 显示关联度评分(0-100分)")
+    print("   3. 可视化展示关联路径")
+    print("   4. 提供报考建议")
+    print("\n包含28个专业大类，共206个专业")
+    print("用浏览器打开即可使用")

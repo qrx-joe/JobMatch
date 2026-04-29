@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 历史数据分析模块 - 支持历年数据对比、趋势预测
 """
-import pandas as pd
-import numpy as np
-from typing import Dict, List, Optional, Tuple
+
 from dataclasses import dataclass
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
 
 
 @dataclass
 class YearlyStats:
     """单年度统计数据"""
+
     year: int
-    applicants: int = 0          # 报名人数
-    approved: int = 0            # 初审通过
-    paid: int = 0                # 缴费人数
-    pass_score: float = 0.0      # 上岸分数线
-    avg_competition: float = 0.0 # 平均竞争比
+    applicants: int = 0  # 报名人数
+    approved: int = 0  # 初审通过
+    paid: int = 0  # 缴费人数
+    pass_score: float = 0.0  # 上岸分数线
+    avg_competition: float = 0.0  # 平均竞争比
 
 
 class HistoricalAnalyzer:
@@ -32,23 +33,23 @@ class HistoricalAnalyzer:
             historical_config: 配置中的 historical_data 部分
         """
         self.config = historical_config
-        self.current_year = historical_config.get('当前年份', 2025)
-        self.yearly_data: Dict[int, YearlyStats] = {}
-        self.user_score = historical_config.get('分析选项', {}).get('预估分数', 0)
+        self.current_year = historical_config.get("当前年份", 2025)
+        self.yearly_data: dict[int, YearlyStats] = {}
+        self.user_score = historical_config.get("分析选项", {}).get("预估分数", 0)
 
-    def load_historical_data(self) -> Dict[int, pd.DataFrame]:
+    def load_historical_data(self) -> dict[int, pd.DataFrame]:
         """
         加载所有历年统计数据
 
         Returns:
             Dict[int, pd.DataFrame]: {年份: 统计表DataFrame}
         """
-        historical_files = self.config.get('历年统计', {})
+        historical_files = self.config.get("历年统计", {})
         loaded_data = {}
 
         for year, file_config in historical_files.items():
             year = int(year)
-            file_path = file_config.get('文件路径', '')
+            file_path = file_config.get("文件路径", "")
 
             if not file_path or not Path(file_path).exists():
                 print(f"  警告: {year}年统计文件不存在: {file_path}")
@@ -63,7 +64,9 @@ class HistoricalAnalyzer:
 
         return loaded_data
 
-    def analyze_job_historical(self, unit_name: str, historical_dfs: Dict[int, pd.DataFrame]) -> Dict[int, dict]:
+    def analyze_job_historical(
+        self, unit_name: str, historical_dfs: dict[int, pd.DataFrame]
+    ) -> dict[int, dict]:
         """
         分析单个岗位的历年数据
 
@@ -84,7 +87,7 @@ class HistoricalAnalyzer:
 
         return stats
 
-    def _match_unit_in_df(self, unit_name: str, df: pd.DataFrame, year: int) -> Optional[dict]:
+    def _match_unit_in_df(self, unit_name: str, df: pd.DataFrame, year: int) -> dict | None:
         """
         在DataFrame中匹配单位名称
 
@@ -100,7 +103,7 @@ class HistoricalAnalyzer:
             return None
 
         # 可能的列名
-        unit_columns = ['单位名称', '服务单位', '用人单位', '单位']
+        unit_columns = ["单位名称", "服务单位", "用人单位", "单位"]
         unit_col = None
 
         for col in unit_columns:
@@ -125,8 +128,8 @@ class HistoricalAnalyzer:
         row = matches.iloc[0]
 
         # 获取该年分数线配置
-        year_config = self.config.get('历年统计', {}).get(str(year), {})
-        pass_score = year_config.get('上岸分数线', 0)
+        year_config = self.config.get("历年统计", {}).get(str(year), {})
+        pass_score = year_config.get("上岸分数线", 0)
 
         # 获取统计数据字段
         def get_field(row, possible_names, default=0):
@@ -140,21 +143,21 @@ class HistoricalAnalyzer:
                             return default
             return default
 
-        applicants = get_field(row, ['填报信息人数', '报名人数', '报名', 'applicants'])
-        paid = get_field(row, ['缴费人数', '缴费', 'paid'])
-        recruit_count = get_field(row, ['招募人数', '招录人数', '人数', 'recruit_count'], 1)
+        applicants = get_field(row, ["填报信息人数", "报名人数", "报名", "applicants"])
+        paid = get_field(row, ["缴费人数", "缴费", "paid"])
+        recruit_count = get_field(row, ["招募人数", "招录人数", "人数", "recruit_count"], 1)
 
         competition_ratio = paid / recruit_count if recruit_count > 0 else 0
 
         return {
-            'applicants': applicants,
-            'paid': paid,
-            'recruit_count': recruit_count,
-            'competition_ratio': competition_ratio,
-            'pass_score': pass_score
+            "applicants": applicants,
+            "paid": paid,
+            "recruit_count": recruit_count,
+            "competition_ratio": competition_ratio,
+            "pass_score": pass_score,
         }
 
-    def predict_score(self, historical_stats: Dict[int, dict]) -> Tuple[float, str]:
+    def predict_score(self, historical_stats: dict[int, dict]) -> tuple[float, str]:
         """
         基于历史数据预测今年上岸分数
 
@@ -168,7 +171,11 @@ class HistoricalAnalyzer:
             return 0.0, "无历史数据"
 
         years = sorted(historical_stats.keys())
-        scores = [historical_stats[y].get('pass_score', 0) for y in years if historical_stats[y].get('pass_score')]
+        scores = [
+            historical_stats[y].get("pass_score", 0)
+            for y in years
+            if historical_stats[y].get("pass_score")
+        ]
 
         if len(scores) < 2:
             return scores[0] if scores else 0.0, "单年数据"
@@ -216,7 +223,7 @@ class HistoricalAnalyzer:
         else:
             return 10.0
 
-    def analyze_trend(self, historical_stats: Dict[int, dict]) -> str:
+    def analyze_trend(self, historical_stats: dict[int, dict]) -> str:
         """
         分析竞争趋势
 
@@ -230,7 +237,7 @@ class HistoricalAnalyzer:
             return "未知"
 
         years = sorted(historical_stats.keys())
-        ratios = [historical_stats[y].get('competition_ratio', 0) for y in years]
+        ratios = [historical_stats[y].get("competition_ratio", 0) for y in years]
 
         if len(ratios) < 2:
             return "未知"
@@ -262,9 +269,9 @@ class HistoricalAnalyzer:
         Returns:
             策略建议
         """
-        strategy_mode = self.config.get('分析选项', {}).get('报考策略', 'conservative')
+        strategy_mode = self.config.get("分析选项", {}).get("报考策略", "conservative")
 
-        if strategy_mode == 'conservative':
+        if strategy_mode == "conservative":
             if pass_probability >= 80:
                 return "【稳妥】上岸概率高，推荐报考"
             elif pass_probability >= 60:
@@ -272,7 +279,7 @@ class HistoricalAnalyzer:
             else:
                 return "【谨慎】风险较高，建议备选"
 
-        elif strategy_mode == 'aggressive':
+        elif strategy_mode == "aggressive":
             if pass_probability >= 50:
                 return "【推荐】值得一试"
             else:
@@ -287,7 +294,7 @@ class HistoricalAnalyzer:
                 return "【观望】建议关注其他岗位"
 
 
-def enrich_jobs_with_historical_data(jobs: List, historical_config: dict) -> List:
+def enrich_jobs_with_historical_data(jobs: list, historical_config: dict) -> list:
     """
     为岗位列表添加历史数据分析
 
@@ -298,7 +305,7 @@ def enrich_jobs_with_historical_data(jobs: List, historical_config: dict) -> Lis
     Returns:
         添加历史数据后的岗位列表
     """
-    if not historical_config.get('启用', False):
+    if not historical_config.get("启用", False):
         return jobs
 
     print("\n[历史数据分析]")
@@ -341,17 +348,13 @@ def enrich_jobs_with_historical_data(jobs: List, historical_config: dict) -> Lis
 if __name__ == "__main__":
     # 测试代码
     test_config = {
-        '启用': True,
-        '当前年份': 2025,
-        '历年统计': {
-            2023: {'文件路径': 'test_2023.xlsx', '上岸分数线': 65.5},
-            2024: {'文件路径': 'test_2024.xlsx', '上岸分数线': 68.0},
+        "启用": True,
+        "当前年份": 2025,
+        "历年统计": {
+            2023: {"文件路径": "test_2023.xlsx", "上岸分数线": 65.5},
+            2024: {"文件路径": "test_2024.xlsx", "上岸分数线": 68.0},
         },
-        '分析选项': {
-            '预测分数': True,
-            '预估分数': 70.0,
-            '报考策略': 'conservative'
-        }
+        "分析选项": {"预测分数": True, "预估分数": 70.0, "报考策略": "conservative"},
     }
 
     analyzer = HistoricalAnalyzer(test_config)

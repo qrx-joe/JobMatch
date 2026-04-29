@@ -1,32 +1,33 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 岗位筛选主程序 V2 - 支持更多筛选条件
 """
+
+import argparse
+import glob
 import os
 import sys
-import glob
-import argparse
-from typing import List
+
+import yaml
+
+from excel_exporter import ExcelExporter
+from excel_reader_v2 import SimpleJobReader, StatsReader
 from job_matcher import Job, MatchLevel
 from job_matcher_v2 import JobMatcherV2
-from excel_reader_v2 import SimpleJobReader, StatsReader
-from excel_exporter import ExcelExporter
-import yaml
 
 
 def find_files() -> tuple:
     """查找岗位表和统计表文件"""
-    job_files = glob.glob('*岗位汇总表*.xlsx') + glob.glob('*岗位汇总表*.xls')
-    job_files = [f for f in job_files if not os.path.basename(f).startswith('~$')]
+    job_files = glob.glob("*岗位汇总表*.xlsx") + glob.glob("*岗位汇总表*.xls")
+    job_files = [f for f in job_files if not os.path.basename(f).startswith("~$")]
 
-    stats_files = glob.glob('P0*.xls') + glob.glob('*统计*.xls') + glob.glob('*统计*.xlsx')
-    stats_files = [f for f in stats_files if not os.path.basename(f).startswith('~$')]
+    stats_files = glob.glob("P0*.xls") + glob.glob("*统计*.xls") + glob.glob("*统计*.xlsx")
+    stats_files = [f for f in stats_files if not os.path.basename(f).startswith("~$")]
 
     return job_files, stats_files
 
 
-def print_summary(jobs: List[Job]):
+def print_summary(jobs: list[Job]):
     """打印汇总信息"""
     print("\n" + "=" * 80)
     print("筛选结果汇总")
@@ -37,13 +38,13 @@ def print_summary(jobs: List[Job]):
     partial = [j for j in jobs if j.match_level == MatchLevel.PARTIAL]
     mismatch = [j for j in jobs if j.match_level == MatchLevel.MISMATCH]
 
-    print(f"\n匹配统计:")
+    print("\n匹配统计:")
     print(f"  完全符合: {len(perfect)} 个岗位")
     print(f"  可能符合: {len(partial)} 个岗位")
     print(f"  不符合:   {len(mismatch)} 个岗位")
 
     # 按城市统计
-    print(f"\n按地市统计（完全符合）:")
+    print("\n按地市统计（完全符合）:")
     city_counts = {}
     for job in perfect:
         city_counts[job.sheet_name] = city_counts.get(job.sheet_name, 0) + 1
@@ -52,7 +53,7 @@ def print_summary(jobs: List[Job]):
         print(f"  {city}: {count} 个")
 
     # 竞争比分析
-    print(f"\n竞争比分析（完全符合且有数据的岗位）:")
+    print("\n竞争比分析（完全符合且有数据的岗位）:")
     jobs_with_data = [j for j in perfect if j.paid > 0]
     if jobs_with_data:
         ratios = [j.competition_ratio for j in jobs_with_data]
@@ -68,13 +69,13 @@ def print_summary(jobs: List[Job]):
         mid = len([r for r in ratios if 30 <= r < 100])
         high = len([r for r in ratios if r >= 100])
 
-        print(f"\n  竞争比分布:")
+        print("\n  竞争比分布:")
         print(f"    低竞争(<30:1):  {low} 个")
         print(f"    中竞争(30-100): {mid} 个")
         print(f"    高竞争(>100):   {high} 个")
 
     # 显示前10个最匹配的岗位
-    print(f"\n前10个最匹配的岗位（完全符合 + 竞争比最低）:")
+    print("\n前10个最匹配的岗位（完全符合 + 竞争比最低）:")
     sorted_jobs = sorted(jobs_with_data, key=lambda j: j.competition_ratio)
 
     for i, job in enumerate(sorted_jobs[:10], 1):
@@ -85,9 +86,9 @@ def print_summary(jobs: List[Job]):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='三支一扶岗位筛选工具 V2')
-    parser.add_argument('--config', '-c', default='config_full.yaml', help='配置文件路径')
-    parser.add_argument('--output', '-o', default='筛选结果_v2.xlsx', help='输出文件路径')
+    parser = argparse.ArgumentParser(description="三支一扶岗位筛选工具 V2")
+    parser.add_argument("--config", "-c", default="config_full.yaml", help="配置文件路径")
+    parser.add_argument("--output", "-o", default="筛选结果_v2.xlsx", help="输出文件路径")
     args = parser.parse_args()
 
     print("=" * 80)
@@ -100,7 +101,7 @@ def main():
         print(f"错误: 配置文件不存在: {args.config}")
         sys.exit(1)
 
-    with open(args.config, 'r', encoding='utf-8') as f:
+    with open(args.config, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     print(f"  配置文件: {args.config}")
@@ -148,9 +149,9 @@ def main():
         for job in jobs:
             stats = stats_reader.match_job(job)
             if stats:
-                job.applicants = stats['applicants']
-                job.approved = stats['approved']
-                job.paid = stats['paid']
+                job.applicants = stats["applicants"]
+                job.approved = stats["approved"]
+                job.paid = stats["paid"]
                 matched += 1
 
         print(f"  成功关联 {matched}/{len(jobs)} 个岗位的竞争数据")

@@ -1,30 +1,29 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 匹配报告生成器
 支持JSON、HTML、Excel、PDF格式导出
 """
+
 import json
-import os
+from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Dict, Optional
-from dataclasses import dataclass, asdict
 from pathlib import Path
 
 
 @dataclass
 class MatchReport:
     """匹配报告数据类"""
+
     user_major: str
     user_education: str
     user_degree: str
     user_gender: str = ""
     user_household: str = ""
     is_fresh_graduate: bool = False
-    target_cities: List[str] = None
-    matched_jobs: List[Dict] = None
-    filter_config: Dict = None
-    summary: Dict = None
+    target_cities: list[str] = None
+    matched_jobs: list[dict] = None
+    filter_config: dict = None
+    summary: dict = None
     generated_at: str = ""
 
     def __post_init__(self):
@@ -58,7 +57,7 @@ class ReportGenerator:
             "report_info": {
                 "generated_at": report.generated_at,
                 "version": "2.0.0",
-                "source": "三支一扶智能选岗系统"
+                "source": "三支一扶智能选岗系统",
             },
             "user_profile": {
                 "major": report.user_major,
@@ -67,14 +66,14 @@ class ReportGenerator:
                 "gender": report.user_gender,
                 "household": report.user_household,
                 "is_fresh_graduate": report.is_fresh_graduate,
-                "target_cities": report.target_cities
+                "target_cities": report.target_cities,
             },
             "filter_config": report.filter_config,
             "summary": report.summary,
-            "matched_jobs": report.matched_jobs
+            "matched_jobs": report.matched_jobs,
         }
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
         return str(filepath)
@@ -88,11 +87,13 @@ class ReportGenerator:
 
         # 计算统计数据
         total = len(report.matched_jobs)
-        perfect_count = sum(1 for j in report.matched_jobs if j.get('match_level') == '完全符合')
-        partial_count = sum(1 for j in report.matched_jobs if j.get('match_level') == '可能符合')
-        avg_score = sum(j.get('match_score', 0) for j in report.matched_jobs) / total if total > 0 else 0
+        perfect_count = sum(1 for j in report.matched_jobs if j.get("match_level") == "完全符合")
+        partial_count = sum(1 for j in report.matched_jobs if j.get("match_level") == "可能符合")
+        avg_score = (
+            sum(j.get("match_score", 0) for j in report.matched_jobs) / total if total > 0 else 0
+        )
 
-        html_content = f'''<!DOCTYPE html>
+        html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -335,7 +336,7 @@ class ReportGenerator:
                 </div>
                 <div class="profile-item">
                     <span class="profile-label">政治面貌</span>
-                    <span class="profile-value">{report.filter_config.get('political_status', '不限')}</span>
+                    <span class="profile-value">{report.filter_config.get("political_status", "不限")}</span>
                 </div>
             </div>
         </div>
@@ -354,59 +355,61 @@ class ReportGenerator:
 
     <button class="print-btn" onclick="window.print()">🖨️ 打印报告</button>
 </body>
-</html>'''
+</html>"""
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(html_content)
 
         return str(filepath)
 
-    def _generate_job_items(self, jobs: List[Dict]) -> str:
+    def _generate_job_items(self, jobs: list[dict]) -> str:
         """生成岗位HTML"""
         if not jobs:
             return '<p style="text-align: center; color: #888; padding: 40px;">暂无匹配岗位</p>'
 
         html = ""
         for job in jobs:
-            level = job.get('match_level', '不符合')
+            level = job.get("match_level", "不符合")
             badge_class = {
-                '完全符合': 'badge-perfect',
-                '可能符合': 'badge-partial',
-                '不符合': 'badge-mismatch'
-            }.get(level, 'badge-mismatch')
+                "完全符合": "badge-perfect",
+                "可能符合": "badge-partial",
+                "不符合": "badge-mismatch",
+            }.get(level, "badge-mismatch")
 
-            card_class = 'perfect' if level == '完全符合' else 'partial' if level == '可能符合' else ''
+            card_class = (
+                "perfect" if level == "完全符合" else "partial" if level == "可能符合" else ""
+            )
 
-            reasons = job.get('match_reasons', [])
+            reasons = job.get("match_reasons", [])
             reasons_html = ""
             if reasons:
-                reasons_list = "".join([f'<li>{r}</li>' for r in reasons])
+                reasons_list = "".join([f"<li>{r}</li>" for r in reasons])
                 reasons_html = f'<div class="reasons"><div class="reasons-title">匹配理由</div><ul>{reasons_list}</ul></div>'
 
-            competition = job.get('competition_ratio', 0)
+            competition = job.get("competition_ratio", 0)
             competition_str = f"{competition:.1f}:1" if competition > 0 else "暂无"
 
-            html += f'''
+            html += f"""
                 <div class="job-item {card_class}">
                     <div class="job-header">
                         <div>
-                            <div class="job-title">{job.get('unit', '未知单位')}</div>
-                            <div class="job-location">{job.get('sheet_name', '未知城市')} | {job.get('job_type', '未知类型')}</div>
+                            <div class="job-title">{job.get("unit", "未知单位")}</div>
+                            <div class="job-location">{job.get("sheet_name", "未知城市")} | {job.get("job_type", "未知类型")}</div>
                         </div>
                         <span class="badge {badge_class}">{level}</span>
                     </div>
                     <div class="job-details">
                         <div class="detail">
                             <div class="detail-label">专业要求</div>
-                            <div class="detail-value">{job.get('major', '不限')}</div>
+                            <div class="detail-value">{job.get("major", "不限")}</div>
                         </div>
                         <div class="detail">
                             <div class="detail-label">学历要求</div>
-                            <div class="detail-value">{job.get('education', '不限')}</div>
+                            <div class="detail-value">{job.get("education", "不限")}</div>
                         </div>
                         <div class="detail">
                             <div class="detail-label">招募人数</div>
-                            <div class="detail-value">{job.get('recruit_count', 1)}人</div>
+                            <div class="detail-value">{job.get("recruit_count", 1)}人</div>
                         </div>
                         <div class="detail">
                             <div class="detail-label">竞争比</div>
@@ -414,12 +417,12 @@ class ReportGenerator:
                         </div>
                         <div class="detail">
                             <div class="detail-label">匹配分数</div>
-                            <div class="detail-value" style="color: #667eea;">{job.get('match_score', 0)}分</div>
+                            <div class="detail-value" style="color: #667eea;">{job.get("match_score", 0)}分</div>
                         </div>
                     </div>
                     {reasons_html}
                 </div>
-            '''
+            """
 
         return html
 
@@ -427,11 +430,10 @@ class ReportGenerator:
         """生成Excel格式报告"""
         try:
             import pandas as pd
-            from openpyxl import load_workbook
-            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
         except ImportError:
             print("[错误] 未安装pandas/openpyxl，正在安装...")
             import subprocess
+
             subprocess.run(["uv", "add", "pandas", "openpyxl"], check=True)
             import pandas as pd
 
@@ -443,70 +445,65 @@ class ReportGenerator:
         # 准备数据
         jobs_data = []
         for job in report.matched_jobs:
-            jobs_data.append({
-                '序号': len(jobs_data) + 1,
-                '城市': job.get('sheet_name', ''),
-                '服务单位': job.get('unit', ''),
-                '岗位类型': job.get('job_type', ''),
-                '专业要求': job.get('major', ''),
-                '学历要求': job.get('education', ''),
-                '招募人数': job.get('recruit_count', 1),
-                '报名人数': job.get('applicants', 0),
-                '初审通过': job.get('approved', 0),
-                '缴费人数': job.get('paid', 0),
-                '竞争比': job.get('competition_ratio', 0),
-                '匹配等级': job.get('match_level', ''),
-                '匹配分数': job.get('match_score', 0),
-                '匹配理由': ' | '.join(job.get('match_reasons', []))
-            })
+            jobs_data.append(
+                {
+                    "序号": len(jobs_data) + 1,
+                    "城市": job.get("sheet_name", ""),
+                    "服务单位": job.get("unit", ""),
+                    "岗位类型": job.get("job_type", ""),
+                    "专业要求": job.get("major", ""),
+                    "学历要求": job.get("education", ""),
+                    "招募人数": job.get("recruit_count", 1),
+                    "报名人数": job.get("applicants", 0),
+                    "初审通过": job.get("approved", 0),
+                    "缴费人数": job.get("paid", 0),
+                    "竞争比": job.get("competition_ratio", 0),
+                    "匹配等级": job.get("match_level", ""),
+                    "匹配分数": job.get("match_score", 0),
+                    "匹配理由": " | ".join(job.get("match_reasons", [])),
+                }
+            )
 
         df = pd.DataFrame(jobs_data)
 
         # 创建Excel writer
-        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
             # 岗位列表
-            df.to_excel(writer, sheet_name='匹配岗位', index=False)
+            df.to_excel(writer, sheet_name="匹配岗位", index=False)
 
             # 用户信息
-            user_info = pd.DataFrame([{
-                '项目': '专业',
-                '内容': report.user_major
-            }, {
-                '项目': '学历',
-                '内容': report.user_education
-            }, {
-                '项目': '学位',
-                '内容': report.user_degree
-            }, {
-                '项目': '性别',
-                '内容': report.user_gender or '不限'
-            }, {
-                '项目': '户籍',
-                '内容': report.user_household or '不限'
-            }, {
-                '项目': '是否应届',
-                '内容': '是' if report.is_fresh_graduate else '否'
-            }, {
-                '项目': '意向城市',
-                '内容': ', '.join(report.target_cities) if report.target_cities else '不限'
-            }, {
-                '项目': '生成时间',
-                '内容': report.generated_at
-            }])
-            user_info.to_excel(writer, sheet_name='用户信息', index=False)
+            user_info = pd.DataFrame(
+                [
+                    {"项目": "专业", "内容": report.user_major},
+                    {"项目": "学历", "内容": report.user_education},
+                    {"项目": "学位", "内容": report.user_degree},
+                    {"项目": "性别", "内容": report.user_gender or "不限"},
+                    {"项目": "户籍", "内容": report.user_household or "不限"},
+                    {"项目": "是否应届", "内容": "是" if report.is_fresh_graduate else "否"},
+                    {
+                        "项目": "意向城市",
+                        "内容": ", ".join(report.target_cities) if report.target_cities else "不限",
+                    },
+                    {"项目": "生成时间", "内容": report.generated_at},
+                ]
+            )
+            user_info.to_excel(writer, sheet_name="用户信息", index=False)
 
             # 统计信息
             summary_data = {
-                '指标': ['匹配岗位总数', '完全符合', '可能符合', '不符合', '平均匹配分'],
-                '数值': [
+                "指标": ["匹配岗位总数", "完全符合", "可能符合", "不符合", "平均匹配分"],
+                "数值": [
                     len(report.matched_jobs),
-                    sum(1 for j in report.matched_jobs if j.get('match_level') == '完全符合'),
-                    sum(1 for j in report.matched_jobs if j.get('match_level') == '可能符合'),
-                    sum(1 for j in report.matched_jobs if j.get('match_level') == '不符合'),
-                    sum(j.get('match_score', 0) for j in report.matched_jobs) / len(report.matched_jobs) if report.matched_jobs else 0
-                ]
+                    sum(1 for j in report.matched_jobs if j.get("match_level") == "完全符合"),
+                    sum(1 for j in report.matched_jobs if j.get("match_level") == "可能符合"),
+                    sum(1 for j in report.matched_jobs if j.get("match_level") == "不符合"),
+                    sum(j.get("match_score", 0) for j in report.matched_jobs)
+                    / len(report.matched_jobs)
+                    if report.matched_jobs
+                    else 0,
+                ],
             }
-            pd.DataFrame(summary_data).to_excel(writer, sheet_name='统计汇总', index=False)
+            pd.DataFrame(summary_data).to_excel(writer, sheet_name="统计汇总", index=False)
 
         return str(filepath)
 
@@ -517,8 +514,8 @@ class ReportGenerator:
 
         # 尝试使用weasyprint或playwright转换为PDF
         try:
-            pdf_path = html_path.replace('.html', '.pdf')
-            print(f"[提示] PDF生成需要使用浏览器打印功能")
+            pdf_path = html_path.replace(".html", ".pdf")
+            print("[提示] PDF生成需要使用浏览器打印功能")
             print(f'[提示] 请打开 {html_path}，然后选择"打印"->"另存为PDF"')
             return pdf_path
         except Exception as e:
@@ -550,7 +547,11 @@ def create_sample_report() -> MatchReport:
                 "competition_ratio": 8.0,
                 "match_level": "完全符合",
                 "match_score": 95,
-                "match_reasons": ["专业匹配：金融学属于经济学类", "学历符合：本科符合要求", "意向城市匹配：济南市"]
+                "match_reasons": [
+                    "专业匹配：金融学属于经济学类",
+                    "学历符合：本科符合要求",
+                    "意向城市匹配：济南市",
+                ],
             },
             {
                 "sheet_name": "青岛市",
@@ -565,15 +566,10 @@ def create_sample_report() -> MatchReport:
                 "competition_ratio": 6.7,
                 "match_level": "可能符合",
                 "match_score": 75,
-                "match_reasons": ["专业相关：金融学与统计学高度相关", "学历符合：本科符合要求"]
-            }
+                "match_reasons": ["专业相关：金融学与统计学高度相关", "学历符合：本科符合要求"],
+            },
         ],
-        summary={
-            "total": 2,
-            "perfect": 1,
-            "partial": 1,
-            "avg_score": 85
-        }
+        summary={"total": 2, "perfect": 1, "partial": 1, "avg_score": 85},
     )
 
 
@@ -601,8 +597,8 @@ if __name__ == "__main__":
         print(f"[错误] Excel生成失败: {e}")
 
     print("\n" + "=" * 80)
-    print(f"报告预览:")
+    print("报告预览:")
     print(f"  用户: {report.user_major}")
     print(f"  匹配: {len(report.matched_jobs)}个岗位")
     print(f"  完全符合: {report.summary['perfect']}个")
-    print(f"=" * 80)
+    print("=" * 80)

@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 匹配报告导出器 - 支持PDF和Excel格式
 """
+
 import json
-from datetime import datetime
-from typing import List, Dict, Optional
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
 class MatchReport:
     """匹配报告数据"""
+
     user_major: str
     user_education: str
     user_degree: str
-    target_jobs: List[Dict]
-    filter_criteria: Dict
-    summary: Dict
+    target_jobs: list[dict]
+    filter_criteria: dict
+    summary: dict
     generated_at: str = ""
 
     def __post_init__(self):
@@ -45,14 +45,14 @@ class ReportExporter:
             "user_profile": {
                 "major": report.user_major,
                 "education": report.user_education,
-                "degree": report.user_degree
+                "degree": report.user_degree,
             },
             "filter_criteria": report.filter_criteria,
             "summary": report.summary,
-            "target_jobs": report.target_jobs
+            "target_jobs": report.target_jobs,
         }
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
         return filepath
@@ -66,8 +66,8 @@ class ReportExporter:
 
         # 统计
         total = len(report.target_jobs)
-        perfect = sum(1 for j in report.target_jobs if j.get('level') == '完全符合')
-        partial = sum(1 for j in report.target_jobs if j.get('level') == '可能符合')
+        perfect = sum(1 for j in report.target_jobs if j.get("level") == "完全符合")
+        partial = sum(1 for j in report.target_jobs if j.get("level") == "可能符合")
 
         html = f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -231,7 +231,7 @@ class ReportExporter:
                 <div class="label">可能符合</div>
             </div>
             <div class="card">
-                <div class="number" style="color: #17a2b8;">{report.summary.get('avg_score', 0):.0f}</div>
+                <div class="number" style="color: #17a2b8;">{report.summary.get("avg_score", 0):.0f}</div>
                 <div class="label">平均匹配分</div>
             </div>
         </div>
@@ -263,44 +263,44 @@ class ReportExporter:
 """
 
         for job in report.target_jobs:
-            level = job.get('level', '不符合')
+            level = job.get("level", "不符合")
             badge_class = {
-                '完全符合': 'badge-perfect',
-                '可能符合': 'badge-partial',
-                '不符合': 'badge-mismatch'
-            }.get(level, 'badge-mismatch')
+                "完全符合": "badge-perfect",
+                "可能符合": "badge-partial",
+                "不符合": "badge-mismatch",
+            }.get(level, "badge-mismatch")
 
-            match_reasons = job.get('match_reasons', [])
-            reasons_html = ''
+            match_reasons = job.get("match_reasons", [])
+            reasons_html = ""
             if match_reasons:
-                reasons_list = ''.join([f'<li>{r}</li>' for r in match_reasons])
+                reasons_list = "".join([f"<li>{r}</li>" for r in match_reasons])
                 reasons_html = f'<div class="reasons"><div class="title">匹配理由</div><ul>{reasons_list}</ul></div>'
 
             html += f"""
                 <div class="job-item">
                     <div class="job-header">
                         <div>
-                            <div class="job-title">{job.get('unit', '未知单位')}</div>
-                            <div class="job-location">{job.get('city', '未知城市')} | {job.get('job_type', '未知类型')}</div>
+                            <div class="job-title">{job.get("unit", "未知单位")}</div>
+                            <div class="job-location">{job.get("city", "未知城市")} | {job.get("job_type", "未知类型")}</div>
                         </div>
                         <span class="badge {badge_class}">{level}</span>
                     </div>
                     <div class="job-details">
                         <div class="detail-item">
                             <span class="label">专业要求:</span>
-                            <span>{job.get('major', '不限')}</span>
+                            <span>{job.get("major", "不限")}</span>
                         </div>
                         <div class="detail-item">
                             <span class="label">学历要求:</span>
-                            <span>{job.get('education', '不限')}</span>
+                            <span>{job.get("education", "不限")}</span>
                         </div>
                         <div class="detail-item">
                             <span class="label">招募人数:</span>
-                            <span>{job.get('recruit_count', 1)}人</span>
+                            <span>{job.get("recruit_count", 1)}人</span>
                         </div>
                         <div class="detail-item">
                             <span class="label">竞争比:</span>
-                            <span>{job.get('competition_ratio', 'N/A')}</span>
+                            <span>{job.get("competition_ratio", "N/A")}</span>
                         </div>
                     </div>
                     {reasons_html}
@@ -320,7 +320,7 @@ class ReportExporter:
 </html>
 """
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(html)
 
         return filepath
@@ -342,7 +342,11 @@ class ReportExporter:
                     "competition_ratio": "12:1",
                     "level": "完全符合",
                     "match_score": 95,
-                    "match_reasons": ["专业匹配：金融学属于经济学类", "学历符合：本科符合要求", "意向城市匹配"]
+                    "match_reasons": [
+                        "专业匹配：金融学属于经济学类",
+                        "学历符合：本科符合要求",
+                        "意向城市匹配",
+                    ],
                 },
                 {
                     "unit": "某县统计局",
@@ -354,7 +358,7 @@ class ReportExporter:
                     "competition_ratio": "8:1",
                     "level": "可能符合",
                     "match_score": 75,
-                    "match_reasons": ["专业相关：金融学与统计学高度相关", "学历符合：本科符合要求"]
+                    "match_reasons": ["专业相关：金融学与统计学高度相关", "学历符合：本科符合要求"],
                 },
                 {
                     "unit": "某市教育局",
@@ -366,21 +370,21 @@ class ReportExporter:
                     "competition_ratio": "25:1",
                     "level": "不符合",
                     "match_score": 30,
-                    "match_reasons": ["专业不匹配：金融学与教育学类差异较大"]
-                }
+                    "match_reasons": ["专业不匹配：金融学与教育学类差异较大"],
+                },
             ],
             filter_criteria={
                 "意向城市": ["济南市", "青岛市"],
                 "学历要求": "本科及以上",
-                "最大竞争比": 50
+                "最大竞争比": 50,
             },
             summary={
                 "total_jobs": 150,
                 "matched_jobs": 45,
                 "perfect_match": 12,
                 "partial_match": 33,
-                "avg_score": 72.5
-            }
+                "avg_score": 72.5,
+            },
         )
 
 

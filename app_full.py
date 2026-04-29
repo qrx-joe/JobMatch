@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 三支一扶智能选岗系统 - 完整版
 集成Claude API、专业对比、报告导出
 """
+
 import os
-import json
-from typing import List, Dict, Optional
-from datetime import datetime
-from dataclasses import dataclass, asdict
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,10 +12,10 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 # 导入各个模块
-from job_matcher_v2 import JobMatcherV2, Job, MatchLevel
+from job_matcher_v2 import Job, JobMatcherV2
 from llm_matcher_api import ClaudeMajorMatcher
-from major_graph_full import get_graph, compare_majors, find_path
-from report_exporter import ReportExporter, MatchReport
+from major_graph_full import compare_majors, find_path, get_graph
+from report_exporter import MatchReport, ReportExporter
 
 app = FastAPI(title="三支一扶智能选岗系统", version="2.0.0")
 
@@ -35,8 +31,10 @@ app.add_middleware(
 
 # ============== 数据模型 ==============
 
+
 class UserProfile(BaseModel):
     """用户档案"""
+
     major: str
     education: str = "本科"
     degree: str = "学士"
@@ -44,22 +42,24 @@ class UserProfile(BaseModel):
     household: str = ""
     is_fresh_graduate: bool = False
     political_status: str = "群众"
-    qualifications: List[str] = []
+    qualifications: list[str] = []
     work_years: int = 0
-    target_cities: List[str] = []
+    target_cities: list[str] = []
 
 
 class FilterConfig(BaseModel):
     """筛选配置"""
-    cities: List[str] = []
-    min_salary: Optional[int] = None
+
+    cities: list[str] = []
+    min_salary: int | None = None
     max_competition_ratio: float = 100.0
-    exclude_keywords: List[str] = []
-    require_qualifications: List[str] = []
+    exclude_keywords: list[str] = []
+    require_qualifications: list[str] = []
 
 
 class JobSearchRequest(BaseModel):
     """岗位搜索请求"""
+
     profile: UserProfile
     filters: FilterConfig
     use_llm: bool = True  # 是否使用Claude API
@@ -67,23 +67,26 @@ class JobSearchRequest(BaseModel):
 
 class MatchResult(BaseModel):
     """匹配结果"""
-    jobs: List[Dict]
-    summary: Dict
+
+    jobs: list[dict]
+    summary: dict
     match_time: float
 
 
 class MajorCompareRequest(BaseModel):
     """专业对比请求"""
+
     major1: str
     major2: str
 
 
 class MajorCompareResponse(BaseModel):
     """专业对比响应"""
-    major1: Dict
-    major2: Dict
+
+    major1: dict
+    major2: dict
     relationship: str
-    path: List[str]
+    path: list[str]
     same_category: bool
     same_subcategory: bool
 
@@ -92,6 +95,7 @@ class MajorCompareResponse(BaseModel):
 
 # Claude API匹配器（延迟初始化）
 _claude_matcher = None
+
 
 def get_claude_matcher():
     """获取Claude匹配器（单例）"""
@@ -105,18 +109,14 @@ def get_claude_matcher():
 
 # ============== API路由 ==============
 
+
 @app.get("/")
 def root():
     """根路径"""
     return {
         "name": "三支一扶智能选岗系统",
         "version": "2.0.0",
-        "features": [
-            "AI语义匹配",
-            "专业关系图谱",
-            "专业对比分析",
-            "报告导出"
-        ]
+        "features": ["AI语义匹配", "专业关系图谱", "专业对比分析", "报告导出"],
     }
 
 
@@ -131,8 +131,8 @@ def get_status():
             "llm_matching": claude_available,
             "major_graph": True,
             "major_comparison": True,
-            "report_export": True
-        }
+            "report_export": True,
+        },
     }
 
 
@@ -143,6 +143,7 @@ def search_jobs(request: JobSearchRequest):
     支持Claude API智能匹配或本地规则匹配
     """
     import time
+
     start_time = time.time()
 
     try:
@@ -173,22 +174,24 @@ def search_jobs(request: JobSearchRequest):
 
             # 应用筛选条件
             if _apply_filters(result, request.filters):
-                matched_jobs.append({
-                    "sheet_name": result.sheet_name,
-                    "unit": result.unit,
-                    "job_type": result.job_type,
-                    "major": result.major,
-                    "education": result.education,
-                    "recruit_count": result.recruit_count,
-                    "applicants": result.applicants,
-                    "approved": result.approved,
-                    "paid": result.paid,
-                    "competition_ratio": result.competition_ratio,
-                    "match_level": result.match_level.value,
-                    "match_score": result.match_score,
-                    "match_reasons": result.match_reasons,
-                    "mismatch_reasons": result.mismatch_reasons
-                })
+                matched_jobs.append(
+                    {
+                        "sheet_name": result.sheet_name,
+                        "unit": result.unit,
+                        "job_type": result.job_type,
+                        "major": result.major,
+                        "education": result.education,
+                        "recruit_count": result.recruit_count,
+                        "applicants": result.applicants,
+                        "approved": result.approved,
+                        "paid": result.paid,
+                        "competition_ratio": result.competition_ratio,
+                        "match_level": result.match_level.value,
+                        "match_score": result.match_score,
+                        "match_reasons": result.match_reasons,
+                        "mismatch_reasons": result.mismatch_reasons,
+                    }
+                )
 
         # 按匹配分数排序
         matched_jobs.sort(key=lambda x: x["match_score"], reverse=True)
@@ -206,9 +209,11 @@ def search_jobs(request: JobSearchRequest):
                 "total": total,
                 "perfect": perfect,
                 "partial": partial,
-                "avg_score": sum(j["match_score"] for j in matched_jobs) / total if total > 0 else 0
+                "avg_score": sum(j["match_score"] for j in matched_jobs) / total
+                if total > 0
+                else 0,
             },
-            match_time=elapsed
+            match_time=elapsed,
         )
 
     except Exception as e:
@@ -231,7 +236,7 @@ def compare_majors_api(request: MajorCompareRequest):
         relationship=result["relationship"],
         path=result["path"],
         same_category=result["same_category"],
-        same_subcategory=result["same_subcategory"]
+        same_subcategory=result["same_subcategory"],
     )
 
 
@@ -245,7 +250,7 @@ def get_major_path(from_major: str, to_major: str):
         "from": from_major,
         "to": to_major,
         "path": path,
-        "distance": len(path) - 1 if path else -1
+        "distance": len(path) - 1 if path else -1,
     }
 
 
@@ -253,10 +258,7 @@ def get_major_path(from_major: str, to_major: str):
 def get_categories():
     """获取所有学科门类"""
     graph = get_graph()
-    return {
-        "categories": list(graph.categories.keys()),
-        "count": len(graph.categories)
-    }
+    return {"categories": list(graph.categories.keys()), "count": len(graph.categories)}
 
 
 @app.get("/api/majors/category/{category}")
@@ -266,7 +268,7 @@ def get_majors_by_category(category: str):
     majors = graph.get_category_majors(category)
     return {
         "category": category,
-        "majors": [{"id": m.id, "name": m.name, "subcategory": m.subcategory} for m in majors]
+        "majors": [{"id": m.id, "name": m.name, "subcategory": m.subcategory} for m in majors],
     }
 
 
@@ -285,19 +287,16 @@ def match_single_job(user_major: str, job_major: str, use_llm: bool = False):
                 "confidence": result.confidence,
                 "category_match": result.category_match,
                 "related": result.related,
-                "source": "claude_api"
+                "source": "claude_api",
             }
 
     # 使用本地匹配
     from job_matcher_llm import LLMEnhancedMajorMatcher
+
     local_matcher = LLMEnhancedMajorMatcher(user_major, use_llm=False)
     match, reason, source = local_matcher.match(job_major)
 
-    return {
-        "match": match,
-        "reason": reason,
-        "source": source
-    }
+    return {"match": match, "reason": reason, "source": source}
 
 
 @app.post("/api/reports/export")
@@ -316,7 +315,7 @@ def export_report(request: JobSearchRequest, format: str = "html"):
             user_degree=request.profile.degree,
             target_jobs=match_result.jobs,
             filter_criteria=request.filters.dict(),
-            summary=match_result.summary
+            summary=match_result.summary,
         )
 
         # 导出
@@ -332,7 +331,7 @@ def export_report(request: JobSearchRequest, format: str = "html"):
         return {
             "success": True,
             "filepath": filepath,
-            "download_url": f"/api/reports/download?path={filepath}"
+            "download_url": f"/api/reports/download?path={filepath}",
         }
 
     except Exception as e:
@@ -346,15 +345,14 @@ def download_report(path: str):
         raise HTTPException(status_code=404, detail="文件不存在")
 
     return FileResponse(
-        path,
-        filename=os.path.basename(path),
-        media_type="application/octet-stream"
+        path, filename=os.path.basename(path), media_type="application/octet-stream"
     )
 
 
 # ============== 辅助函数 ==============
 
-def _generate_mock_jobs() -> List[Dict]:
+
+def _generate_mock_jobs() -> list[dict]:
     """生成模拟岗位数据"""
     return [
         {
@@ -367,7 +365,7 @@ def _generate_mock_jobs() -> List[Dict]:
             "recruit_count": 5,
             "applicants": 60,
             "approved": 45,
-            "paid": 40
+            "paid": 40,
         },
         {
             "sheet_name": "青岛市",
@@ -378,7 +376,7 @@ def _generate_mock_jobs() -> List[Dict]:
             "recruit_count": 3,
             "applicants": 30,
             "approved": 25,
-            "paid": 20
+            "paid": 20,
         },
         {
             "sheet_name": "烟台市",
@@ -389,7 +387,7 @@ def _generate_mock_jobs() -> List[Dict]:
             "recruit_count": 10,
             "applicants": 250,
             "approved": 200,
-            "paid": 180
+            "paid": 180,
         },
         {
             "sheet_name": "济南市",
@@ -400,7 +398,7 @@ def _generate_mock_jobs() -> List[Dict]:
             "recruit_count": 4,
             "applicants": 80,
             "approved": 60,
-            "paid": 50
+            "paid": 50,
         },
         {
             "sheet_name": "青岛市",
@@ -411,8 +409,8 @@ def _generate_mock_jobs() -> List[Dict]:
             "recruit_count": 8,
             "applicants": 120,
             "approved": 90,
-            "paid": 75
-        }
+            "paid": 75,
+        },
     ]
 
 
@@ -438,4 +436,5 @@ def _apply_filters(job: Job, filters: FilterConfig) -> bool:
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-import pandas as pd
 import glob
-import os
-import sys
 
 # 设置输出编码
 import io
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+import os
+import sys
+
+import pandas as pd
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 # 找到文件
-files = glob.glob('*.xlsx')
-files = [f for f in files if not os.path.basename(f).startswith('~$')]
-files = [f for f in files if '岗位汇总表' in f or '附件1' in f]
+files = glob.glob("*.xlsx")
+files = [f for f in files if not os.path.basename(f).startswith("~$")]
+files = [f for f in files if "岗位汇总表" in f or "附件1" in f]
 
 if not files:
     print("未找到岗位表文件")
@@ -46,15 +47,15 @@ output_lines.append(f"总行数: {len(df_raw)}, 总列数: {len(df_raw.columns)}
 output_lines.append("\n前10行内容:")
 for idx in range(min(10, len(df_raw))):
     row = df_raw.iloc[idx]
-    row_str = ' | '.join([str(v)[:25] if pd.notna(v) else '' for v in row.values])
-    output_lines.append(f"  行{idx+1}: {row_str}")
+    row_str = " | ".join([str(v)[:25] if pd.notna(v) else "" for v in row.values])
+    output_lines.append(f"  行{idx + 1}: {row_str}")
 
 # 找表头
 output_lines.append("\n尝试找表头行...")
 for idx in range(min(10, len(df_raw))):
     row_text = str(df_raw.iloc[idx].values)
-    if any(k in row_text for k in ['序号', '服务单位', '岗位名称', '学历', '专业']):
-        output_lines.append(f"  -> 可能的表头在第 {idx+1} 行")
+    if any(k in row_text for k in ["序号", "服务单位", "岗位名称", "学历", "专业"]):
+        output_lines.append(f"  -> 可能的表头在第 {idx + 1} 行")
         header_row = df_raw.iloc[idx]
         output_lines.append(f"  -> 列名: {list(header_row.values)}")
 
@@ -74,7 +75,7 @@ if len(df_data) > 0:
             output_lines.append(f"  {col}: {val}")
 
 # 写入文件
-with open('excel_structure_analysis.txt', 'w', encoding='utf-8') as f:
-    f.write('\n'.join(output_lines))
+with open("excel_structure_analysis.txt", "w", encoding="utf-8") as f:
+    f.write("\n".join(output_lines))
 
 print("分析完成！结果已保存到: excel_structure_analysis.txt")
