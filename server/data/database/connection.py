@@ -3,20 +3,48 @@
 数据库连接模块
 
 使用 SQLAlchemy 进行数据库连接和会话管理
+支持从环境变量或 .env 文件读取配置
 """
 
+import os
+from pathlib import Path
 from contextlib import contextmanager
 from typing import Optional
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 
+
+def load_env():
+    """从 .env 文件加载环境变量"""
+    env_path = Path(__file__).parent.parent.parent / ".env"
+    if env_path.exists():
+        with open(env_path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    os.environ[key.strip()] = value.strip()
+
+
+# 加载环境变量
+load_env()
+
+
 # 数据库Schema定义
 Base = declarative_base()
 
 
-# 全局配置（可通过配置文件覆盖）
-_DB_URL = "mysql+pymysql://root:password@localhost:3306/jobmatch?charset=utf8mb4"
+def get_db_url() -> str:
+    """获取数据库连接URL"""
+    host = os.environ.get("DB_HOST", "localhost")
+    port = os.environ.get("DB_PORT", "3306")
+    user = os.environ.get("DB_USER", "root")
+    password = os.environ.get("DB_PASSWORD", "password")
+    db_name = os.environ.get("DB_NAME", "jobmatch")
+
+    return f"mysql+pymysql://{user}:{password}@{host}:{port}/{db_name}?charset=utf8mb4"
+
 
 # 全局引擎和会话工厂
 _engine = None
@@ -28,19 +56,19 @@ def init_db(db_url: Optional[str] = None) -> None:
     初始化数据库连接
 
     Args:
-        db_url: 数据库URL，如果为None则使用默认配置
+        db_url: 数据库URL，如果为None则从环境变量读取
     """
     global _engine, _SessionLocal
 
     if db_url is None:
-        db_url = _DB_URL
+        db_url = get_db_url()
 
     _engine = create_engine(
         db_url,
-        pool_pre_ping=True,  # 连接前ping一下
+        pool_pre_ping=True,
         pool_size=10,
         max_overflow=20,
-        echo=False,  # 调试时可改为True
+        echo=False,
     )
 
     _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
