@@ -57,10 +57,15 @@ def test_education_matcher():
     ok, msg = matcher.match("大专")
     assert ok, f"本科应覆盖大专: {msg}"
 
-    # 测试研究生
+    # 测试研究生 - 研究生可以报本科岗位（向下兼容）
     matcher_graduate = EducationMatcher("研究生")
     ok, msg = matcher_graduate.match("本科")
-    assert not ok, f"研究生不应匹配本科: {msg}"
+    assert ok, f"研究生应匹配本科: {msg}"
+
+    # 测试研究生不能报研究生及以上（本科不够）
+    matcher_undergrad = EducationMatcher("本科")
+    ok, msg = matcher_undergrad.match("研究生及以上")
+    assert not ok, f"本科不应匹配研究生及以上: {msg}"
 
     print("✓ 学历匹配器测试通过")
 
