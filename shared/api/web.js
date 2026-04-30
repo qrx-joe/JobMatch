@@ -3,7 +3,7 @@
  * 同时支持小程序和网页端
  */
 
-const API_BASE_URL = '/api'
+const API_BASE_URL = ''
 
 export const createApi = (baseUrl = API_BASE_URL) => {
   const request = (options) => {
@@ -41,7 +41,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    */
   const uploadExcel = (filePath, name = 'file', platform = '三支一扶') => {
     return uploadFile({
-      url: '/jobs/upload',
+      url: '/api/jobs/upload',
       filePath,
       name,
       formData: { platform }
@@ -53,7 +53,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    * @param {FormData} formData - 表单数据
    */
   const uploadAndFilter = (formData) => {
-    return fetch(`${baseUrl}/jobs/upload-and-filter`, {
+    return fetch(`${baseUrl}/upload-and-filter`, {
       method: 'POST',
       body: formData
     }).then(res => {
@@ -68,7 +68,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
   const listJobs = (params = {}) => {
     const qs = new URLSearchParams(params).toString()
     return request({
-      url: `/jobs${qs ? '?' + qs : ''}`,
+      url: `/api/jobs${qs ? '?' + qs : ''}`,
       method: 'GET'
     })
   }
@@ -78,7 +78,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    */
   const filterJobs = (profile, options = {}) => {
     return request({
-      url: '/jobs/filter',
+      url: '/api/jobs/filter',
       method: 'POST',
       data: {
         profile: {
@@ -110,7 +110,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    */
   const recommendJobs = (profile, options = {}) => {
     return request({
-      url: '/jobs/recommend',
+      url: '/api/jobs/recommend',
       method: 'POST',
       data: {
         profile: {
@@ -136,7 +136,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    * 获取岗位详情
    */
   const getJobDetail = (jobId) => {
-    return request({ url: `/jobs/${jobId}` })
+    return request({ url: `/api/jobs/${jobId}` })
   }
 
   /**
@@ -144,7 +144,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    */
   const matchJob = (jobId, profile) => {
     return request({
-      url: `/jobs/${jobId}/match`,
+      url: `/api/jobs/${jobId}/match`,
       method: 'POST',
       data: {
         major: profile.major || '',
@@ -169,7 +169,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    */
   const getCities = (platform) => {
     return request({
-      url: '/cities',
+      url: '/api/cities',
       method: 'GET',
       data: platform ? { platform } : {}
     })
@@ -179,14 +179,14 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    * 获取平台类型列表
    */
   const getPlatforms = () => {
-    return request({ url: '/platforms' })
+    return request({ url: '/api/platforms' })
   }
 
   /**
    * 获取资质证书列表
    */
   const getQualifications = () => {
-    return request({ url: '/qualifications' })
+    return request({ url: '/api/qualifications' })
   }
 
   // ==================== 用户相关 API ====================
@@ -196,7 +196,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    */
   const login = (code) => {
     return request({
-      url: '/auth/login',
+      url: '/api/auth/login',
       method: 'POST',
       data: { code }
     })
@@ -206,7 +206,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    * 获取用户画像
    */
   const getProfile = (openid) => {
-    return request({ url: `/profile/${openid}` })
+    return request({ url: `/api/profile/${openid}` })
   }
 
   /**
@@ -214,7 +214,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    */
   const updateProfile = (openid, profile) => {
     return request({
-      url: `/profile/${openid}`,
+      url: `/api/profile/${openid}`,
       method: 'PUT',
       data: {
         major: profile.major || '',
@@ -240,7 +240,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    * 获取收藏列表
    */
   const getFavorites = (openid) => {
-    return request({ url: `/favorites/${openid}` })
+    return request({ url: `/api/favorites/${openid}` })
   }
 
   /**
@@ -248,7 +248,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    */
   const addFavorite = (openid, jobId) => {
     return request({
-      url: `/favorites/${openid}/${jobId}`,
+      url: `/api/favorites/${openid}/${jobId}`,
       method: 'POST'
     })
   }
@@ -258,7 +258,7 @@ export const createApi = (baseUrl = API_BASE_URL) => {
    */
   const removeFavorite = (openid, jobId) => {
     return request({
-      url: `/favorites/${openid}/${jobId}`,
+      url: `/api/favorites/${openid}/${jobId}`,
       method: 'DELETE'
     })
   }
