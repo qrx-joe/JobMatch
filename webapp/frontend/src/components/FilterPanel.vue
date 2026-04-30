@@ -3,7 +3,7 @@
     <el-card class="filter-card" shadow="hover">
       <template #header>
         <div class="card-header">
-          <el-icon><Filter /></el-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
           <span>筛选条件设置</span>
         </div>
       </template>
@@ -19,7 +19,8 @@
             class="upload-demo"
           >
             <el-button type="primary">
-              <el-icon><Upload /></el-icon>选择文件
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+              选择文件
             </el-button>
             <template #tip>
               <div class="el-upload__tip">支持 .xlsx 和 .xls 格式</div>
@@ -36,7 +37,8 @@
             class="upload-demo"
           >
             <el-button>
-              <el-icon><Upload /></el-icon>选择文件
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+              选择文件
             </el-button>
           </el-upload>
         </el-form-item>
@@ -45,7 +47,8 @@
 
         <!-- 基本信息 -->
         <h4 class="section-title">
-          <el-icon><User /></el-icon> 个人信息
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          个人信息
         </h4>
 
         <el-form-item label="专业">
@@ -91,7 +94,8 @@
 
         <!-- 高级选项 -->
         <h4 class="section-title">
-          <el-icon><Setting /></el-icon> 高级选项
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          高级选项
         </h4>
 
         <el-form-item label="政治面貌">
@@ -149,15 +153,14 @@
 
         <!-- 匹配规则 -->
         <h4 class="section-title">
-          <el-icon><Tools /></el-icon> 匹配规则
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg>
+          匹配规则
         </h4>
 
         <el-form-item>
           <template #label>
             性别限制
-            <el-tooltip content="严格=排除限异性岗位，宽松=显示但标记">
-              <el-icon><QuestionFilled /></el-icon>
-            </el-tooltip>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="help-icon"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
           </template>
           <el-radio-group v-model="form.gender_strict">
             <el-radio :label="true">严格</el-radio>
@@ -168,9 +171,7 @@
         <el-form-item>
           <template #label>
             户籍限制
-            <el-tooltip content="严格=只报不限或限本户籍，宽松=显示但标记">
-              <el-icon><QuestionFilled /></el-icon>
-            </el-tooltip>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="help-icon"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
           </template>
           <el-radio-group v-model="form.household_strict">
             <el-radio :label="true">严格</el-radio>
@@ -187,7 +188,7 @@
           :disabled="!canSubmit"
           @click="submit"
         >
-          <el-icon><Search /></el-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           {{ loading ? '筛选中...' : '开始筛选' }}
         </el-button>
       </el-form>
@@ -277,12 +278,12 @@ const submit = () => {
 
 <style scoped>
 .filter-panel {
-  position: sticky;
-  top: 20px;
+  /* 移除sticky，避免遮挡其他内容 */
 }
 
 .filter-card {
-  border-radius: 12px;
+  border-radius: 6px;
+  border: 1px solid #D8DEE7;
 }
 
 .card-header {
@@ -290,19 +291,42 @@ const submit = () => {
   align-items: center;
   gap: 8px;
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 600;
+  color: #1B3A5F;
+}
+
+.card-header svg {
+  color: #4A6FA5;
 }
 
 .section-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #409eff;
+  color: #1B3A5F;
   margin: 20px 0 15px;
   font-size: 14px;
+  font-weight: 600;
+}
+
+.section-title svg {
+  color: #4A6FA5;
 }
 
 :deep(.el-form-item__label) {
   font-weight: 500;
+  color: #1A1A2E;
+}
+
+:deep(.el-divider) {
+  margin: 20px 0;
+  border-color: #D8DEE7;
+}
+
+.help-icon {
+  color: #5A6978;
+  cursor: help;
+  margin-left: 4px;
+  vertical-align: middle;
 }
 </style>

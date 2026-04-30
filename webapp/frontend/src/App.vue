@@ -1,36 +1,37 @@
 <template>
   <div class="app">
-    <el-container>
-      <!-- 顶部导航 -->
-      <el-header class="header">
-        <div class="header-content">
-          <h1><el-icon><OfficeBuilding /></el-icon> 三支一扶岗位筛选系统</h1>
-          <p>智能匹配 · 精准筛选 · 高效选岗</p>
-        </div>
-      </el-header>
+    <!-- 顶部导航 -->
+    <header class="header">
+      <div class="header-content">
+        <h1>
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          岗位筛选系统
+        </h1>
+        <p>智能匹配 · 精准筛选 · 高效选岗</p>
+      </div>
+    </header>
 
-      <el-main class="main">
-        <el-row :gutter="20">
-          <!-- 左侧：条件设置 -->
-          <el-col :xs="24" :sm="24" :md="8" :lg="6">
-            <FilterPanel
-              @filter="handleFilter"
-              :loading="loading"
-            />
-          </el-col>
+    <main class="main">
+      <el-row :gutter="16">
+        <!-- 左侧：条件设置 -->
+        <el-col :xs="24" :sm="24" :md="8" :lg="6">
+          <FilterPanel
+            @filter="handleFilter"
+            :loading="loading"
+          />
+        </el-col>
 
-          <!-- 右侧：结果展示 -->
-          <el-col :xs="24" :sm="24" :md="16" :lg="18">
-            <ResultPanel
-              :jobs="filteredJobs"
-              :stats="stats"
-              :loading="loading"
-              @download="handleDownload"
-            />
-          </el-col>
-        </el-row>
-      </el-main>
-    </el-container>
+        <!-- 右侧：结果展示 -->
+        <el-col :xs="24" :sm="24" :md="16" :lg="18">
+          <ResultPanel
+            :jobs="filteredJobs"
+            :stats="stats"
+            :loading="loading"
+            @download="handleDownload"
+          />
+        </el-col>
+      </el-row>
+    </main>
   </div>
 </template>
 
@@ -90,13 +91,15 @@ const handleDownload = () => {
 <style scoped>
 .app {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #EEF2F7;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  border-bottom: 1px solid #D8DEE7;
+  width: 100%;
 }
 
 .header-content {
@@ -104,11 +107,13 @@ const handleDownload = () => {
   margin: 0 auto;
   padding: 20px;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .header-content h1 {
   font-size: 28px;
-  color: #333;
+  font-weight: 600;
+  color: #1B3A5F;
   margin-bottom: 8px;
   display: flex;
   align-items: center;
@@ -116,14 +121,22 @@ const handleDownload = () => {
   gap: 10px;
 }
 
+.header-content h1 svg {
+  color: #4A6FA5;
+}
+
 .header-content p {
-  color: #666;
+  color: #5A6978;
   font-size: 14px;
+  margin: 0;
 }
 
 .main {
+  flex: 1;
   max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
   padding: 20px;
+  box-sizing: border-box;
 }
 </style>

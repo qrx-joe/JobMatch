@@ -1,39 +1,52 @@
 <template>
   <div class="result-panel">
     <!-- 统计卡片 -->
-    <el-row :gutter="20" class="stats-row">
-      <el-col :span="6">
-        <el-statistic title="总岗位数" :value="stats.total">
-          <template #prefix><el-icon><OfficeBuilding /></el-icon></template>
-        </el-statistic>
-      </el-col>
-      <el-col :span="6">
-        <el-statistic title="完全符合" :value="stats.perfect" value-style="color: #67c23a">
-          <template #prefix><el-icon><CircleCheck /></el-icon></template>
-        </el-statistic>
-      </el-col>
-      <el-col :span="6">
-        <el-statistic title="可能符合" :value="stats.partial" value-style="color: #e6a23c">
-          <template #prefix><el-icon><Warning /></el-icon></template>
-        </el-statistic>
-      </el-col>
-      <el-col :span="6">
-        <el-statistic title="不符合" :value="stats.mismatch" value-style="color: #f56c6c">
-          <template #prefix><el-icon><CircleClose /></el-icon></template>
-        </el-statistic>
-      </el-col>
-    </el-row>
+    <el-card class="stats-card" shadow="never">
+      <el-row :gutter="16">
+        <el-col :span="6">
+          <el-statistic title="总岗位数" :value="stats.total">
+            <template #prefix>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            </template>
+          </el-statistic>
+        </el-col>
+        <el-col :span="6">
+          <el-statistic title="完全符合" :value="stats.perfect" value-style="color: #2E7D32">
+            <template #prefix>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+            </template>
+          </el-statistic>
+        </el-col>
+        <el-col :span="6">
+          <el-statistic title="可能符合" :value="stats.partial" value-style="color: #B8860B">
+            <template #prefix>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+            </template>
+          </el-statistic>
+        </el-col>
+        <el-col :span="6">
+          <el-statistic title="不符合" :value="stats.mismatch" value-style="color: #C41E3A">
+            <template #prefix>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+            </template>
+          </el-statistic>
+        </el-col>
+      </el-row>
+    </el-card>
 
     <!-- 操作栏 -->
     <el-card class="toolbar-card" shadow="never">
-      <el-row :gutter="20" align="middle">
+      <el-row :gutter="16" align="middle">
         <el-col :span="8">
           <el-input
             v-model="searchText"
             placeholder="搜索单位或岗位"
             clearable
-            prefix-icon="Search"
-          />
+          >
+            <template #prefix>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </template>
+          </el-input>
         </el-col>
         <el-col :span="10">
           <el-checkbox-group v-model="filterLevels">
@@ -48,9 +61,10 @@
             </el-checkbox>
           </el-checkbox-group>
         </el-col>
-        <el-col :span="6" style="text-align: right">
+        <el-col :span="10" style="text-align: right">
           <el-button type="success" @click="$emit('download')" :disabled="!jobs.length">
-            <el-icon><Download /></el-icon>下载Excel
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            下载Excel
           </el-button>
         </el-col>
       </el-row>
@@ -249,24 +263,54 @@ const handleRowClick = (row) => {
 
 <style scoped>
 .result-panel {
+  padding-top: 0;
   padding-bottom: 40px;
 }
 
-.stats-row {
-  margin-bottom: 20px;
+.stats-card {
+  margin-bottom: 16px;
+  border-radius: 6px;
+  border: 1px solid #D8DEE7;
 }
 
-.stats-row :deep(.el-statistic__content) {
+.stats-card :deep(.el-card__body) {
+  padding: 16px 20px;
+}
+
+.stats-card :deep(.el-col) {
+  text-align: center;
+}
+
+.stats-card :deep(.el-statistic__head) {
+  color: #5A6978;
+  font-size: 13px;
+}
+
+.stats-card :deep(.el-statistic__content) {
   font-size: 24px;
-  font-weight: bold;
+  font-weight: 600;
+}
+
+.stats-card :deep(.el-statistic__prefix) {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+}
+
+.stats-card :deep(.el-statistic__prefix svg) {
+  color: #4A6FA5;
 }
 
 .toolbar-card {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  border: 1px solid #D8DEE7;
 }
 
 .jobs-card {
   min-height: 400px;
+  border-radius: 6px;
+  border: 1px solid #D8DEE7;
 }
 
 .unit-cell {
@@ -279,14 +323,14 @@ const handleRowClick = (row) => {
   font-weight: 500;
 }
 
-.ratio-low { color: #67c23a; font-weight: bold; }
-.ratio-medium { color: #e6a23c; font-weight: bold; }
-.ratio-high { color: #f56c6c; font-weight: bold; }
+.ratio-low { color: #2E7D32; font-weight: 600; }
+.ratio-medium { color: #B8860B; font-weight: 600; }
+.ratio-high { color: #C41E3A; font-weight: 600; }
 
 .job-detail {
   padding: 20px;
-  background: #f5f7fa;
-  border-radius: 8px;
+  background: #F5F7FA;
+  border-radius: 6px;
 }
 
 .match-info, .mismatch-info {
@@ -296,6 +340,7 @@ const handleRowClick = (row) => {
 .match-info h4, .mismatch-info h4 {
   margin-bottom: 10px;
   font-size: 14px;
+  font-weight: 600;
 }
 
 .match-tag {
@@ -305,5 +350,16 @@ const handleRowClick = (row) => {
 .pagination {
   margin-top: 20px;
   justify-content: center;
+}
+
+:deep(.el-table) {
+  --el-table-border-color: #D8DEE7;
+  --el-table-header-bg-color: #F5F7FA;
+  --el-table-header-text-color: #1B3A5F;
+}
+
+:deep(.el-button--success) {
+  --el-button-bg-color: #2E7D32;
+  --el-button-border-color: #2E7D32;
 }
 </style>
