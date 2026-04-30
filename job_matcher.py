@@ -143,12 +143,27 @@ class MajorMatcher:
             if category in job_major:
                 return True, f"专业大类匹配：{category}"
 
-        # 情况5: 专业代码匹配（如"0201"是经济学类代码）
-        for category in self.user_categories:
-            codes = self.MAJOR_CODES.get(category, [])
-            for code in codes:
-                if code in job_major:
-                    return True, f"专业代码匹配：{code}"
+        # 情况5: 专业代码匹配（使用完整的6位代码匹配）
+        # 从岗位要求中提取所有括号内的代码
+        import re
+        job_codes = re.findall(r'[（(](\d{6})[）)]', job_major)
+        if job_codes:
+            for category in self.user_categories:
+                for code in self.MAJOR_CODES.get(category, []):
+                    # 用户专业代码（如020101）应该完整匹配岗位代码（如020101）
+                    if code in job_codes or code.zfill(6) in job_codes:
+                        return True, f"专业代码匹配：{code}"
+        else:
+            # 如果没有6位代码，尝试4位大类代码（需要精确匹配，不是子串）
+            for category in self.user_categories:
+                codes = self.MAJOR_CODES.get(category, [])
+                for code in codes:
+                    # 匹配4位代码，但必须是完整的大类代码
+                    # 例如：0201匹配"经济学类（0201）"，但不匹配"会计学（120201）"
+                    if re.search(r'[（(]0\d{3}[）)]', job_major) and code in job_major:
+                        # 确保是4位代码且不在更大的代码中
+                        if f"（{code}）" in job_major or f"({code})" in job_major:
+                            return True, f"专业大类代码匹配：{code}"
 
         # 情况6: 反向包含（岗位是具体专业，用户是大类）- 这种情况不符合
         # 例如：岗位要求"经济学"，用户是"经济学类" -> 不符合
