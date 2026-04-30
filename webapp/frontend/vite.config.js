@@ -11,18 +11,9 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       },
-      '/upload-and-filter': {
-        target: 'http://localhost:8000',
-        changeOrigin: true
-      },
-      '/cities': {
-        target: 'http://localhost:8000',
-        changeOrigin: true
-      },
-      '/qualifications': {
-        target: 'http://localhost:8000',
-        changeOrigin: true
-      }
+      '/upload-and-filter': 'http://localhost:8000',
+      '/cities': 'http://localhost:8000',
+      '/qualifications': 'http://localhost:8000'
     }
   }
 })
