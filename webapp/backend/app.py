@@ -5,6 +5,7 @@
 
 import base64
 import os
+import tempfile
 
 # 导入现有模块
 import sys
@@ -16,7 +17,7 @@ from pydantic import BaseModel
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from excel_exporter import ExcelExporter
-from excel_reader_v2 import SimpleJobReader
+from excel_reader_v2 import SimpleJobReader as JobReader
 from job_matcher_v2 import JobMatcherV2, MatchLevel
 
 app = FastAPI(title="岗位筛选系统", version="1.0.0")
@@ -106,21 +107,22 @@ async def upload_and_filter(
     qual_list = [q.strip() for q in qualifications.split(",") if q.strip()]
     city_list = [c.strip() for c in target_cities.split(",") if c.strip()]
 
-    # 保存上传的文件
-    job_path = f"/tmp/{job_file.filename}"
+    # 保存上传的文件 (使用系统临时目录，兼容Windows)
+    temp_dir = tempfile.gettempdir()
+    job_path = os.path.join(temp_dir, job_file.filename.replace('/', '_').replace('\\', '_'))
     with open(job_path, "wb") as f:
         content = await job_file.read()
         f.write(content)
 
     stats_path = None
     if stats_file:
-        stats_path = f"/tmp/{stats_file.filename}"
+        stats_path = os.path.join(temp_dir, stats_file.filename.replace('/', '_').replace('\\', '_'))
         with open(stats_path, "wb") as f:
             content = await stats_file.read()
             f.write(content)
 
     # 读取岗位数据
-    reader = SimpleJobReader(job_path)
+    reader = JobReader(job_path)
     jobs = reader.read_all()
 
     # 关联统计数据
