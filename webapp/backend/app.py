@@ -107,23 +107,27 @@ async def upload_and_filter(
     qual_list = [q.strip() for q in qualifications.split(",") if q.strip()]
     city_list = [c.strip() for c in target_cities.split(",") if c.strip()]
 
-    # 保存上传的文件 (使用系统临时目录，兼容Windows)
+    # 保存上传的文件（使用 ASCII 安全的临时文件名，避免中文路径与 pandas 不兼容）
     temp_dir = tempfile.gettempdir()
-    job_path = os.path.join(temp_dir, job_file.filename.replace('/', '_').replace('\\', '_'))
+    print(f"[upload] received job_file: {job_file.filename}, content_type={job_file.content_type}")
+    job_path = os.path.join(temp_dir, "jobmatch_jobs.xlsx")
     with open(job_path, "wb") as f:
         content = await job_file.read()
         f.write(content)
+    print(f"[upload] saved to: {job_path}, size={os.path.getsize(job_path)} bytes")
 
     stats_path = None
     if stats_file:
-        stats_path = os.path.join(temp_dir, stats_file.filename.replace('/', '_').replace('\\', '_'))
+        stats_path = os.path.join(temp_dir, "jobmatch_stats.xlsx")
         with open(stats_path, "wb") as f:
             content = await stats_file.read()
             f.write(content)
+        print(f"[upload] saved stats to: {stats_path}")
 
     # 读取岗位数据
     reader = JobReader(job_path)
     jobs = reader.read_all()
+    print(f"[reader] total jobs: {len(jobs)}")
 
     # 关联统计数据
     if stats_path:
@@ -187,7 +191,7 @@ async def upload_and_filter(
 
     import yaml
 
-    config_path = "/tmp/config_temp.yaml"
+    config_path = os.path.join(temp_dir, "jobmatch_config.yaml")
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(config, f, allow_unicode=True)
 
@@ -195,6 +199,12 @@ async def upload_and_filter(
     matcher = JobMatcherV2(config_path)
     for job in jobs:
         matcher.match(job)
+
+    # 统计匹配结果
+    perfect_count = len([j for j in jobs if j.match_level == MatchLevel.PERFECT])
+    partial_count = len([j for j in jobs if j.match_level == MatchLevel.PARTIAL])
+    mismatch_count = len([j for j in jobs if j.match_level == MatchLevel.MISMATCH])
+    print(f"[matcher] perfect={perfect_count}, partial={partial_count}, mismatch={mismatch_count}")
 
     # 转换为响应格式
     results = []
@@ -226,23 +236,18 @@ async def upload_and_filter(
 
     # 生成Excel
     exporter = ExcelExporter(config_path)
-    excel_path = "/tmp/筛选结果.xlsx"
+    excel_path = os.path.join(temp_dir, "jobmatch_result.xlsx")
     exporter.export(jobs, excel_path)
 
     # 读取Excel为base64
     with open(excel_path, "rb") as f:
         excel_base64 = base64.b64encode(f.read()).decode()
 
-    # 统计
-    perfect = len([j for j in jobs if j.match_level == MatchLevel.PERFECT])
-    partial = len([j for j in jobs if j.match_level == MatchLevel.PARTIAL])
-    mismatch = len([j for j in jobs if j.match_level == MatchLevel.MISMATCH])
-
     return {
         "total": len(jobs),
-        "perfect": perfect,
-        "partial": partial,
-        "mismatch": mismatch,
+        "perfect": perfect_count,
+        "partial": partial_count,
+        "mismatch": mismatch_count,
         "jobs": results,
         "excel_base64": excel_base64,
         "excel_filename": "筛选结果.xlsx",

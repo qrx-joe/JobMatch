@@ -81,6 +81,7 @@
 
         <el-form-item label="户籍">
           <el-select v-model="form.household" style="width: 100%">
+            <el-option label="不限户籍" value="不限" />
             <el-option
               v-for="city in cities"
               :key="city"
