@@ -50,13 +50,13 @@
         </el-col>
         <el-col :span="10">
           <el-checkbox-group v-model="filterLevels">
-            <el-checkbox label="完全符合">
+            <el-checkbox value="完全符合">
               <el-tag type="success" size="small">完全符合</el-tag>
             </el-checkbox>
-            <el-checkbox label="可能符合">
+            <el-checkbox value="可能符合">
               <el-tag type="warning" size="small">可能符合</el-tag>
             </el-checkbox>
-            <el-checkbox label="不符合">
+            <el-checkbox value="不符合">
               <el-tag type="danger" size="small">不符合</el-tag>
             </el-checkbox>
           </el-checkbox-group>

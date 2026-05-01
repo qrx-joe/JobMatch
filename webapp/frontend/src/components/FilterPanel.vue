@@ -74,8 +74,8 @@
 
         <el-form-item label="性别">
           <el-radio-group v-model="form.gender">
-            <el-radio label="男">男</el-radio>
-            <el-radio label="女">女</el-radio>
+            <el-radio value="男">男</el-radio>
+            <el-radio value="女">女</el-radio>
           </el-radio-group>
         </el-form-item>
 
@@ -197,8 +197,8 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="help-icon"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
           </template>
           <el-radio-group v-model="form.gender_strict">
-            <el-radio :label="true">严格</el-radio>
-            <el-radio :label="false">宽松</el-radio>
+            <el-radio :value="true">严格</el-radio>
+            <el-radio :value="false">宽松</el-radio>
           </el-radio-group>
         </el-form-item>
 
@@ -208,8 +208,8 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="help-icon"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
           </template>
           <el-radio-group v-model="form.household_strict">
-            <el-radio :label="true">严格</el-radio>
-            <el-radio :label="false">宽松</el-radio>
+            <el-radio :value="true">严格</el-radio>
+            <el-radio :value="false">宽松</el-radio>
           </el-radio-group>
         </el-form-item>
 
