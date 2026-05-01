@@ -43,6 +43,10 @@ class ProfileRequest(BaseModel):
     estimated_score: float = 0.0
     target_cities: list[str] = []
     target_platforms: list[str] = []
+    computer_level: str = ""
+    english_level: str = ""
+    basic_experience: str = ""
+    work_years: int = 0
 
 
 class FilterRequest(BaseModel):

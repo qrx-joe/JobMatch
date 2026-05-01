@@ -115,6 +115,10 @@
           <el-input-number v-model="form.work_years" :min="0" :max="50" style="width: 100%" />
         </el-form-item>
 
+        <el-form-item label="年龄">
+          <el-input-number v-model="form.age" :min="18" :max="40" style="width: 100%" />
+        </el-form-item>
+
         <el-form-item label="相关资格证书">
           <el-select
             v-model="form.qualifications"
@@ -129,6 +133,36 @@
               :label="q"
               :value="q"
             />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="计算机等级">
+          <el-select v-model="form.computer_level" style="width: 100%" placeholder="选择计算机等级">
+            <el-option label="无要求" value="" />
+            <el-option label="一级" value="一级" />
+            <el-option label="二级" value="二级" />
+            <el-option label="三级" value="三级" />
+            <el-option label="四级" value="四级" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="英语等级">
+          <el-select v-model="form.english_level" style="width: 100%" placeholder="选择英语等级">
+            <el-option label="无要求" value="" />
+            <el-option label="大学英语四级" value="大学英语四级" />
+            <el-option label="大学英语六级" value="大学英语六级" />
+            <el-option label="专业英语四级" value="专业英语四级" />
+            <el-option label="专业英语八级" value="专业英语八级" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="服务基层项目经历">
+          <el-select v-model="form.basic_experience" style="width: 100%" placeholder="选择服务基层项目">
+            <el-option label="无" value="" />
+            <el-option label="大学生志愿服务西部计划" value="西部计划" />
+            <el-option label="三支一扶" value="三支一扶" />
+            <el-option label="大学生村官" value="大学生村官" />
+            <el-option label="特岗教师" value="特岗教师" />
           </el-select>
         </el-form-item>
 
@@ -219,9 +253,13 @@ const form = reactive({
   degree: '学士',
   gender: '女',
   household: '吕梁市',
+  age: 25,
   is_fresh_graduate: false,
   political_status: '群众',
   qualifications: [],
+  computer_level: '',
+  english_level: '',
+  basic_experience: '',
   work_years: 0,
   target_cities: ['吕梁市', '太原市'],
   gender_strict: true,
@@ -264,9 +302,13 @@ const submit = () => {
   formData.append('degree', form.degree)
   formData.append('gender', form.gender)
   formData.append('household', form.household)
+  formData.append('age', form.age)
   formData.append('is_fresh_graduate', form.is_fresh_graduate)
   formData.append('political_status', form.political_status)
   formData.append('qualifications', form.qualifications.join(','))
+  formData.append('computer_level', form.computer_level)
+  formData.append('english_level', form.english_level)
+  formData.append('basic_experience', form.basic_experience)
   formData.append('work_years', form.work_years)
   formData.append('target_cities', form.target_cities.join(','))
   formData.append('gender_strict', form.gender_strict)

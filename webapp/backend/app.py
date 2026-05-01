@@ -19,7 +19,7 @@ from excel_exporter import ExcelExporter
 from excel_reader_v2 import SimpleJobReader
 from job_matcher_v2 import JobMatcherV2, MatchLevel
 
-app = FastAPI(title="三支一扶岗位筛选系统", version="1.0.0")
+app = FastAPI(title="岗位筛选系统", version="1.0.0")
 
 # CORS配置
 app.add_middleware(
@@ -87,9 +87,13 @@ async def upload_and_filter(
     degree: str = Form("学士"),
     gender: str = Form("女"),
     household: str = Form("吕梁市"),
+    age: int = Form(25),
     is_fresh_graduate: bool = Form(False),
     political_status: str = Form("群众"),
     qualifications: str = Form(""),
+    computer_level: str = Form(""),
+    english_level: str = Form(""),
+    basic_experience: str = Form(""),
     work_years: int = Form(0),
     target_cities: str = Form("吕梁市,太原市"),
     gender_strict: bool = Form(True),
@@ -140,9 +144,13 @@ async def upload_and_filter(
             "学位": degree,
             "性别": gender,
             "户籍": household,
+            "年龄": age,
             "是否应届": is_fresh_graduate,
             "政治面貌": political_status,
             "相关资格": qual_list,
+            "计算机等级": computer_level,
+            "英语等级": english_level,
+            "服务基层项目": basic_experience,
             "工作年限": work_years,
         },
         "preference": {"意向城市": city_list, "服务类别": []},
@@ -154,6 +162,10 @@ async def upload_and_filter(
             "相关资格匹配": {"模式": "strict" if False else "loose"},
             "应届生匹配": {"模式": "loose"},
             "政治面貌匹配": {"模式": "loose"},
+            "年龄匹配": {"模式": "strict"},
+            "计算机等级匹配": {"模式": "loose"},
+            "英语等级匹配": {"模式": "loose"},
+            "服务基层项目匹配": {"模式": "loose"},
         },
         "filter": {"最大竞争比": 100, "最低招募人数": 1, "排除关键词": []},
         "output": {
