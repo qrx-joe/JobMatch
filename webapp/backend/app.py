@@ -76,7 +76,7 @@ class JobResponse(BaseModel):
 
 @app.get("/")
 def root():
-    return {"message": "三支一扶岗位筛选API", "version": "1.0.0"}
+    return {"message": "岗位筛选系统API", "version": "1.0.0"}
 
 
 @app.post("/upload-and-filter")
