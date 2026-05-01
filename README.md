@@ -11,21 +11,27 @@ JobMatch/
 ├── server/                    # FastAPI 后端
 │   ├── app.py                # 主入口
 │   ├── core/                 # 核心业务逻辑
-│   │   ├── models/           # 数据模型
+│   │   ├── models/          # 数据模型
 │   │   ├── matchers/        # 匹配器
 │   │   ├── recommenders/    # 推荐系统
 │   │   └── analyzers/       # 分析器
-│   ├── data/                 # 数据处理
+│   ├── data/                # 数据处理
 │   │   ├── excel/           # Excel 解析
 │   │   └── database/        # 数据库
 │   ├── platforms/           # 平台适配层
 │   └── utils/               # 工具函数
-├── webapp/                    # Web 应用（Vue3）
-│   ├── backend/             # 后端入口
-│   └── frontend/           # Vue3 前端
-├── shared/api/               # 统一 API 服务
+├── webapp/                   # Web 应用（Vue3）
 ├── miniprogram/              # 微信小程序
-└── tests/                     # 测试
+├── shared/api/               # 统一 API 服务
+├── tests/                    # 测试
+├── docs/                     # 文档
+├── data/                     # 数据目录
+├── reports/                  # 报告输出
+├── archive/                  # 归档旧文件
+├── pyproject.toml            # 依赖管理
+├── config.yaml               # 基础配置
+├── start.py                  # 快速启动脚本
+└── demo_full_pipeline.py     # 完整流程演示
 ```
 
 ---
@@ -93,6 +99,7 @@ API 文档：http://localhost:8000/docs
 - FastAPI
 - SQLAlchemy
 - pandas / openpyxl
+- Anthropic Claude API（可选）
 
 ### 前端
 - Vue 3
@@ -100,24 +107,18 @@ API 文档：http://localhost:8000/docs
 - Vite
 - Lucide 图标
 
-### 辅助
-- Anthropic Claude API（可选）
-- D3.js（可视化）
-
 ---
 
 ## 主要模块
 
 | 模块 | 说明 |
 |-----|------|
-| `job_matcher.py` | 基础匹配引擎 |
-| `job_matcher_v2.py` | 增强版匹配引擎 |
-| `job_matcher_v3.py` | 第三版匹配引擎 |
-| `excel_reader_v2.py` | Excel 读取器 |
-| `excel_exporter.py` | Excel 导出器 |
-| `semantic_matcher.py` | 语义匹配器 |
-| `report_generator.py` | 报告生成器 |
-| `data_manager.py` | 数据管理器 |
+| `server/core/matchers/` | 匹配器（专业/学历/政治面貌等） |
+| `server/core/recommenders/` | 推荐系统（冲/稳/保分层） |
+| `server/core/analyzers/` | 历史数据分析 |
+| `server/data/excel/` | Excel 解析 |
+| `server/data/database/` | 数据库访问 |
+| `server/platforms/` | 平台适配层 |
 
 ---
 
@@ -127,14 +128,8 @@ API 文档：http://localhost:8000/docs
 # 运行完整流程演示
 uv run python demo_full_pipeline.py
 
-# 使用本地语义匹配测试
-uv run python demo_llm_api.py --mode local
-
-# 使用 Claude API 测试
-uv run python demo_llm_api.py --mode api
-
-# 对比不同匹配方法
-uv run python demo_llm_api.py --mode compare
+# 快速启动（交互式）
+uv run python start.py
 ```
 
 ---
