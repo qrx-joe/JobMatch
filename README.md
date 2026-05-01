@@ -1,6 +1,18 @@
-# 三支一扶智能选岗系统
+# JobMatch 智能选岗系统
 
-AI驱动的考公考编岗位智能匹配系统，支持语义匹配、专业图谱、历年分析和报告导出。
+> 三支一扶智能选岗系统 - AI驱动的考公考编岗位智能匹配工具
+
+---
+
+## 项目概述
+
+| 项目 | 说明 |
+|-----|------|
+| 版本 | v3.0 |
+| 更新时间 | 2026-05-01 |
+| 技术栈 | Python 3.11+ / FastAPI / Vue 3 |
+
+支持语义匹配、专业图谱、历年分析和报告导出。
 
 ---
 
@@ -24,15 +36,47 @@ JobMatch/
 ├── miniprogram/              # 微信小程序
 ├── shared/api/               # 统一 API 服务
 ├── tests/                    # 测试
-├── docs/                     # 文档
+├── docs/                     # 详细文档
 ├── data/                     # 数据目录
 ├── reports/                  # 报告输出
-├── archive/                  # 归档旧文件
 ├── pyproject.toml            # 依赖管理
 ├── config.yaml               # 基础配置
 ├── start.py                  # 快速启动脚本
 └── demo_full_pipeline.py     # 完整流程演示
 ```
+
+---
+
+## 已完成功能
+
+### 核心匹配
+- [x] 专业匹配（支持大类/代码/模糊）
+- [x] 学历匹配（支持向下兼容）
+- [x] 学位匹配
+- [x] 性别匹配
+- [x] 户籍匹配
+- [x] 政治面貌匹配
+- [x] 年龄匹配
+- [x] 基层工作经验匹配
+- [x] 语义匹配（支持模糊表达）
+
+### 历年分析
+- [x] 历史数据分析
+- [x] 竞争趋势预测
+- [x] 进面分数预测
+- [x] 上岸概率计算
+
+### 平台适配
+- [x] 三支一扶
+- [x] 公务员
+- [x] 事业单位
+- [x] 教师招聘
+
+### 用户体验
+- [x] 颜色标记（绿/黄/红）
+- [x] 竞争比显示
+- [x] 结果导出（Excel/HTML/JSON）
+- [x] 收藏功能
 
 ---
 
@@ -67,58 +111,9 @@ npm run dev
 
 ### 5. 访问应用
 
-前端：http://localhost:3000
-后端 API：http://localhost:8000
-API 文档：http://localhost:8000/docs
-
----
-
-## 核心功能
-
-### 智能匹配
-- **专业匹配**：支持大类匹配（经济学类包含经济学）、专业代码匹配
-- **学历兼容**：本科可报大专及以上
-- **多维度筛选**：性别、户籍、政治面貌、年龄、基层经验等
-
-### 历年分析
-- 历史数据分析与趋势预测
-- 竞争比趋势预测
-- 进面分数预测
-
-### 报告导出
-- Excel：带颜色标记的筛选结果
-- HTML：可视化报告
-- JSON：结构化数据
-
----
-
-## 技术栈
-
-### 后端
-- Python 3.11+
-- FastAPI
-- SQLAlchemy
-- pandas / openpyxl
-- Anthropic Claude API（可选）
-
-### 前端
-- Vue 3
-- Element Plus
-- Vite
-- Lucide 图标
-
----
-
-## 主要模块
-
-| 模块 | 说明 |
-|-----|------|
-| `server/core/matchers/` | 匹配器（专业/学历/政治面貌等） |
-| `server/core/recommenders/` | 推荐系统（冲/稳/保分层） |
-| `server/core/analyzers/` | 历史数据分析 |
-| `server/data/excel/` | Excel 解析 |
-| `server/data/database/` | 数据库访问 |
-| `server/platforms/` | 平台适配层 |
+- 前端：http://localhost:3000
+- 后端 API：http://localhost:8000
+- API 文档：http://localhost:8000/docs
 
 ---
 
@@ -142,6 +137,15 @@ uv run python start.py
 | `config_full.yaml` | 完整配置 |
 | `.env` | 环境变量 |
 | `.env.example` | 环境变量示例 |
+
+---
+
+## 详细文档
+
+| 文档 | 说明 |
+|-----|------|
+| `docs/ARCHITECTURE.md` | 架构设计详解 |
+| `docs/IMPLEMENTATION_STATUS.md` | 实施进度详情 |
 
 ---
 
