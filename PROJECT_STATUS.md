@@ -1,111 +1,134 @@
-# 岗位筛选工具 - 项目状态
+# JobMatch 智能选岗系统 - 项目状态
 
-## 已完成的功能
+> 更新日期: 2026-05-01
+> 版本: v2.0 → v3.0
 
-### 1. 核心功能 ✅
-- [x] Excel多Sheet读取（11个地市）
-- [x] 智能表头识别（处理合并单元格）
-- [x] 岗位数据解析（专业、学历、学位等）
-- [x] 竞争数据关联（报名人数、缴费人数）
-- [x] 多条件匹配引擎
-- [x] 带颜色标记的Excel导出
+## 项目概述
 
-### 2. 匹配条件 ✅
-| 条件 | 状态 |
-|-----|------|
-| 专业匹配 | ✅ 支持大类匹配（经济学类包含经济学） |
-| 学历匹配 | ✅ 支持"及以上"（本科可报大专及以上） |
-| 学位匹配 | ✅ 学士/硕士/博士 |
-| 性别匹配 | ✅ 限男性/限女性/不限 |
-| 户籍匹配 | ✅ 限户籍地/不限 |
-| 资格证书 | ✅ 教师资格证等 |
-| 应届生 | ✅ 限应届/往届/不限 |
-| 政治面貌 | ✅ 党员/群众 |
-| 工作年限 | ✅ X年以上 |
+三支一扶智能选岗系统是一个 AI 驱动的考公考编岗位智能匹配工具，支持语义匹配、专业图谱、历年分析和报告导出。
 
-### 3. 项目文件结构
+---
+
+## 项目结构
+
 ```
 JobMatch/
-├── 核心模块
-│   ├── job_matcher.py          # 基础匹配引擎
-│   ├── job_matcher_v2.py       # 增强版匹配引擎
-│   ├── excel_reader_v2.py      # Excel读取器
-│   └── excel_exporter.py       # Excel导出器
-├── 主程序
-│   ├── main.py                 # 基础版主程序
-│   └── main_v2.py              # 增强版主程序
-├── 配置
-│   ├── config.yaml             # 基础配置
-│   └── config_full.yaml        # 完整配置
-├── 数据文件（用户上传）
-│   ├── 附件1：山西省2026年度...岗位汇总表.xlsx
-│   └── P020260410598205300172.xls
-├── 输出文件
-│   └── 筛选结果_v2.xlsx
-└── 文档
-    ├── ARCHITECTURE.md         # 架构设计
-    └── PROJECT_STATUS.md       # 本文件
+├── 核心模块 (根目录)
+│   ├── job_matcher.py           # 基础匹配引擎
+│   ├── job_matcher_v2.py        # 增强版匹配引擎
+│   ├── job_matcher_v3.py        # 第三版匹配引擎
+│   ├── semantic_matcher.py      # 语义匹配器
+│   ├── excel_reader_v2.py       # Excel 读取器
+│   ├── excel_exporter.py       # Excel 导出器
+│   ├── report_generator.py      # 报告生成器
+│   └── data_manager.py          # 数据管理器
+│
+├── server/                      # FastAPI 后端
+│   ├── app.py                   # 主入口
+│   ├── core/                    # 核心业务逻辑
+│   │   ├── models/              # 数据模型
+│   │   ├── matchers/            # 匹配器
+│   │   ├── recommenders/       # 推荐系统
+│   │   └── analyzers/          # 分析器
+│   ├── data/                    # 数据处理
+│   │   ├── excel/               # Excel 解析
+│   │   └── database/            # 数据库
+│   └── platforms/              # 平台适配层
+│
+├── webapp/                      # Web 应用 (Vue3)
+│   ├── backend/                 # 后端入口
+│   └── frontend/               # Vue3 前端
+│
+├── shared/api/                  # 统一 API 服务
+├── miniprogram/                # 微信小程序
+├── tests/                       # 测试
+└── docs/                        # 文档
 ```
+
+---
 
 ## 技术栈
 
-### 当前（Python命令行）
-- Python 3.11
-- pandas - Excel处理
-- openpyxl - Excel样式
-- pyyaml - 配置管理
+### 后端
+- Python 3.11+
+- FastAPI
+- SQLAlchemy
+- pandas / openpyxl
+- Anthropic Claude API (可选)
 
-### 建议的小程序/网页APP技术栈
+### 前端
+- Vue 3
+- Element Plus
+- Vite
+- Lucide 图标
 
-#### 方案A：微信小程序 + 云开发（推荐）
+---
+
+## 已完成功能
+
+### 核心匹配
+- [x] 专业匹配（支持大类/代码/模糊）
+- [x] 学历匹配（支持向下兼容）
+- [x] 学位匹配
+- [x] 性别匹配
+- [x] 户籍匹配
+- [x] 政治面貌匹配
+- [x] 年龄匹配
+- [x] 基层工作经验匹配
+- [x] 语义匹配（支持模糊表达）
+
+### 历年分析
+- [x] 历史数据分析
+- [x] 竞争趋势预测
+- [x] 进面分数预测
+- [x] 上岸概率计算
+
+### 平台适配
+- [x] 三支一扶
+- [x] 公务员
+- [x] 事业单位
+- [x] 教师招聘
+
+### 用户体验
+- [x] 颜色标记（绿/黄/红）
+- [x] 竞争比显示
+- [x] 结果导出（Excel/HTML/JSON/PDF）
+- [x] 收藏功能
+
+---
+
+## 快速开始
+
+```bash
+# 1. 安装依赖
+uv sync
+
+# 2. 启动后端
+uv run uvicorn server.app:app --host 0.0.0.0 --port 8000 --reload
+
+# 3. 启动前端
+cd webapp/frontend
+npm install
+npm run dev
 ```
-前端：微信小程序原生 / Taro / uni-app
-后端：微信云开发（云函数）
-数据：微信云数据库
-Excel处理：Python云函数
-```
 
-#### 方案B：Web应用（Vue + FastAPI）
-```
-前端：Vue3 + Element Plus
-后端：Python FastAPI
-部署：Vercel / 阿里云 / 腾讯云
-Excel处理：后端Python处理
-```
+---
 
-#### 方案C：纯前端（数据不上传）
-```
-前端：Vue3 + Element Plus + SheetJS
-处理：浏览器端直接解析Excel
-部署：静态托管（GitHub Pages/Vercel）
-```
+## 配置文件
 
-## 下一步：小程序/网页APP实现
+| 文件 | 说明 |
+|-----|------|
+| `config.yaml` | 基础配置 |
+| `config_full.yaml` | 完整配置 |
+| `.env` | 环境变量 |
+| `.env.example` | 环境变量示例 |
 
-### 核心功能规划
-1. **用户界面**
-   - 条件输入表单（专业、学历、性别等）
-   - 岗位列表展示（带筛选和排序）
-   - 岗位详情页
-   - 收藏/对比功能
+---
 
-2. **数据处理**
-   - Excel文件上传
-   - 实时筛选计算
-   - 结果导出（Excel/PDF）
+## 下一步计划
 
-3. **用户体验**
-   - 响应式设计（手机/电脑）
-   - 加载状态提示
-   - 错误处理
-
-### 推荐实现路径
-1. **第一步**：Web应用（Vue + FastAPI）
-   - 开发快，测试方便
-   - 手机浏览器可直接访问
-
-2. **第二步**：微信小程序
-   - 基于Web版本适配
-   - 更好的手机体验
-
-你想选择哪个方案？我可以帮你实现。
+1. 完善微信小程序界面
+2. 添加更多匹配维度
+3. 优化推荐算法
+4. 添加数据可视化
+5. 实现岗位对比功能

@@ -1,23 +1,26 @@
-# 三支一扶岗位筛选系统 - Web版
+# 三支一扶智能选岗系统 - Web 应用
+
+Vue3 + FastAPI 构建的 Web 版岗位筛选工具。
+
+---
 
 ## 项目结构
 
 ```
 webapp/
-├── backend/           # FastAPI后端
-│   ├── app.py        # 主API
-│   └── requirements.txt
-├── frontend/          # Vue3前端
+├── backend/           # FastAPI 后端
+│   └── app.py        # 主 API
+├── frontend/          # Vue3 前端
 │   ├── src/
-│   │   ├── components/
-│   │   │   ├── FilterPanel.vue   # 筛选面板
-│   │   │   └── ResultPanel.vue   # 结果展示
-│   │   ├── App.vue               # 主应用
-│   │   └── main.js               # 入口
+│   │   ├── components/  # 组件
+│   │   ├── App.vue      # 主应用
+│   │   └── main.js     # 入口
 │   ├── package.json
 │   └── vite.config.js
-└── README.md         # 本文件
+└── README.md          # 本文件
 ```
+
+---
 
 ## 快速开始
 
@@ -25,27 +28,25 @@ webapp/
 
 **后端依赖（在项目根目录）：**
 ```bash
-cd ..
-uv add fastapi uvicorn python-multipart
+uv sync
 ```
 
 **前端依赖：**
 ```bash
-cd frontend
+cd webapp/frontend
 npm install
 ```
 
 ### 2. 启动服务
 
-**启动后端（端口8000）：**
+**启动后端（端口 8000）：**
 ```bash
-cd ..
-uv run python webapp/backend/app.py
+uv run uvicorn webapp.backend.app:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-**启动前端（端口3000）：**
+**启动前端（端口 3000）：**
 ```bash
-cd frontend
+cd webapp/frontend
 npm run dev
 ```
 
@@ -53,9 +54,11 @@ npm run dev
 
 打开浏览器访问：`http://localhost:3000`
 
+---
+
 ## 功能特点
 
-1. **拖拽上传**：支持拖拽上传Excel文件
+1. **拖拽上传**：支持拖拽上传 Excel 文件
 2. **实时筛选**：所有筛选条件即时生效
 3. **智能匹配**：
    - 专业大类匹配（经济学类包含经济学）
@@ -66,34 +69,25 @@ npm run dev
    - 绿色 = 完全符合
    - 黄色 = 可能符合
    - 红色 = 不符合
-6. **结果导出**：支持下载Excel文件
+6. **结果导出**：支持下载 Excel 文件
 
-## 部署
+---
 
-### 本地部署
-按照"快速开始"步骤执行即可
+## API 接口
 
-### 服务器部署
+| 接口 | 方法 | 说明 |
+|-----|------|------|
+| `/api/jobs/upload` | POST | 上传 Excel |
+| `/api/jobs/filter` | POST | 条件筛选 |
+| `/api/jobs/recommend` | POST | 智能推荐 |
+| `/api/jobs/{id}` | GET | 岗位详情 |
+| `/api/cities` | GET | 城市列表 |
 
-**使用Docker（推荐）：**
-```bash
-# 构建镜像
-docker build -t jobmatch .
-
-# 运行
-docker run -p 8000:8000 jobmatch
-```
-
-**手动部署：**
-1. 将代码上传到服务器
-2. 安装Python依赖：`uv sync`
-3. 构建前端：`cd frontend && npm run build`
-4. 使用Nginx代理前端静态文件
-5. 使用PM2运行后端：`pm2 start webapp/backend/app.py`
+---
 
 ## 技术栈
 
 - **后端**：Python + FastAPI
-- **前端**：Vue3 + Element Plus
-- **Excel处理**：pandas + openpyxl
-- **构建工具**：Vite
+- **前端**：Vue 3 + Element Plus + Vite
+- **Excel 处理**：pandas + openpyxl
+- **图标**：Lucide Vue Next
