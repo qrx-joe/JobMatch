@@ -21,27 +21,19 @@
         </div>
       </div>
 
-      <el-row :gutter="16">
-        <!-- 左侧：条件设置 -->
-        <el-col :xs="24" :sm="24" :md="8" :lg="6">
-          <FilterPanel
-            :key="filterKey"
-            @filter="handleFilter"
-            @clear="handleClear"
-            :loading="loading"
-          />
-        </el-col>
+      <FilterPanel
+        :key="filterKey"
+        @filter="handleFilter"
+        @clear="handleClear"
+        :loading="loading"
+      />
 
-        <!-- 右侧：结果展示 -->
-        <el-col :xs="24" :sm="24" :md="16" :lg="18">
-          <ResultPanel
-            :jobs="filteredJobs"
-            :stats="stats"
-            :loading="loading"
-            @download="handleDownload"
-          />
-        </el-col>
-      </el-row>
+      <ResultPanel
+        :jobs="filteredJobs"
+        :stats="stats"
+        :loading="loading"
+        @download="handleDownload"
+      />
     </main>
   </div>
 </template>

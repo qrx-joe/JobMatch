@@ -221,7 +221,7 @@
         <template #description>
           <div class="empty-desc">
             <p class="empty-title">还没有筛选结果</p>
-            <p class="empty-tip">在左侧上传岗位表并设置筛选条件</p>
+            <p class="empty-tip">在上方上传岗位表并设置筛选条件</p>
           </div>
         </template>
       </el-empty>
