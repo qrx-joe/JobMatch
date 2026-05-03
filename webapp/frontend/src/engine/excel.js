@@ -112,7 +112,7 @@ export function readJobFile(file) {
         const nextRow = rows[headerRowIdx + 1]
         if (nextRow) {
           const nextRowText = nextRow.map((c) => String(c || '')).join('')
-          const hasSubHeaders = ['学历', '学位', '专业', '相关资格', '其他'].some((k) =
+          const hasSubHeaders = ['学历', '学位', '专业', '相关资格', '其他'].some((k) =>
             nextRowText.includes(k)
           )
           if (hasSubHeaders) {
