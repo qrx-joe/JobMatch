@@ -383,35 +383,33 @@ const submit = () => {
   vertical-align: middle;
 }
 
+/* 隐藏 el-upload 默认文件列表，用自己样式替代 */
+:deep(.el-upload-list) {
+  display: none;
+}
+
 .file-selected {
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: #F0F7FF;
-  border: 1px solid #B3D4FC;
-  border-radius: 4px;
+  margin-top: 4px;
+  padding-left: 2px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 13px;
+  line-height: 1.5;
 }
 
 .file-selected svg {
-  color: #4A6FA5;
+  color: #2E7D32;
   flex-shrink: 0;
 }
 
 .file-name {
   color: #1B3A5F;
   font-weight: 500;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .file-size {
-  color: #5A6978;
+  color: #8A96A8;
   font-size: 12px;
-  flex-shrink: 0;
 }
 </style>
