@@ -65,7 +65,8 @@ const handleFilter = async (formData) => {
 
   } catch (error) {
     console.error('筛选失败:', error)
-    alert('筛选失败，请检查文件格式是否正确')
+    const detail = error?.message || String(error)
+    alert(`筛选失败：${detail}`)
   } finally {
     loading.value = false
   }
