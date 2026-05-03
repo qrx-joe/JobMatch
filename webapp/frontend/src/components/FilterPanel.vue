@@ -251,7 +251,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getCities, getQualifications } from '../services/api'
 
@@ -270,26 +270,28 @@ const statsFileList = ref([])
 const cities = ref([])
 const qualifications = ref([])
 
-const defaultForm = {
-  major: '经济学',
-  education: '本科',
-  degree: '学士',
-  gender: '女',
-  household: '吕梁市',
-  age: 25,
-  is_fresh_graduate: false,
-  political_status: '群众',
-  qualifications: [],
-  computer_level: '',
-  english_level: '',
-  basic_experience: '',
-  work_years: 0,
-  target_cities: ['吕梁市', '太原市'],
-  gender_strict: true,
-  household_strict: false
+function createDefaultForm() {
+  return {
+    major: '经济学',
+    education: '本科',
+    degree: '学士',
+    gender: '女',
+    household: '吕梁市',
+    age: 25,
+    is_fresh_graduate: false,
+    political_status: '群众',
+    qualifications: [],
+    computer_level: '',
+    english_level: '',
+    basic_experience: '',
+    work_years: 0,
+    target_cities: ['吕梁市', '太原市'],
+    gender_strict: true,
+    household_strict: false
+  }
 }
 
-const form = reactive({ ...defaultForm })
+const form = reactive(createDefaultForm())
 
 function saveProfile() {
   try {
@@ -322,13 +324,17 @@ async function clearCache() {
   }
 
   localStorage.removeItem(PROFILE_KEY)
-  Object.keys(defaultForm).forEach(key => {
-    form[key] = JSON.parse(JSON.stringify(defaultForm[key]))
+
+  const defaults = createDefaultForm()
+  Object.keys(defaults).forEach(key => {
+    form[key] = defaults[key]
   })
+
   jobFileList.value = []
   statsFileList.value = []
   emit('clear')
 
+  await nextTick()
   ElMessage.success('已清除所有缓存和个人信息')
 }
 
