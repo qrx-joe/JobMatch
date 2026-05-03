@@ -324,17 +324,7 @@ async function clearCache() {
   }
 
   localStorage.removeItem(PROFILE_KEY)
-
-  const defaults = createDefaultForm()
-  Object.keys(defaults).forEach(key => {
-    form[key] = defaults[key]
-  })
-
-  jobFileList.value = []
-  statsFileList.value = []
   emit('clear')
-
-  await nextTick()
   ElMessage.success('已清除所有缓存和个人信息')
 }
 

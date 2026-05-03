@@ -25,8 +25,9 @@
         <!-- 左侧：条件设置 -->
         <el-col :xs="24" :sm="24" :md="8" :lg="6">
           <FilterPanel
+            :key="filterKey"
             @filter="handleFilter"
-            @clear="clearResultCache"
+            @clear="handleClear"
             :loading="loading"
           />
         </el-col>
@@ -159,6 +160,15 @@ const handleFilter = async (formData, fileInfo = {}) => {
     parsing.value = false
     currentFileName.value = ''
   }
+}
+
+const filterKey = ref(0)
+
+function handleClear() {
+  localStorage.removeItem(RESULT_KEY)
+  jobs.value = []
+  stats.value = {}
+  filterKey.value++
 }
 
 const handleDownload = () => {
