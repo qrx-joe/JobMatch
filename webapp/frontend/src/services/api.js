@@ -1,5 +1,6 @@
 import { readJobFile } from '../engine/excel.js'
 import { matchJobs } from '../engine/matcher.js'
+import { readStatsFile, joinJobsWithStats } from '../engine/joiner.js'
 
 export const getCities = async () => ({
   cities: ['太原市', '大同市', '朔州市', '忻州市', '吕梁市', '晋中市', '阳泉市', '长治市', '晋城市', '临汾市', '运城市']
@@ -15,13 +16,15 @@ export const uploadAndFilter = async (formData) => {
     throw new Error('请选择岗位表文件')
   }
 
+  const statsFile = formData.get('stats_file')
+
   const profile = {
     major: formData.get('major') || '',
     education: formData.get('education') || '',
     gender: formData.get('gender') || '',
     household: formData.get('household') || '',
     degree: formData.get('degree') || '',
-    age: parseInt(formData.get('age')) || 25,
+    age: parseInt(formData.get('age')) || 0,
     isFreshGraduate: formData.get('is_fresh_graduate') === 'true',
     politicalStatus: formData.get('political_status') || '',
     qualifications: (formData.get('qualifications') || '').split(',').filter(Boolean),
@@ -35,7 +38,15 @@ export const uploadAndFilter = async (formData) => {
   }
 
   const jobs = await readJobFile(jobFile)
-  const matchedJobs = matchJobs(jobs, profile)
+  let finalJobs = jobs
+
+  // 多表关联：如果上传了统计表，自动 join
+  if (statsFile) {
+    const statsResult = await readStatsFile(statsFile)
+    finalJobs = joinJobsWithStats(jobs, statsResult)
+  }
+
+  const matchedJobs = matchJobs(finalJobs, profile)
 
   const perfect = matchedJobs.filter((j) => j.match_level === '完全符合')
   const partial = matchedJobs.filter((j) => j.match_level === '可能符合')

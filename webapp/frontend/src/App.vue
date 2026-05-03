@@ -74,22 +74,32 @@ const handleFilter = async (formData) => {
 const handleDownload = () => {
   if (!jobs.value.length) return
 
-  const exportData = jobs.value.map(job => ({
-    '序号': job.index,
-    '服务单位': job.unit,
-    '岗位类型': job.job_type,
-    '服务类别': job.service_category,
-    '招募人数': job.recruit_count,
-    '学历要求': job.education,
-    '学位要求': job.degree,
-    '专业要求': job.major,
-    '相关资格': job.qualifications,
-    '其他要求': job.other,
-    '联系电话': job.phone,
-    '匹配结果': job.match_level,
-    '匹配说明': job.match_reasons.join('；'),
-    '不匹配原因': job.mismatch_reasons.join('；')
-  }))
+  const exportData = jobs.value.map(job => {
+    const base = {
+      '序号': job.index,
+      '服务单位': job.unit,
+      '岗位类型': job.job_type,
+      '服务类别': job.service_category,
+      '招募人数': job.recruit_count,
+      '学历要求': job.education,
+      '学位要求': job.degree,
+      '专业要求': job.major,
+      '相关资格': job.qualifications,
+      '其他要求': job.other,
+      '联系电话': job.phone,
+      '匹配结果': job.match_level,
+      '匹配说明': job.match_reasons.join('；'),
+      '不匹配原因': job.mismatch_reasons.join('；'),
+      '注意事项': job.partial_reasons ? job.partial_reasons.join('；') : ''
+    }
+    if (job.hasStats) {
+      base['报名人数'] = job.applicants
+      base['初审通过'] = job.approved
+      base['缴费人数'] = job.paid
+      base['竞争比'] = job.competition_ratio ? job.competition_ratio + ':1' : '-'
+    }
+    return base
+  })
 
   const ws = XLSX.utils.json_to_sheet(exportData)
   const wb = XLSX.utils.book_new()
