@@ -36,19 +36,37 @@
 
     <!-- 操作栏 -->
     <el-card class="toolbar-card" shadow="never">
-      <el-row :gutter="16" align="middle">
-        <el-col :span="8">
+      <el-row :gutter="12" align="middle">
+        <el-col :span="6">
           <el-input
             v-model="searchText"
             placeholder="搜索单位或岗位"
             clearable
+            size="default"
           >
             <template #prefix>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </template>
           </el-input>
         </el-col>
-        <el-col :span="10">
+        <el-col :span="5">
+          <el-select
+            v-model="filterCities"
+            multiple
+            collapse-tags
+            size="default"
+            placeholder="筛选城市"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="city in availableCities"
+              :key="city"
+              :label="city"
+              :value="city"
+            />
+          </el-select>
+        </el-col>
+        <el-col :span="8">
           <el-checkbox-group v-model="filterLevels">
             <el-checkbox value="完全符合">
               <el-tag type="success" size="small">完全符合</el-tag>
@@ -61,7 +79,7 @@
             </el-checkbox>
           </el-checkbox-group>
         </el-col>
-        <el-col :span="6" style="text-align: right">
+        <el-col :span="5" style="text-align: right">
           <el-button type="success" @click="$emit('download')" :disabled="!jobs.length">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
             下载Excel
@@ -203,7 +221,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
   jobs: Array,
@@ -214,9 +232,20 @@ const props = defineProps({
 const emit = defineEmits(['download'])
 
 const searchText = ref('')
-const filterLevels = ref(['完全符合', '可能符合'])
+const filterLevels = ref(['完全符合', '可能符合', '不符合'])
+const filterCities = ref([])
 const currentPage = ref(1)
 const pageSize = ref(20)
+
+const availableCities = computed(() => {
+  const cities = new Set(props.jobs.map(job => job.sheet_name).filter(Boolean))
+  return Array.from(cities).sort()
+})
+
+watch(availableCities, (cities) => {
+  // 当数据变化时，默认全选所有城市
+  filterCities.value = [...cities]
+}, { immediate: true })
 
 const filteredJobs = computed(() => {
   let result = props.jobs
@@ -224,6 +253,11 @@ const filteredJobs = computed(() => {
   // 按匹配度筛选
   if (filterLevels.value.length > 0) {
     result = result.filter(job => filterLevels.value.includes(job.match_level))
+  }
+
+  // 按城市筛选
+  if (filterCities.value.length > 0) {
+    result = result.filter(job => filterCities.value.includes(job.sheet_name))
   }
 
   // 按搜索词筛选

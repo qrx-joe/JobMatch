@@ -26,6 +26,11 @@
               <div class="el-upload__tip">支持 .xlsx 和 .xls 格式</div>
             </template>
           </el-upload>
+          <div v-if="jobFileList.length > 0" class="file-selected">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span class="file-name">{{ jobFileList[0].name }}</span>
+            <span class="file-size" v-if="jobFileList[0].size">{{ (jobFileList[0].size / 1024).toFixed(1) }} KB</span>
+          </div>
         </el-form-item>
 
         <el-form-item label="统计表文件 (可选)">
@@ -41,6 +46,11 @@
               选择文件
             </el-button>
           </el-upload>
+          <div v-if="statsFileList.length > 0" class="file-selected">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span class="file-name">{{ statsFileList[0].name }}</span>
+            <span class="file-size" v-if="statsFileList[0].size">{{ (statsFileList[0].size / 1024).toFixed(1) }} KB</span>
+          </div>
         </el-form-item>
 
         <el-divider />
@@ -173,7 +183,7 @@
             multiple
             collapse-tags
             style="width: 100%"
-            placeholder="优先显示这些城市的岗位"
+            placeholder="只显示选中城市的岗位"
           >
             <el-option
               v-for="city in cities"
@@ -371,5 +381,37 @@ const submit = () => {
   cursor: help;
   margin-left: 4px;
   vertical-align: middle;
+}
+
+.file-selected {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #F0F7FF;
+  border: 1px solid #B3D4FC;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.file-selected svg {
+  color: #4A6FA5;
+  flex-shrink: 0;
+}
+
+.file-name {
+  color: #1B3A5F;
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  color: #5A6978;
+  font-size: 12px;
+  flex-shrink: 0;
 }
 </style>

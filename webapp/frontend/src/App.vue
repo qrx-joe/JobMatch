@@ -12,6 +12,15 @@
     </header>
 
     <main class="main">
+      <!-- 全屏解析遮罩 -->
+      <div v-if="parsing" class="parsing-overlay">
+        <div class="parsing-box">
+          <div class="spinner"></div>
+          <p class="parsing-text">{{ parsingText }}</p>
+          <p class="parsing-sub">大文件解析可能需要几秒，请稍候</p>
+        </div>
+      </div>
+
       <el-row :gutter="16">
         <!-- 左侧：条件设置 -->
         <el-col :xs="24" :sm="24" :md="8" :lg="6">
@@ -45,6 +54,8 @@ import ResultPanel from './components/ResultPanel.vue'
 const jobs = ref([])
 const stats = ref({})
 const loading = ref(false)
+const parsing = ref(false)
+const parsingText = ref('正在解析...')
 
 const filteredJobs = computed(() => {
   return jobs.value
@@ -52,7 +63,14 @@ const filteredJobs = computed(() => {
 
 const handleFilter = async (formData) => {
   loading.value = true
+  parsing.value = true
+  parsingText.value = '正在读取Excel文件...'
+
+  // 给UI一个渲染机会，再开始阻塞解析
+  await new Promise(resolve => setTimeout(resolve, 50))
+
   try {
+    parsingText.value = '正在匹配岗位...'
     const response = await uploadAndFilter(formData)
 
     jobs.value = response.jobs
@@ -69,6 +87,7 @@ const handleFilter = async (formData) => {
     alert(`筛选失败：${detail}`)
   } finally {
     loading.value = false
+    parsing.value = false
   }
 }
 
@@ -159,5 +178,52 @@ const handleDownload = () => {
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
+  position: relative;
+}
+
+.parsing-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.parsing-box {
+  text-align: center;
+  padding: 40px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 20px;
+  border: 3px solid #E0E6F0;
+  border-top-color: #4A6FA5;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.parsing-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1B3A5F;
+  margin: 0 0 8px;
+}
+
+.parsing-sub {
+  font-size: 13px;
+  color: #5A6978;
+  margin: 0;
 }
 </style>
