@@ -19,11 +19,17 @@
               </el-button>
             </el-upload>
             <span v-if="jobFileList.length > 0" class="file-tag">{{ jobFileList[0].name }}</span>
+            <span v-else class="format-hint">支持 .xlsx / .xls</span>
           </div>
         </el-col>
         <el-col :xs="24" :sm="12">
           <div class="upload-wrap">
-            <span class="field-label">统计表</span>
+            <span class="field-label">
+              统计表
+              <el-tooltip content="用于显示岗位报名人数和竞争比" placement="top">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #8A96A8; cursor: help; vertical-align: middle; margin-left: 2px;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+              </el-tooltip>
+            </span>
             <el-upload
               v-model:file-list="statsFileList"
               :auto-upload="false"
@@ -37,6 +43,8 @@
               </el-button>
             </el-upload>
             <span v-if="statsFileList.length > 0" class="file-tag">{{ statsFileList[0].name }}</span>
+            <span v-else class="format-hint">可选</span>
+            <el-button size="small" text class="cache-btn" @click="clearCache">清除缓存</el-button>
           </div>
         </el-col>
       </el-row>
@@ -91,7 +99,7 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :xs="12" :sm="8" :md="4" :lg="4">
+          <el-col :xs="24" :sm="8" :md="4" :lg="4">
             <el-form-item label="意向城市">
               <el-select
                 v-model="form.target_cities"
@@ -124,14 +132,6 @@
                 {{ loading ? '筛选中...' : '开始筛选' }}
               </el-button>
             </el-form-item>
-            <el-button
-              size="small"
-              text
-              style="width: 100%; margin-top: 4px"
-              @click="clearCache"
-            >
-              清除缓存并重置
-            </el-button>
           </el-col>
         </el-row>
       </el-form>
@@ -166,7 +166,7 @@
                   <el-input-number v-model="form.age" :min="18" :max="40" size="default" style="width: 100%" />
                 </el-form-item>
               </el-col>
-              <el-col :xs="12" :sm="8" :md="4">
+              <el-col :xs="24" :sm="8" :md="4">
                 <el-form-item label="资格证书">
                   <el-select
                     v-model="form.qualifications"
@@ -419,6 +419,11 @@ const submit = () => {
   white-space: nowrap;
 }
 
+.cache-btn {
+  margin-left: auto;
+  color: #8A96A8;
+}
+
 .file-tag {
   font-size: 12px;
   color: #2E7D32;
@@ -428,6 +433,12 @@ const submit = () => {
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.format-hint {
+  font-size: 12px;
+  color: #8A96A8;
   white-space: nowrap;
 }
 
