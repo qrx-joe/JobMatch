@@ -323,9 +323,20 @@ async function clearCache() {
     return
   }
 
+  const before = localStorage.getItem(PROFILE_KEY)
+  console.log('[清除前] localStorage:', before)
+
   localStorage.removeItem(PROFILE_KEY)
+
+  const after = localStorage.getItem(PROFILE_KEY)
+  console.log('[清除后] localStorage:', after)
+
   emit('clear')
-  ElMessage.success('已清除所有缓存和个人信息')
+  ElMessage.success('已清除，页面即将刷新...')
+
+  setTimeout(() => {
+    window.location.reload()
+  }, 800)
 }
 
 const canSubmit = computed(() => {
