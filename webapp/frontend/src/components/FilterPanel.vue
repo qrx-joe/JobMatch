@@ -391,6 +391,10 @@ const submit = () => {
 
 .filter-card :deep(.el-card__body) {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 220px;
 }
 
 .file-row {
