@@ -37,17 +37,14 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import * as XLSX from 'xlsx'
 import { uploadAndFilter } from './services/api'
 import FilterPanel from './components/FilterPanel.vue'
 import ResultPanel from './components/ResultPanel.vue'
 
-const API_BASE = import.meta.env.DEV ? '/api' : ''
-
 const jobs = ref([])
 const stats = ref({})
 const loading = ref(false)
-const excelBase64 = ref('')
-const excelFilename = ref('')
 
 const filteredJobs = computed(() => {
   return jobs.value
@@ -65,8 +62,6 @@ const handleFilter = async (formData) => {
       partial: response.partial,
       mismatch: response.mismatch
     }
-    excelBase64.value = response.excel_base64
-    excelFilename.value = response.excel_filename
 
   } catch (error) {
     console.error('筛选失败:', error)
@@ -77,14 +72,29 @@ const handleFilter = async (formData) => {
 }
 
 const handleDownload = () => {
-  if (!excelBase64.value) return
+  if (!jobs.value.length) return
 
-  const link = document.createElement('a')
-  link.href = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${excelBase64.value}`
-  link.download = excelFilename.value
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  const exportData = jobs.value.map(job => ({
+    '序号': job.index,
+    '服务单位': job.unit,
+    '岗位类型': job.job_type,
+    '服务类别': job.service_category,
+    '招募人数': job.recruit_count,
+    '学历要求': job.education,
+    '学位要求': job.degree,
+    '专业要求': job.major,
+    '相关资格': job.qualifications,
+    '其他要求': job.other,
+    '联系电话': job.phone,
+    '匹配结果': job.match_level,
+    '匹配说明': job.match_reasons.join('；'),
+    '不匹配原因': job.mismatch_reasons.join('；')
+  }))
+
+  const ws = XLSX.utils.json_to_sheet(exportData)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, '筛选结果')
+  XLSX.writeFile(wb, `筛选结果_${new Date().toISOString().slice(0, 10)}.xlsx`)
 }
 </script>
 
