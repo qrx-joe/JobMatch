@@ -47,6 +47,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import * as XLSX from 'xlsx'
 import { uploadAndFilter } from './services/api'
 import FilterPanel from './components/FilterPanel.vue'
@@ -109,10 +110,15 @@ onMounted(() => {
   }
 })
 
-const handleFilter = async (formData) => {
+const currentFileName = ref('')
+
+const handleFilter = async (formData, fileInfo = {}) => {
   loading.value = true
   parsing.value = true
-  parsingText.value = '正在读取Excel文件...'
+  currentFileName.value = fileInfo.jobFileName || ''
+  parsingText.value = currentFileName.value
+    ? `正在解析：${currentFileName.value}`
+    : '正在读取Excel文件...'
 
   // 给UI一个渲染机会，再开始阻塞解析
   await new Promise(resolve => setTimeout(resolve, 50))
@@ -131,13 +137,27 @@ const handleFilter = async (formData) => {
 
     saveResult(jobs.value, stats.value)
 
+    const summary = `筛选完成：共${response.total}个岗位，完全符合${response.perfect}个，可能符合${response.partial}个`
+    ElMessage.success({ message: summary, duration: 4000 })
+
   } catch (error) {
     console.error('筛选失败:', error)
     const detail = error?.message || String(error)
-    alert(`筛选失败：${detail}`)
+
+    let friendlyMsg = detail
+    if (detail.includes('无法识别') || detail.includes('表头')) {
+      friendlyMsg = '无法识别Excel文件的表头，请检查文件格式是否包含岗位名称、单位名称等必要列'
+    } else if (detail.includes('请选择')) {
+      friendlyMsg = detail
+    } else if (detail.includes('format') || detail.includes('格式')) {
+      friendlyMsg = '文件格式不支持，请上传 .xlsx 或 .xls 格式的Excel文件'
+    }
+
+    ElMessage.error({ message: friendlyMsg, duration: 6000, showClose: true })
   } finally {
     loading.value = false
     parsing.value = false
+    currentFileName.value = ''
   }
 }
 

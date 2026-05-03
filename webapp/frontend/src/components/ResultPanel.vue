@@ -1,7 +1,7 @@
 <template>
   <div class="result-panel">
     <!-- 统计卡片 -->
-    <el-card class="stats-card" shadow="never">
+    <el-card class="stats-card" shadow="never" v-if="hasJobs">
       <el-row :gutter="16">
         <el-col :span="6">
           <el-statistic title="总岗位数" :value="stats.total">
@@ -35,7 +35,7 @@
     </el-card>
 
     <!-- 操作栏 -->
-    <el-card class="toolbar-card" shadow="never">
+    <el-card class="toolbar-card" shadow="never" v-if="hasJobs">
       <el-row :gutter="12" align="middle">
         <el-col :span="6">
           <el-input
@@ -80,7 +80,7 @@
           </el-checkbox-group>
         </el-col>
         <el-col :span="5" style="text-align: right">
-          <el-button type="success" @click="$emit('download')" :disabled="!jobs.length">
+          <el-button type="success" @click="$emit('download')" :disabled="!filteredJobs.length">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
             下载Excel
           </el-button>
@@ -91,6 +91,7 @@
     <!-- 岗位列表 -->
     <el-card class="jobs-card" shadow="never" v-loading="loading">
       <el-table
+        v-if="hasJobs && paginatedJobs.length"
         :data="paginatedJobs"
         style="width: 100%"
         stripe
@@ -206,6 +207,7 @@
 
       <!-- 分页 -->
       <el-pagination
+        v-if="hasJobs && filteredJobs.length > pageSize"
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
         :page-sizes="[10, 20, 50, 100]"
@@ -214,8 +216,28 @@
         class="pagination"
       />
 
-      <!-- 空状态 -->
-      <el-empty v-if="!jobs.length && !loading" description="请先上传文件并开始筛选" />
+      <!-- 空状态：从未筛选 -->
+      <el-empty v-if="!hasJobs && !loading">
+        <template #description>
+          <div class="empty-desc">
+            <p class="empty-title">还没有筛选结果</p>
+            <p class="empty-tip">在左侧上传岗位表并设置筛选条件</p>
+          </div>
+        </template>
+      </el-empty>
+
+      <!-- 空状态：被过滤筛光 -->
+      <div v-if="hasJobs && !paginatedJobs.length && !loading" class="empty-filtered">
+        <el-empty description="当前筛选条件下无岗位" />
+        <div class="empty-suggestions">
+          <p>尝试以下操作：</p>
+          <ul>
+            <li>勾选更多匹配级别（如"不符合"）</li>
+            <li>扩大城市选择范围</li>
+            <li>清空搜索关键词</li>
+          </ul>
+        </div>
+      </div>
     </el-card>
   </div>
 </template>
@@ -236,6 +258,8 @@ const filterLevels = ref(['完全符合', '可能符合', '不符合'])
 const filterCities = ref([])
 const currentPage = ref(1)
 const pageSize = ref(20)
+
+const hasJobs = computed(() => props.jobs && props.jobs.length > 0)
 
 const availableCities = computed(() => {
   const cities = new Set(props.jobs.map(job => job.sheet_name).filter(Boolean))
@@ -406,5 +430,51 @@ const handleRowClick = (row) => {
 :deep(.el-button--success) {
   --el-button-bg-color: #2E7D32;
   --el-button-border-color: #2E7D32;
+}
+
+.empty-desc {
+  text-align: center;
+}
+
+.empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1B3A5F;
+  margin: 0 0 6px;
+}
+
+.empty-tip {
+  font-size: 13px;
+  color: #5A6978;
+  margin: 0;
+}
+
+.empty-filtered {
+  text-align: center;
+  padding: 20px 0 40px;
+}
+
+.empty-suggestions {
+  display: inline-block;
+  text-align: left;
+  background: #F5F7FA;
+  border-radius: 6px;
+  padding: 16px 24px;
+  margin-top: 10px;
+}
+
+.empty-suggestions p {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1B3A5F;
+  margin: 0 0 10px;
+}
+
+.empty-suggestions ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #5A6978;
+  font-size: 13px;
+  line-height: 1.8;
 }
 </style>

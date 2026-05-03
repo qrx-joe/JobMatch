@@ -367,7 +367,9 @@ const submit = () => {
   formData.append('household_strict', form.household_strict)
 
   saveProfile()
-  emit('filter', formData)
+  emit('filter', formData, {
+    jobFileName: jobFileList.value[0]?.name || ''
+  })
 }
 </script>
 
