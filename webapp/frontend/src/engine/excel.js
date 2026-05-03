@@ -85,23 +85,105 @@ function buildOtherField(row, indices) {
 
 const CITY_PATTERN = /(太原市|大同市|朔州市|忻州市|吕梁市|晋中市|阳泉市|长治市|晋城市|临汾市|运城市)/
 
-function extractCityFromContent(rows, firstUnit) {
-  // 1. 从第一行（标题行）提取，如 "太原市2026年..."
-  for (let i = 0; i < Math.min(rows.length, 3); i++) {
-    const row = rows[i]
-    if (!Array.isArray(row)) continue
-    const text = row.map((c) => String(c || '')).join('')
-    const m = text.match(CITY_PATTERN)
-    if (m) return m[1]
+function extractCityFromUnit(unit) {
+  if (!unit) return ''
+  const m = String(unit).match(CITY_PATTERN)
+  return m ? m[1] : ''
+}
+
+function normalizeSheetName(name) {
+  if (!name) return ''
+  const text = String(name).trim()
+  if (text.endsWith('市')) return text
+  // 常见城市名补"市"
+  const cityMap = {
+    '太原': '太原市', '大同': '大同市', '朔州': '朔州市',
+    '忻州': '忻州市', '吕梁': '吕梁市', '晋中': '晋中市',
+    '阳泉': '阳泉市', '长治': '长治市', '晋城': '晋城市',
+    '临汾': '临汾市', '运城': '运城市'
+  }
+  for (const [short, full] of Object.entries(cityMap)) {
+    if (text.includes(short)) return full
+  }
+  return text
+}
+
+function parseSheet(rows, sheetName) {
+  const headerRowIdx = detectHeaderRow(rows)
+  if (headerRowIdx === -1) return []
+
+  let headers = rows[headerRowIdx]
+
+  // 检测是否有子表头（如三支一扶的学历/学位/专业子表头）
+  let dataStartIdx = headerRowIdx + 1
+  const nextRow = rows[headerRowIdx + 1]
+  if (nextRow) {
+    const nextRowText = nextRow.map((c) => String(c || '')).join('')
+    const hasSubHeaders = ['学历', '学位', '专业', '相关资格', '其他'].some((k) =>
+      nextRowText.includes(k)
+    )
+    if (hasSubHeaders) {
+      dataStartIdx = headerRowIdx + 2
+      const merged = [...headers]
+      for (let i = 0; i < nextRow.length; i++) {
+        if (nextRow[i] && (!merged[i] || merged[i] === '服务岗位要求')) {
+          merged[i] = nextRow[i]
+        }
+      }
+      headers = merged
+    }
   }
 
-  // 2. 从第一个岗位的单位名提取，如 "太原市杏花岭区..."
-  if (firstUnit) {
-    const m = String(firstUnit).match(CITY_PATTERN)
-    if (m) return m[1]
+  const indexIdx = detectColumn(headers, JOB_HEADER_PATTERNS.index)
+  const deptIdx = detectColumn(headers, JOB_HEADER_PATTERNS.department)
+  const unitIdx = detectColumn(headers, JOB_HEADER_PATTERNS.unit)
+  const posIdx = detectColumn(headers, JOB_HEADER_PATTERNS.position)
+  const recruitIdx = detectColumn(headers, JOB_HEADER_PATTERNS.recruitCount)
+  const eduIdx = detectColumn(headers, JOB_HEADER_PATTERNS.education)
+  const degIdx = detectColumn(headers, JOB_HEADER_PATTERNS.degree)
+  const majorIdx = detectColumn(headers, JOB_HEADER_PATTERNS.major)
+  const qualIdx = detectColumn(headers, JOB_HEADER_PATTERNS.qualifications)
+  const polIdx = detectColumn(headers, JOB_HEADER_PATTERNS.political)
+  const workIdx = detectColumn(headers, JOB_HEADER_PATTERNS.workYears)
+  const ageIdx = detectColumn(headers, JOB_HEADER_PATTERNS.age)
+  const otherIdx = detectColumn(headers, JOB_HEADER_PATTERNS.other)
+  const descIdx = detectColumn(headers, JOB_HEADER_PATTERNS.description)
+  const phoneIdx = detectColumn(headers, JOB_HEADER_PATTERNS.phone)
+  const contactIdx = detectColumn(headers, JOB_HEADER_PATTERNS.contact)
+  const benefitsIdx = detectColumn(headers, JOB_HEADER_PATTERNS.benefits)
+
+  const jobs = rows
+    .slice(dataStartIdx)
+    .map((row) => ({
+      index: row[indexIdx],
+      department: normalizeText(row[deptIdx]),
+      unit: normalizeText(row[unitIdx]),
+      job_type: normalizeText(row[posIdx]),
+      recruit_count: row[recruitIdx] || 0,
+      education: normalizeText(row[eduIdx]),
+      degree: normalizeText(row[degIdx]),
+      major: normalizeText(row[majorIdx]),
+      qualifications: normalizeText(row[qualIdx]),
+      other: buildOtherField(row, { otherIdx, polIdx, workIdx, ageIdx }),
+      description: normalizeText(row[descIdx]),
+      phone: normalizeText(row[phoneIdx]),
+      contact_person: normalizeText(row[contactIdx]),
+      benefits: normalizeText(row[benefitsIdx])
+    }))
+    .filter(
+      (job) =>
+        job.index !== undefined &&
+        job.index !== null &&
+        job.unit
+    )
+
+  // sheet_name 优先用 sheet 名称，其次从单位名提取
+  let city = normalizeSheetName(sheetName)
+  if (!city && jobs.length > 0) {
+    city = extractCityFromUnit(jobs[0].unit)
   }
 
-  return ''
+  return jobs.map((job) => ({ ...job, sheet_name: city || '未知' }))
 }
 
 export function readJobFile(file) {
@@ -111,86 +193,16 @@ export function readJobFile(file) {
       try {
         const data = new Uint8Array(e.target.result)
         const workbook = XLSX.read(data, { type: 'array' })
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
 
-        const headerRowIdx = detectHeaderRow(rows)
-        if (headerRowIdx === -1) {
-          reject(new Error('无法识别岗位表的表头，请检查文件格式'))
-          return
+        let allJobs = []
+        for (const sheetName of workbook.SheetNames) {
+          const worksheet = workbook.Sheets[sheetName]
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+          const jobs = parseSheet(rows, sheetName)
+          allJobs = allJobs.concat(jobs)
         }
 
-        let headers = rows[headerRowIdx]
-
-        // 检测是否有子表头（如三支一扶的学历/学位/专业子表头）
-        let dataStartIdx = headerRowIdx + 1
-        const nextRow = rows[headerRowIdx + 1]
-        if (nextRow) {
-          const nextRowText = nextRow.map((c) => String(c || '')).join('')
-          const hasSubHeaders = ['学历', '学位', '专业', '相关资格', '其他'].some((k) =>
-            nextRowText.includes(k)
-          )
-          if (hasSubHeaders) {
-            dataStartIdx = headerRowIdx + 2
-            // 合并子表头到有效表头（子表头覆盖主表头中的空值或合并项）
-            const merged = [...headers]
-            for (let i = 0; i < nextRow.length; i++) {
-              if (nextRow[i] && (!merged[i] || merged[i] === '服务岗位要求')) {
-                merged[i] = nextRow[i]
-              }
-            }
-            headers = merged
-          }
-        }
-
-        const indexIdx = detectColumn(headers, JOB_HEADER_PATTERNS.index)
-        const deptIdx = detectColumn(headers, JOB_HEADER_PATTERNS.department)
-        const unitIdx = detectColumn(headers, JOB_HEADER_PATTERNS.unit)
-        const posIdx = detectColumn(headers, JOB_HEADER_PATTERNS.position)
-        const recruitIdx = detectColumn(headers, JOB_HEADER_PATTERNS.recruitCount)
-        const eduIdx = detectColumn(headers, JOB_HEADER_PATTERNS.education)
-        const degIdx = detectColumn(headers, JOB_HEADER_PATTERNS.degree)
-        const majorIdx = detectColumn(headers, JOB_HEADER_PATTERNS.major)
-        const qualIdx = detectColumn(headers, JOB_HEADER_PATTERNS.qualifications)
-        const polIdx = detectColumn(headers, JOB_HEADER_PATTERNS.political)
-        const workIdx = detectColumn(headers, JOB_HEADER_PATTERNS.workYears)
-        const ageIdx = detectColumn(headers, JOB_HEADER_PATTERNS.age)
-        const otherIdx = detectColumn(headers, JOB_HEADER_PATTERNS.other)
-        const descIdx = detectColumn(headers, JOB_HEADER_PATTERNS.description)
-        const phoneIdx = detectColumn(headers, JOB_HEADER_PATTERNS.phone)
-        const contactIdx = detectColumn(headers, JOB_HEADER_PATTERNS.contact)
-        const benefitsIdx = detectColumn(headers, JOB_HEADER_PATTERNS.benefits)
-
-        let jobs = rows
-          .slice(dataStartIdx)
-          .map((row) => ({
-            index: row[indexIdx],
-            department: normalizeText(row[deptIdx]),
-            unit: normalizeText(row[unitIdx]),
-            job_type: normalizeText(row[posIdx]),
-            recruit_count: row[recruitIdx] || 0,
-            education: normalizeText(row[eduIdx]),
-            degree: normalizeText(row[degIdx]),
-            major: normalizeText(row[majorIdx]),
-            qualifications: normalizeText(row[qualIdx]),
-            other: buildOtherField(row, { otherIdx, polIdx, workIdx, ageIdx }),
-            description: normalizeText(row[descIdx]),
-            phone: normalizeText(row[phoneIdx]),
-            contact_person: normalizeText(row[contactIdx]),
-            benefits: normalizeText(row[benefitsIdx])
-          }))
-          .filter(
-            (job) =>
-              job.index !== undefined &&
-              job.index !== null &&
-              job.unit
-          )
-
-        // 从内容提取地市（优先从标题行或单位名，不从文件名）
-        const city = extractCityFromContent(rows, jobs[0]?.unit)
-        jobs = jobs.map((job) => ({ ...job, sheet_name: city || '未知' }))
-
-        resolve(jobs)
+        resolve(allJobs)
       } catch (err) {
         reject(err)
       }
