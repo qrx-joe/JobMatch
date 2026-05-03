@@ -124,6 +124,14 @@
                 {{ loading ? '筛选中...' : '开始筛选' }}
               </el-button>
             </el-form-item>
+            <el-button
+              size="small"
+              text
+              style="width: 100%; margin-top: 4px"
+              @click="clearCache"
+            >
+              清除缓存并重置
+            </el-button>
           </el-col>
         </el-row>
       </el-form>
