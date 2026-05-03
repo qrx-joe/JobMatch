@@ -83,10 +83,25 @@ function buildOtherField(row, indices) {
     .join('；')
 }
 
-function extractCity(filename) {
-  const match = filename.match(
-    /(山西|太原|大同|朔州|忻州|吕梁|晋中|阳泉|长治|晋城|临汾|运城)/)
-  return match ? match[1] + '市' : '未知地市'
+const CITY_PATTERN = /(太原市|大同市|朔州市|忻州市|吕梁市|晋中市|阳泉市|长治市|晋城市|临汾市|运城市)/
+
+function extractCityFromContent(rows, firstUnit) {
+  // 1. 从第一行（标题行）提取，如 "太原市2026年..."
+  for (let i = 0; i < Math.min(rows.length, 3); i++) {
+    const row = rows[i]
+    if (!Array.isArray(row)) continue
+    const text = row.map((c) => String(c || '')).join('')
+    const m = text.match(CITY_PATTERN)
+    if (m) return m[1]
+  }
+
+  // 2. 从第一个岗位的单位名提取，如 "太原市杏花岭区..."
+  if (firstUnit) {
+    const m = String(firstUnit).match(CITY_PATTERN)
+    if (m) return m[1]
+  }
+
+  return ''
 }
 
 export function readJobFile(file) {
@@ -146,7 +161,7 @@ export function readJobFile(file) {
         const contactIdx = detectColumn(headers, JOB_HEADER_PATTERNS.contact)
         const benefitsIdx = detectColumn(headers, JOB_HEADER_PATTERNS.benefits)
 
-        const jobs = rows
+        let jobs = rows
           .slice(dataStartIdx)
           .map((row) => ({
             index: row[indexIdx],
@@ -162,8 +177,7 @@ export function readJobFile(file) {
             description: normalizeText(row[descIdx]),
             phone: normalizeText(row[phoneIdx]),
             contact_person: normalizeText(row[contactIdx]),
-            benefits: normalizeText(row[benefitsIdx]),
-            sheet_name: extractCity(file.name)
+            benefits: normalizeText(row[benefitsIdx])
           }))
           .filter(
             (job) =>
@@ -171,6 +185,10 @@ export function readJobFile(file) {
               job.index !== null &&
               job.unit
           )
+
+        // 从内容提取地市（优先从标题行或单位名，不从文件名）
+        const city = extractCityFromContent(rows, jobs[0]?.unit)
+        jobs = jobs.map((job) => ({ ...job, sheet_name: city || '未知' }))
 
         resolve(jobs)
       } catch (err) {
