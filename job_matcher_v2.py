@@ -552,8 +552,8 @@ class JobMatcherV2:
         critical_checks = ["专业", "学历", "学位"]
         all_critical = all(checks.get(k, False) for k in critical_checks)
 
-        # 定向岗位与院校层次也是硬性条件
-        hard_constraints_ok = targeted_ok and school_ok and physical_ok
+        # 定向岗位、院校层次、英语/计算机等级也是硬性条件
+        hard_constraints_ok = targeted_ok and school_ok and physical_ok and english_ok and computer_ok
 
         if all_critical and other_ok and qual_ok and hard_constraints_ok:
             if job.sheet_name in self.profile.target_cities:
