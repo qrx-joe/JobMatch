@@ -1,11 +1,11 @@
 import * as XLSX from 'xlsx'
 
 const JOB_HEADER_PATTERNS = {
-  index: ['序号'],
-  department: ['招录部门', '招聘部门', '服务类别'],
-  unit: ['服务单位', '招录单位', '招聘单位'],
-  position: ['岗位类型', '招录职位', '岗位名称', '职位'],
-  recruitCount: ['招募人数', '招录人数', '招聘人数'],
+  index: ['序号', '职位代码', '岗位代码'],
+  department: ['招录部门', '招聘部门', '服务类别', '招录机关'],
+  unit: ['服务单位', '招录单位', '招聘单位', '招录机关'],
+  position: ['岗位类型', '招录职位', '岗位名称', '职位', '职位名称'],
+  recruitCount: ['招募人数', '招录人数', '招聘人数', '招考人数'],
   education: ['学历要求', '学历'],
   degree: ['学位要求', '学位'],
   major: ['专业要求', '专业（学科）类别', '专业'],
@@ -172,9 +172,7 @@ function parseSheet(rows, sheetName) {
     }))
     .filter(
       (job) =>
-        job.index !== undefined &&
-        job.index !== null &&
-        job.unit
+        job.unit || job.job_type || job.department
     )
 
   // sheet_name 优先用 sheet 名称，其次从单位名提取
