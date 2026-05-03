@@ -322,7 +322,9 @@ async function clearCache() {
   }
 
   localStorage.removeItem(PROFILE_KEY)
-  Object.assign(form, defaultForm)
+  Object.keys(defaultForm).forEach(key => {
+    form[key] = JSON.parse(JSON.stringify(defaultForm[key]))
+  })
   jobFileList.value = []
   statsFileList.value = []
   emit('clear')
