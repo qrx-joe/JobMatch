@@ -252,6 +252,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { getCities, getQualifications } from '../services/api'
 
 const PROFILE_KEY = 'jobmatch_profile'
@@ -309,12 +310,24 @@ function loadProfile() {
   }
 }
 
-function clearCache() {
+async function clearCache() {
+  try {
+    await ElMessageBox.confirm(
+      '这将清除所有缓存的个人信息和筛选结果，确定继续吗？',
+      '清除缓存',
+      { confirmButtonText: '确定清除', cancelButtonText: '取消', type: 'warning' }
+    )
+  } catch {
+    return
+  }
+
   localStorage.removeItem(PROFILE_KEY)
   Object.assign(form, defaultForm)
   jobFileList.value = []
   statsFileList.value = []
   emit('clear')
+
+  ElMessage.success('已清除所有缓存和个人信息')
 }
 
 const canSubmit = computed(() => {
