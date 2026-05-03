@@ -53,6 +53,14 @@ class Job:
     difficulty_trend: str = ""  # 难度趋势: 上升/下降/稳定/未知
     pass_probability: float = 0.0  # 上岸概率 (%)
 
+    # ========== 新增岗位字段 ==========
+    english_requirement: str = ""
+    computer_requirement: str = ""
+    physical_requirement: str = ""
+    is_targeted_recruit: bool = False
+    targeted_type: str = ""
+    school_requirement: str = ""
+
 
 @dataclass
 class UserProfile:
@@ -68,6 +76,15 @@ class UserProfile:
     qualifications: list[str] = field(default_factory=list)  # 拥有的证书
     work_years: int = 0  # 工作年限
     target_cities: list[str] = field(default_factory=list)
+
+    # ========== 新增用户字段 ==========
+    english_level: str = ""
+    computer_level: str = ""
+    physical_conditions: str = ""
+    is_veteran: bool = False
+    is_west_plan_participant: bool = False
+    is_supporting_grassroots: bool = False
+    school_level: str = ""
 
 
 class QualificationMatcher:
@@ -287,6 +304,92 @@ class OtherRequirementsMatcher:
         return True, "无工作经验要求"
 
 
+class PhysicalConditionMatcher:
+    """身体条件/视力匹配器"""
+
+    def __init__(self, user_conditions: str):
+        self.user_conditions = user_conditions or ""
+
+    def match(self, requirement: str) -> tuple[bool, str]:
+        req = str(requirement).strip()
+        if not req or req in ["无", "不限", "正常", "符合", "nan", ""]:
+            return True, "身体条件符合"
+        restrictions = {
+            "色盲": "色盲", "色弱": "色弱", "视力不良": "视力不良",
+            "视力矫正": "视力矫正", "单眼视力": "单眼视力",
+            "近视": "近视", "远视": "远视", "身高": "身高", "体重": "体重",
+        }
+        for keyword, condition_type in restrictions.items():
+            if keyword in req:
+                if condition_type in self.user_conditions:
+                    return False, f"身体条件不符合：{keyword}"
+                return True, f"身体条件可能受限：{keyword}"
+        return True, "身体条件符合"
+
+
+class TargetedRecruitMatcher:
+    """定向/专项岗位匹配器（退伍军人、西部计划等）"""
+
+    def __init__(self, profile: UserProfile):
+        self.profile = profile
+
+    def match(self, is_targeted: bool, targeted_type: str) -> tuple[bool, list[str], list[str]]:
+        if not is_targeted:
+            return True, ["非定向岗位"], []
+        match_reasons, mismatch_reasons = [], []
+        if "退伍军人" in targeted_type or "退役" in targeted_type:
+            if self.profile.is_veteran:
+                match_reasons.append("符合：退伍军人专项")
+            else:
+                mismatch_reasons.append("不符合：仅限退伍军人")
+        if "西部计划" in targeted_type:
+            if self.profile.is_west_plan_participant:
+                match_reasons.append("符合：西部计划志愿者专项")
+            else:
+                mismatch_reasons.append("不符合：仅限西部计划志愿者")
+        grassroots_keywords = ["三支一扶", "村官", "特岗", "基层服务"]
+        if any(kw in targeted_type for kw in grassroots_keywords):
+            if self.profile.is_supporting_grassroots:
+                match_reasons.append("符合：基层服务项目人员专项")
+            else:
+                mismatch_reasons.append("不符合：仅限基层服务项目人员")
+        if "高校应届" in targeted_type or "应届毕业生" in targeted_type:
+            if self.profile.is_fresh_graduate:
+                match_reasons.append("符合：高校应届毕业生专项")
+            else:
+                mismatch_reasons.append("不符合：仅限高校应届毕业生")
+        all_ok = len(mismatch_reasons) == 0
+        return all_ok, match_reasons, mismatch_reasons
+
+
+class SchoolLevelMatcher:
+    """院校层次匹配器（985/211/普通本科）"""
+
+    SCHOOL_LEVELS = {"985": 3, "211": 2, "普通本科": 1, "专科": 0}
+
+    def __init__(self, user_level: str):
+        self.user_level = user_level or "普通本科"
+
+    def match(self, requirement: str) -> tuple[bool, str]:
+        req = str(requirement).strip()
+        if not req or req in ["无", "不限", "普通本科", "本科", "nan", ""]:
+            return True, "院校层次符合"
+        required_level = 0
+        for level_name, level_value in self.SCHOOL_LEVELS.items():
+            if level_name in req:
+                required_level = max(required_level, level_value)
+        user_level = self.SCHOOL_LEVELS.get(self.user_level, 1)
+        if user_level >= required_level:
+            return True, f"院校层次符合：{self.user_level}"
+        return False, f"院校层次不足：要求{self._level_name(required_level)}，你是{self.user_level}"
+
+    def _level_name(self, level: int) -> str:
+        for name, val in self.SCHOOL_LEVELS.items():
+            if val == level:
+                return name
+        return "普通本科"
+
+
 class JobMatcherV2:
     """增强版岗位匹配引擎"""
 
@@ -305,6 +408,13 @@ class JobMatcherV2:
             qualifications=self.config["profile"].get("相关资格", []),
             work_years=self.config["profile"].get("工作年限", 0),
             target_cities=self.config["preference"].get("意向城市", []),
+            english_level=self.config["profile"].get("英语等级", ""),
+            computer_level=self.config["profile"].get("计算机等级", ""),
+            physical_conditions=self.config["profile"].get("身体状况", ""),
+            is_veteran=self.config["profile"].get("是否退伍军人", False),
+            is_west_plan_participant=self.config["profile"].get("是否西部计划志愿者", False),
+            is_supporting_grassroots=self.config["profile"].get("是否基层服务项目人员", False),
+            school_level=self.config["profile"].get("院校层次", ""),
         )
 
         self.rules = self.config.get("rules", {})
@@ -371,6 +481,52 @@ class JobMatcherV2:
             match_reasons.extend(other_reasons)
         mismatch_reasons.extend(other_mismatches)
 
+        # 5b. 计算机等级匹配
+        computer_ok, computer_msg = self._match_computer_level(job.computer_requirement or job.other)
+        if computer_ok:
+            score += 5
+            match_reasons.append(computer_msg)
+        else:
+            mismatch_reasons.append(computer_msg)
+
+        # 5c. 英语等级匹配
+        english_ok, english_msg = self._match_english_level(job.english_requirement or job.other)
+        if english_ok:
+            score += 5
+            match_reasons.append(english_msg)
+        else:
+            mismatch_reasons.append(english_msg)
+
+        # 5d. 定向/专项岗位匹配
+        targeted_matcher = TargetedRecruitMatcher(self.profile)
+        targeted_ok, targeted_reasons, targeted_mismatches = targeted_matcher.match(
+            job.is_targeted_recruit, job.targeted_type
+        )
+        if targeted_ok:
+            score += 10
+            match_reasons.extend(targeted_reasons)
+        else:
+            score -= 20
+            mismatch_reasons.extend(targeted_mismatches)
+
+        # 5e. 院校层次匹配
+        school_matcher = SchoolLevelMatcher(self.profile.school_level)
+        school_ok, school_msg = school_matcher.match(job.school_requirement or job.other)
+        if school_ok:
+            score += 5
+            match_reasons.append(school_msg)
+        else:
+            mismatch_reasons.append(school_msg)
+
+        # 5f. 身体条件/视力匹配
+        physical_matcher = PhysicalConditionMatcher(self.profile.physical_conditions)
+        physical_ok, physical_msg = physical_matcher.match(job.physical_requirement or job.other)
+        if physical_ok:
+            match_reasons.append(physical_msg)
+        else:
+            score -= 15
+            mismatch_reasons.append(physical_msg)
+
         # 6. 城市偏好
         city_ok, city_score = self._match_city(job.sheet_name)
         if city_ok:
@@ -396,12 +552,15 @@ class JobMatcherV2:
         critical_checks = ["专业", "学历", "学位"]
         all_critical = all(checks.get(k, False) for k in critical_checks)
 
-        if all_critical and other_ok and qual_ok:
+        # 定向岗位与院校层次也是硬性条件
+        hard_constraints_ok = targeted_ok and school_ok and physical_ok
+
+        if all_critical and other_ok and qual_ok and hard_constraints_ok:
             if job.sheet_name in self.profile.target_cities:
                 job.match_level = MatchLevel.PERFECT
             else:
                 job.match_level = MatchLevel.PARTIAL
-        elif all_critical:
+        elif all_critical and hard_constraints_ok:
             job.match_level = MatchLevel.PARTIAL
         else:
             job.match_level = MatchLevel.MISMATCH
@@ -445,6 +604,40 @@ class JobMatcherV2:
             return True, score
 
         return False, 0
+
+    def _match_computer_level(self, requirement: str) -> tuple[bool, str]:
+        """匹配计算机等级要求"""
+        req = str(requirement or "").strip()
+        if not req:
+            return True, "计算机等级不限"
+        user_level = self.profile.computer_level
+        required = None
+        for kw in ["计算机一级", "计算机二级", "计算机三级", "计算机四级"]:
+            if kw in req:
+                required = kw
+                break
+        if not required:
+            return True, "计算机等级不限"
+        if user_level and required in user_level:
+            return True, f"计算机等级符合：{user_level}"
+        return False, f"计算机等级不符：要求{required}，你有{user_level or '无'}"
+
+    def _match_english_level(self, requirement: str) -> tuple[bool, str]:
+        """匹配英语等级要求"""
+        req = str(requirement or "").strip()
+        if not req:
+            return True, "英语等级不限"
+        user_level = self.profile.english_level
+        required = None
+        for kw in ["英语四级", "英语六级", "CET-4", "CET-6"]:
+            if kw in req:
+                required = kw
+                break
+        if not required:
+            return True, "英语等级不限"
+        if user_level and (required in user_level or user_level in required):
+            return True, f"英语等级符合：{user_level}"
+        return False, f"英语等级不符：要求{required}，你有{user_level or '无'}"
 
 
 if __name__ == "__main__":
