@@ -45,7 +45,7 @@
 
       <!-- 核心筛选条件 -->
       <el-form :model="form" class="core-form">
-        <el-row :gutter="8" align="bottom">
+        <el-row :gutter="8">
           <el-col :xs="12" :sm="6" :md="4" :lg="4">
             <el-form-item label="专业">
               <el-input v-model="form.major" placeholder="如：经济学" size="default" />
@@ -390,7 +390,7 @@ const submit = () => {
 }
 
 .filter-card :deep(.el-card__body) {
-  padding: 16px 20px 12px;
+  padding: 20px;
 }
 
 .file-row {
