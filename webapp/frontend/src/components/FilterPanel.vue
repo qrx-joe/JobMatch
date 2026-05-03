@@ -72,7 +72,7 @@
           </el-col>
           <el-col :xs="12" :sm="6" :md="3" :lg="3">
             <el-form-item label="性别">
-              <el-radio-group v-model="form.gender" size="small">
+              <el-radio-group v-model="form.gender">
                 <el-radio value="男">男</el-radio>
                 <el-radio value="女">女</el-radio>
               </el-radio-group>
@@ -111,7 +111,7 @@
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="8" :md="3" :lg="3">
-            <el-form-item>
+            <el-form-item label="&nbsp;">
               <el-button
                 type="primary"
                 size="default"
@@ -219,7 +219,7 @@
                     性别限制
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="help-icon"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
                   </template>
-                  <el-radio-group v-model="form.gender_strict" size="small">
+                  <el-radio-group v-model="form.gender_strict">
                     <el-radio :value="true">严格</el-radio>
                     <el-radio :value="false">宽松</el-radio>
                   </el-radio-group>
@@ -231,7 +231,7 @@
                     户籍限制
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="help-icon"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
                   </template>
-                  <el-radio-group v-model="form.household_strict" size="small">
+                  <el-radio-group v-model="form.household_strict">
                     <el-radio :value="true">严格</el-radio>
                     <el-radio :value="false">宽松</el-radio>
                   </el-radio-group>
@@ -428,15 +428,19 @@ const submit = () => {
 }
 
 .core-form :deep(.el-form-item__label) {
-  font-size: 12px;
-  font-weight: 500;
-  color: #5A6978;
-  padding-bottom: 4px;
-  line-height: 1.2;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1B3A5F;
+  padding-bottom: 8px;
+  line-height: 1.3;
 }
 
 .core-form :deep(.el-form-item) {
   margin-bottom: 0;
+}
+
+.core-form .el-col {
+  padding-bottom: 8px;
 }
 
 .advanced-collapse {
@@ -465,15 +469,19 @@ const submit = () => {
 }
 
 .advanced-form :deep(.el-form-item__label) {
-  font-size: 12px;
-  font-weight: 500;
-  color: #5A6978;
-  padding-bottom: 4px;
-  line-height: 1.2;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1B3A5F;
+  padding-bottom: 8px;
+  line-height: 1.3;
 }
 
 .advanced-form :deep(.el-form-item) {
   margin-bottom: 0;
+}
+
+.advanced-form .el-col {
+  padding-bottom: 8px;
 }
 
 .match-rule-row {
