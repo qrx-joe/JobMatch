@@ -428,14 +428,14 @@ const submit = () => {
 }
 
 .compact-divider {
-  margin: 12px 0;
+  margin: 12px 0 20px;
 }
 
 .core-form :deep(.el-form-item__label) {
   font-size: 13px;
   font-weight: 600;
   color: #1B3A5F;
-  padding-bottom: 8px;
+  padding-bottom: 4px;
   line-height: 1.3;
 }
 
@@ -448,7 +448,7 @@ const submit = () => {
 }
 
 .advanced-collapse {
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .advanced-collapse :deep(.el-collapse-item__header) {
