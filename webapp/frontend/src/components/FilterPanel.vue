@@ -236,6 +236,15 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           {{ loading ? '筛选中...' : '开始筛选' }}
         </el-button>
+
+        <el-button
+          size="small"
+          text
+          style="width: 100%; margin-top: 8px"
+          @click="clearCache"
+        >
+          清除缓存并重置
+        </el-button>
       </el-form>
     </el-card>
   </div>
@@ -245,20 +254,22 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { getCities, getQualifications } from '../services/api'
 
+const PROFILE_KEY = 'jobmatch_profile'
+
 const API_BASE = import.meta.env.DEV ? '/api' : ''
 
 const props = defineProps({
   loading: Boolean
 })
 
-const emit = defineEmits(['filter'])
+const emit = defineEmits(['filter', 'clear'])
 
 const jobFileList = ref([])
 const statsFileList = ref([])
 const cities = ref([])
 const qualifications = ref([])
 
-const form = reactive({
+const defaultForm = {
   major: '经济学',
   education: '本科',
   degree: '学士',
@@ -275,13 +286,43 @@ const form = reactive({
   target_cities: ['吕梁市', '太原市'],
   gender_strict: true,
   household_strict: false
-})
+}
+
+const form = reactive({ ...defaultForm })
+
+function saveProfile() {
+  try {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(form))
+  } catch (e) {
+    // 静默失败
+  }
+}
+
+function loadProfile() {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY)
+    if (!raw) return
+    const data = JSON.parse(raw)
+    Object.assign(form, data)
+  } catch (e) {
+    // 解析失败就忽略
+  }
+}
+
+function clearCache() {
+  localStorage.removeItem(PROFILE_KEY)
+  Object.assign(form, defaultForm)
+  jobFileList.value = []
+  statsFileList.value = []
+  emit('clear')
+}
 
 const canSubmit = computed(() => {
   return jobFileList.value.length > 0 && form.major && form.education
 })
 
 onMounted(async () => {
+  loadProfile()
   try {
     const [citiesRes, qualRes] = await Promise.all([
       getCities(),
@@ -325,6 +366,7 @@ const submit = () => {
   formData.append('gender_strict', form.gender_strict)
   formData.append('household_strict', form.household_strict)
 
+  saveProfile()
   emit('filter', formData)
 }
 </script>

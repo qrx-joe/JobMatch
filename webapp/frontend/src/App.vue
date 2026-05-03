@@ -26,6 +26,7 @@
         <el-col :xs="24" :sm="24" :md="8" :lg="6">
           <FilterPanel
             @filter="handleFilter"
+            @clear="clearResultCache"
             :loading="loading"
           />
         </el-col>
@@ -45,11 +46,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import * as XLSX from 'xlsx'
 import { uploadAndFilter } from './services/api'
 import FilterPanel from './components/FilterPanel.vue'
 import ResultPanel from './components/ResultPanel.vue'
+
+const RESULT_KEY = 'jobmatch_result'
+const CACHE_DAYS = 7
 
 const jobs = ref([])
 const stats = ref({})
@@ -59,6 +63,50 @@ const parsingText = ref('正在解析...')
 
 const filteredJobs = computed(() => {
   return jobs.value
+})
+
+function saveResult(jobs, stats) {
+  const payload = {
+    jobs,
+    stats,
+    timestamp: Date.now()
+  }
+  try {
+    localStorage.setItem(RESULT_KEY, JSON.stringify(payload))
+  } catch (e) {
+    // localStorage 满或不可用，静默失败
+  }
+}
+
+function loadResult() {
+  try {
+    const raw = localStorage.getItem(RESULT_KEY)
+    if (!raw) return null
+    const data = JSON.parse(raw)
+    const age = Date.now() - (data.timestamp || 0)
+    const maxAge = CACHE_DAYS * 24 * 60 * 60 * 1000
+    if (age > maxAge) {
+      localStorage.removeItem(RESULT_KEY)
+      return null
+    }
+    return data
+  } catch (e) {
+    return null
+  }
+}
+
+function clearResultCache() {
+  localStorage.removeItem(RESULT_KEY)
+  jobs.value = []
+  stats.value = {}
+}
+
+onMounted(() => {
+  const cached = loadResult()
+  if (cached) {
+    jobs.value = cached.jobs || []
+    stats.value = cached.stats || {}
+  }
 })
 
 const handleFilter = async (formData) => {
@@ -80,6 +128,8 @@ const handleFilter = async (formData) => {
       partial: response.partial,
       mismatch: response.mismatch
     }
+
+    saveResult(jobs.value, stats.value)
 
   } catch (error) {
     console.error('筛选失败:', error)
