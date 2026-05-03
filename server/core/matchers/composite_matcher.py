@@ -14,6 +14,8 @@ from .major_matcher import MajorMatcher
 from .education_matcher import EducationMatcher, DegreeMatcher
 from .political_matcher import PoliticalMatcher
 from .age_matcher import AgeMatcher
+from .level_matcher import ComputerLevelMatcher, EnglishLevelMatcher
+from .qualification_matcher import QualificationMatcher
 
 
 class CompositeMatcher:
@@ -40,6 +42,9 @@ class CompositeMatcher:
         "age": 10,
         "household": 5,
         "gender": 5,
+        "computer_level": 5,
+        "english_level": 5,
+        "qualification": 10,
     }
 
     def __init__(self, weights: Optional[Dict[str, int]] = None):
@@ -57,6 +62,9 @@ class CompositeMatcher:
         self._degree_matcher: Optional[DegreeMatcher] = None
         self._political_matcher: Optional[PoliticalMatcher] = None
         self._age_matcher: Optional[AgeMatcher] = None
+        self._computer_matcher: Optional[ComputerLevelMatcher] = None
+        self._english_matcher: Optional[EnglishLevelMatcher] = None
+        self._qualification_matcher: Optional[QualificationMatcher] = None
 
     def _ensure_matchers(self, profile: UserProfile) -> None:
         """确保所有匹配器已初始化"""
@@ -70,6 +78,12 @@ class CompositeMatcher:
             self._political_matcher = PoliticalMatcher(profile.party_status)
         if self._age_matcher is None:
             self._age_matcher = AgeMatcher(profile.age)
+        if self._computer_matcher is None:
+            self._computer_matcher = ComputerLevelMatcher(profile.computer_level)
+        if self._english_matcher is None:
+            self._english_matcher = EnglishLevelMatcher(profile.english_level)
+        if self._qualification_matcher is None:
+            self._qualification_matcher = QualificationMatcher(profile.qualifications)
 
     def match(self, job: Job, profile: UserProfile) -> MatchResult:
         """
@@ -153,6 +167,33 @@ class CompositeMatcher:
         else:
             mismatch_reasons.append(gender_msg)
 
+        # 8. 计算机等级匹配 (5分)
+        computer_ok, computer_msg = self._computer_matcher.match(job.other or "")
+        result.computer_match = (computer_ok, computer_msg)
+        if computer_ok:
+            total_score += self.weights.get("computer_level", 5)
+            match_reasons.append(computer_msg)
+        else:
+            mismatch_reasons.append(computer_msg)
+
+        # 9. 英语等级匹配 (5分)
+        english_ok, english_msg = self._english_matcher.match(job.other or "")
+        result.english_match = (english_ok, english_msg)
+        if english_ok:
+            total_score += self.weights.get("english_level", 5)
+            match_reasons.append(english_msg)
+        else:
+            mismatch_reasons.append(english_msg)
+
+        # 10. 资格证书匹配 (10分)
+        qual_ok, qual_msg = self._qualification_matcher.match(job.qualifications or "")
+        result.qualifications_match = (qual_ok, qual_msg)
+        if qual_ok:
+            total_score += self.weights.get("qualification", 10)
+            match_reasons.append(qual_msg)
+        else:
+            mismatch_reasons.append(qual_msg)
+
         # 计算综合结果
         result.total_score = total_score
         result.match_reasons = match_reasons
@@ -183,6 +224,10 @@ class CompositeMatcher:
     def _match_household(self, job: Job, profile: UserProfile) -> Tuple[bool, str]:
         """匹配户籍/生源地"""
         other = str(job.other or "").strip()
+
+        # 岗位要求"不限户籍"时直接通过
+        if "不限户籍" in other or "户籍不限" in other:
+            return True, "户籍不限"
 
         # 检查是否有户籍限制
         import re

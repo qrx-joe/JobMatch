@@ -222,6 +222,10 @@ class OtherRequirementsMatcher:
         if not self.profile.household or self.profile.household == "不限":
             return True, "用户不限户籍"
 
+        # 岗位要求"不限户籍"时直接通过
+        if text and ("不限户籍" in text or "户籍不限" in text):
+            return True, "户籍不限"
+
         match = re.search(r"限(.+?)户籍", text)
         if match:
             required = match.group(1)

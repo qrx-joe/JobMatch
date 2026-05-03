@@ -299,6 +299,10 @@ async def filter_jobs(request: FilterRequest):
         estimated_score=request.profile.estimated_score,
         target_cities=request.profile.target_cities,
         target_platforms=request.profile.target_platforms,
+        computer_level=request.profile.computer_level,
+        english_level=request.profile.english_level,
+        basic_experience=request.profile.basic_experience,
+        work_years=request.profile.work_years,
     )
 
     # 从数据库查询岗位

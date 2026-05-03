@@ -28,6 +28,8 @@ class MatchResult:
     age_match: tuple[bool, str] = (False, "")
     grassroots_match: tuple[bool, str] = (False, "")
     qualifications_match: tuple[bool, str] = (False, "")
+    computer_match: tuple[bool, str] = (False, "")
+    english_match: tuple[bool, str] = (False, "")
     household_match: tuple[bool, str] = (False, "")
     gender_match: tuple[bool, str] = (False, "")
 

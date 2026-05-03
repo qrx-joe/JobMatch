@@ -36,6 +36,12 @@ class UserProfile:
     qualifications: list[str] = field(default_factory=list)  # 持有资格证书
     estimated_score: float = 0.0  # 预估考试成绩
 
+    # 扩展条件（与ProfileRequest对齐）
+    computer_level: str = ""  # 计算机等级
+    english_level: str = ""  # 英语等级
+    basic_experience: str = ""  # 服务基层项目
+    work_years: int = 0  # 工作年限
+
     # 偏好设置
     target_cities: list[str] = field(default_factory=list)  # 意向城市
     target_platforms: list[str] = field(default_factory=list)  # 意向平台类型

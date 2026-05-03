@@ -107,10 +107,12 @@ async def upload_and_filter(
     qual_list = [q.strip() for q in qualifications.split(",") if q.strip()]
     city_list = [c.strip() for c in target_cities.split(",") if c.strip()]
 
-    # 保存上传的文件（使用 ASCII 安全的临时文件名，避免中文路径与 pandas 不兼容）
+    # 保存上传的文件（使用唯一临时文件名，避免并发冲突）
+    import uuid
     temp_dir = tempfile.gettempdir()
+    job_filename = f"jobmatch_jobs_{uuid.uuid4().hex[:8]}.xlsx"
+    job_path = os.path.join(temp_dir, job_filename)
     print(f"[upload] received job_file: {job_file.filename}, content_type={job_file.content_type}")
-    job_path = os.path.join(temp_dir, "jobmatch_jobs.xlsx")
     with open(job_path, "wb") as f:
         content = await job_file.read()
         f.write(content)
@@ -118,7 +120,8 @@ async def upload_and_filter(
 
     stats_path = None
     if stats_file:
-        stats_path = os.path.join(temp_dir, "jobmatch_stats.xlsx")
+        stats_filename = f"jobmatch_stats_{uuid.uuid4().hex[:8]}.xlsx"
+        stats_path = os.path.join(temp_dir, stats_filename)
         with open(stats_path, "wb") as f:
             content = await stats_file.read()
             f.write(content)
