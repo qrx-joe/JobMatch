@@ -111,7 +111,7 @@
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="8" :md="3" :lg="3">
-            <el-form-item label="&nbsp;">
+            <el-form-item>
               <el-button
                 type="primary"
                 size="default"
@@ -391,10 +391,6 @@ const submit = () => {
 
 .filter-card :deep(.el-card__body) {
   padding: 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 220px;
 }
 
 .file-row {
@@ -428,19 +424,32 @@ const submit = () => {
 }
 
 .compact-divider {
-  margin: 12px 0 20px;
-}
-
-.core-form :deep(.el-form-item__label) {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1B3A5F;
-  padding-bottom: 4px;
-  line-height: 1.3;
+  margin: 12px 0;
 }
 
 .core-form :deep(.el-form-item) {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   margin-bottom: 0;
+}
+
+.core-form :deep(.el-form-item__label) {
+  float: none;
+  width: auto !important;
+  text-align: left;
+  padding: 0 6px 0 0;
+  line-height: 32px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1B3A5F;
+  flex-shrink: 0;
+}
+
+.core-form :deep(.el-form-item__content) {
+  margin-left: 0 !important;
+  line-height: 32px;
+  flex: 1;
 }
 
 .core-form .el-col {
@@ -472,16 +481,29 @@ const submit = () => {
   padding-bottom: 8px;
 }
 
+.advanced-form :deep(.el-form-item) {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 0;
+}
+
 .advanced-form :deep(.el-form-item__label) {
+  float: none;
+  width: auto !important;
+  text-align: left;
+  padding: 0 6px 0 0;
+  line-height: 32px;
   font-size: 13px;
   font-weight: 600;
   color: #1B3A5F;
-  padding-bottom: 8px;
-  line-height: 1.3;
+  flex-shrink: 0;
 }
 
-.advanced-form :deep(.el-form-item) {
-  margin-bottom: 0;
+.advanced-form :deep(.el-form-item__content) {
+  margin-left: 0 !important;
+  line-height: 32px;
+  flex: 1;
 }
 
 .advanced-form .el-col {
