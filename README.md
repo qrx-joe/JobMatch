@@ -60,7 +60,6 @@ JobMatch/
 ├── data/
 │   └── samples/               # 真实考试数据样本（用于测试）
 ├── .github/workflows/
-│   ├── ci.yml                 # CI（遗留，当前无有效 Python 测试）
 │   └── deploy.yml             # 自动部署到 GitHub Pages
 ├── archive/                   # 旧代码归档（server/、miniprogram/ 等）
 ├── PRODUCT.md                 # 产品定义文档（项目锚点）
