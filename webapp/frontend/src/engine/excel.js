@@ -20,9 +20,13 @@ const JOB_HEADER_PATTERNS = {
   benefits: ['福利待遇']
 }
 
+function normalizeHeader(text) {
+  return String(text || '').replace(/\s+/g, '')
+}
+
 function detectColumn(headers, patterns) {
   for (let i = 0; i < headers.length; i++) {
-    const h = String(headers[i] || '').trim()
+    const h = normalizeHeader(headers[i])
     for (const p of patterns) {
       if (h.includes(p)) return i
     }
@@ -40,7 +44,7 @@ function detectHeaderRow(rows) {
 
     let score = 0
     for (const h of row) {
-      const hs = String(h || '')
+      const hs = normalizeHeader(h)
       for (const patterns of Object.values(JOB_HEADER_PATTERNS)) {
         if (patterns.some((p) => hs.includes(p))) {
           score++
@@ -157,8 +161,8 @@ function parseSheet(rows, sheetName) {
     .map((row) => ({
       index: row[indexIdx],
       department: normalizeText(row[deptIdx]),
-      unit: normalizeText(row[unitIdx]),
-      job_type: normalizeText(row[posIdx]),
+      unit: normalizeText(row[unitIdx]) || normalizeText(row[deptIdx]),
+      job_type: normalizeText(row[posIdx]) || normalizeText(row[descIdx]),
       recruit_count: row[recruitIdx] || 0,
       education: normalizeText(row[eduIdx]),
       degree: normalizeText(row[degIdx]),

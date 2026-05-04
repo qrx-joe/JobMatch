@@ -171,7 +171,7 @@ const handleDownload = () => {
       '序号': job.index,
       '服务单位': job.unit,
       '岗位类型': job.job_type,
-      '服务类别': job.service_category,
+      '服务类别': job.department || job.service_category || '',
       '招募人数': job.recruit_count,
       '学历要求': job.education,
       '学位要求': job.degree,

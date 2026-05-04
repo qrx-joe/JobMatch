@@ -168,7 +168,7 @@
         <el-table-column label="服务单位" min-width="200">
           <template #default="{ row }">
             <div class="unit-cell">
-              <span class="unit-name">{{ row.unit }}</span>
+              <span class="unit-name">{{ row.unit || row.department || '未知单位' }}</span>
               <el-tag v-if="row.recruit_count > 1" type="info" size="small">
                 招{{ row.recruit_count }}人
               </el-tag>

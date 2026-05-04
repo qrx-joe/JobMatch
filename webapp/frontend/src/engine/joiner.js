@@ -134,8 +134,8 @@ export function buildJobJoinKey(job, joinType) {
   if (joinType === 'code' && job.code) {
     return normalizeKey(job.code)
   }
-  // 默认用单位+岗位类型
-  const unit = normalizeUnitName(job.unit)
+  // 默认用单位+岗位类型；unit 为空时回退到 department
+  const unit = normalizeUnitName(job.unit) || normalizeUnitName(job.department)
   const position = String(job.job_type || '').trim()
   if (unit && position) {
     return normalizeKey(unit + '|' + position)
