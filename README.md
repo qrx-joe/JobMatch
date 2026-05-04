@@ -1,18 +1,39 @@
 # JobMatch 智能选岗系统
 
-> 三支一扶智能选岗系统 - AI驱动的考公考编岗位智能匹配工具
+> 100% 本地运行的 Excel 岗位筛选工具 —— 不上传任何个人信息，浏览器内完成全部运算。
 
 ---
 
-## 项目概述
+## 项目定位
 
-| 项目 | 说明 |
-|-----|------|
-| 版本 | v3.0 |
-| 更新时间 | 2026-05-01 |
-| 技术栈 | Python 3.11+ / FastAPI / Vue 3 |
+面向考公考编考生：上传官方 Excel 岗位表（和可选的报名统计表），按个人条件智能筛选，导出匹配结果。
 
-支持语义匹配、专业图谱、历年分析和报告导出。
+**核心差异化**：
+- **真隐私**：纯前端，无后端、无服务器、无登录，Excel 在浏览器内解析
+- **多表关联**：岗位表 + 报名统计表自动按"岗位代码 + 岗位名称"合并，无需手动 VLOOKUP
+- **智能列识别**：自动识别"专业要求 / 所学专业 / 专业"等同义列头
+- **学历向下兼容**：本科可报"本科及以上"、"大专及以上"
+
+---
+
+## 支持考试
+
+| 考试 | 数据情况 | 适用功能 |
+|---|---|---|
+| 国考 | 只有岗位表，无官方统计 Excel | 单表筛选 |
+| 山西省考 | 岗位表 + 报名统计表 | 单表筛选 + **多表关联** |
+| 山西事业编联考 | 岗位表 + 报名统计表 | 单表筛选 + **多表关联** |
+| 三支一扶 | 岗位表 + 报名统计表 | 单表筛选 + **多表关联** |
+
+---
+
+## 技术栈
+
+- **前端**：Vue 3 + Vite + Element Plus
+- **Excel 解析**：SheetJS (xlsx)
+- **模糊匹配**：fuse.js
+- **部署**：GitHub Pages 静态托管
+- **后端**：**无**
 
 ---
 
@@ -20,63 +41,34 @@
 
 ```
 JobMatch/
-├── server/                    # FastAPI 后端
-│   ├── app.py                # 主入口
-│   ├── core/                 # 核心业务逻辑
-│   │   ├── models/          # 数据模型
-│   │   ├── matchers/        # 匹配器
-│   │   ├── recommenders/    # 推荐系统
-│   │   └── analyzers/       # 分析器
-│   ├── data/                # 数据处理
-│   │   ├── excel/           # Excel 解析
-│   │   └── database/        # 数据库
-│   ├── platforms/           # 平台适配层
-│   └── utils/               # 工具函数
-├── webapp/                   # Web 应用（Vue3）
-├── miniprogram/              # 微信小程序
-├── shared/api/               # 统一 API 服务
-├── tests/                    # 测试
-├── docs/                     # 详细文档
-├── data/                     # 数据目录
-├── reports/                  # 报告输出
-├── pyproject.toml            # 依赖管理
-├── config.yaml               # 基础配置
-├── start.py                  # 快速启动脚本
-└── demo_full_pipeline.py     # 完整流程演示
+├── webapp/
+│   └── frontend/              # Vue3 前端应用（唯一活跃代码）
+│       ├── src/
+│       │   ├── App.vue        # 主应用
+│       │   ├── components/    # 页面组件
+│       │   │   ├── FilterPanel.vue   # 筛选条件面板
+│       │   │   └── ResultPanel.vue   # 结果展示面板
+│       │   ├── engine/        # 核心筛选引擎（浏览器内运行）
+│       │   │   ├── excel.js       # Excel 解析 + 智能列识别
+│       │   │   ├── matcher.js     # 条件匹配引擎
+│       │   │   ├── joiner.js      # 多表关联（岗位表 join 统计表）
+│       │   │   └── parseOther.js  # "其他要求"字段解析
+│       │   └── services/
+│       │       └── api.js     # 前端业务接口层（无网络请求）
+│       ├── package.json
+│       └── vite.config.js
+├── data/
+│   └── samples/               # 真实考试数据样本（用于测试）
+├── .github/workflows/
+│   ├── ci.yml                 # CI（遗留，当前无有效 Python 测试）
+│   └── deploy.yml             # 自动部署到 GitHub Pages
+├── archive/                   # 旧代码归档（server/、miniprogram/ 等）
+├── PRODUCT.md                 # 产品定义文档（项目锚点）
+├── README.md                  # 本文件
+└── pyproject.toml             # Python 依赖（遗留，待清理）
 ```
 
----
-
-## 已完成功能
-
-### 核心匹配
-- [x] 专业匹配（支持大类/代码/模糊）
-- [x] 学历匹配（支持向下兼容）
-- [x] 学位匹配
-- [x] 性别匹配
-- [x] 户籍匹配
-- [x] 政治面貌匹配
-- [x] 年龄匹配
-- [x] 基层工作经验匹配
-- [x] 语义匹配（支持模糊表达）
-
-### 历年分析
-- [x] 历史数据分析
-- [x] 竞争趋势预测
-- [x] 进面分数预测
-- [x] 上岸概率计算
-
-### 平台适配
-- [x] 三支一扶
-- [x] 公务员
-- [x] 事业单位
-- [x] 教师招聘
-
-### 用户体验
-- [x] 颜色标记（绿/黄/红）
-- [x] 竞争比显示
-- [x] 结果导出（Excel/HTML/JSON）
-- [x] 收藏功能
+> **注意**：`server/`、`miniprogram/`、`shared/` 等旧架构代码已归档至 `archive/legacy/`，不再维护。
 
 ---
 
@@ -85,67 +77,79 @@ JobMatch/
 ### 1. 安装依赖
 
 ```bash
-uv sync
-```
-
-### 2. 配置环境变量
-
-```bash
-cp .env.example .env
-# 编辑 .env，填入必要的 API Key
-```
-
-### 3. 启动后端服务
-
-```bash
-uv run uvicorn server.app:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### 4. 启动前端开发服务器
-
-```bash
 cd webapp/frontend
 npm install
+```
+
+### 2. 本地开发
+
+```bash
 npm run dev
 ```
 
-### 5. 访问应用
+打开浏览器访问：`http://localhost:3000`
 
-- 前端：http://localhost:3000
-- 后端 API：http://localhost:8000
-- API 文档：http://localhost:8000/docs
-
----
-
-## 命令行使用
+### 3. 构建生产版本
 
 ```bash
-# 运行完整流程演示
-uv run python demo_full_pipeline.py
-
-# 快速启动（交互式）
-uv run python start.py
+npm run build
 ```
 
----
-
-## 配置文件
-
-| 文件 | 说明 |
-|-----|------|
-| `config.yaml` | 基础配置 |
-| `config_full.yaml` | 完整配置 |
-| `.env` | 环境变量 |
-| `.env.example` | 环境变量示例 |
+构建产物输出至 `webapp/frontend/dist/`。
 
 ---
 
-## 详细文档
+## 部署
+
+项目已配置 GitHub Actions 自动部署：
+
+- **触发条件**：`main` 分支推送
+- **目标**：GitHub Pages
+- **构建产物**：`webapp/frontend/dist`
+
+无需手动操作，合并到 `main` 后自动生效。
+
+---
+
+## 核心功能
+
+### 单表筛选
+上传岗位 Excel，按以下维度筛选：
+- 专业（支持大类包含，如"经济学类"包含"经济学"）
+- 学历（向下兼容）
+- 性别、户籍、政治面貌、年龄
+- 意向城市
+- 资格证书、计算机/英语等级
+- 基层工作经验
+
+### 多表关联
+同时上传**岗位表**和**报名统计表**，系统自动：
+1. 识别两张表的同义列头
+2. 按"岗位代码 + 岗位名称"关联
+3. 结果中展示报名人数、竞争比等统计信息
+
+### 结果导出
+筛选结果导出为 Excel，保留原表结构，新增：
+- 匹配结果（完全符合 / 可能符合 / 不符合）
+- 匹配说明与不匹配原因
+- 竞争比（如关联了统计表）
+
+---
+
+## 数据隐私声明
+
+- **不上传**：Excel 文件在浏览器内解析，不发送到任何服务器
+- **不登录**：无账号系统，不收集手机号等个人信息
+- **本地缓存**：筛选结果仅保存在浏览器 localStorage 中，7 天后自动清除
+
+---
+
+## 相关文档
 
 | 文档 | 说明 |
 |-----|------|
-| `docs/ARCHITECTURE.md` | 架构设计详解 |
-| `docs/IMPLEMENTATION_STATUS.md` | 实施进度详情 |
+| `PRODUCT.md` | 产品定义：范围、不做的事、成功标准、已知风险 |
+| `archive/legacy/docs-old/` | 旧架构文档（语义匹配、历年分析等，已废弃） |
 
 ---
 

@@ -1,93 +1,111 @@
-# 三支一扶智能选岗系统 - Web 应用
+# JobMatch 前端应用
 
-Vue3 + FastAPI 构建的 Web 版岗位筛选工具。
+> Vue3 + Vite + Element Plus 构建的纯前端岗位筛选工具。
+> Excel 在浏览器内解析，无后端服务。
 
 ---
 
 ## 项目结构
 
 ```
-webapp/
-├── backend/           # FastAPI 后端
-│   └── app.py        # 主 API
-├── frontend/          # Vue3 前端
-│   ├── src/
-│   │   ├── components/  # 组件
-│   │   ├── App.vue      # 主应用
-│   │   └── main.js     # 入口
-│   ├── package.json
-│   └── vite.config.js
-└── README.md          # 本文件
+webapp/frontend/
+├── src/
+│   ├── App.vue              # 主应用入口
+│   ├── main.js              # 应用初始化
+│   ├── components/          # 页面组件
+│   │   ├── FilterPanel.vue  # 筛选条件面板（文件上传 + 表单）
+│   │   └── ResultPanel.vue  # 结果展示面板（统计 + 表格）
+│   ├── engine/              # 核心筛选引擎
+│   │   ├── excel.js         # Excel 解析、智能列识别
+│   │   ├── matcher.js       # 多条件匹配引擎
+│   │   ├── joiner.js        # 岗位表与统计表关联
+│   │   └── parseOther.js    # "其他要求"文本解析
+│   └── services/
+│       └── api.js           # 业务接口层（纯函数，无网络请求）
+├── index.html
+├── package.json
+└── vite.config.js
 ```
 
 ---
 
 ## 快速开始
 
-### 1. 安装依赖
+### 安装依赖
 
-**后端依赖（在项目根目录）：**
-```bash
-uv sync
-```
-
-**前端依赖：**
 ```bash
 cd webapp/frontend
 npm install
 ```
 
-### 2. 启动服务
+### 本地开发
 
-**启动后端（端口 8000）：**
 ```bash
-uv run uvicorn webapp.backend.app:app --host 0.0.0.0 --port 8000 --reload
-```
-
-**启动前端（端口 3000）：**
-```bash
-cd webapp/frontend
 npm run dev
 ```
 
-### 3. 访问应用
+默认端口 `3000`，访问 `http://localhost:3000`。
 
-打开浏览器访问：`http://localhost:3000`
+### 生产构建
 
----
+```bash
+npm run build
+```
 
-## 功能特点
+输出目录：`dist/`
 
-1. **拖拽上传**：支持拖拽上传 Excel 文件
-2. **实时筛选**：所有筛选条件即时生效
-3. **智能匹配**：
-   - 专业大类匹配（经济学类包含经济学）
-   - 学历向下兼容（本科可报大专及以上）
-   - 性别/户籍/应届/政治面貌等条件
-4. **竞争分析**：显示缴费人数和竞争比
-5. **颜色标记**：
-   - 绿色 = 完全符合
-   - 黄色 = 可能符合
-   - 红色 = 不符合
-6. **结果导出**：支持下载 Excel 文件
+### 预览构建产物
 
----
-
-## API 接口
-
-| 接口 | 方法 | 说明 |
-|-----|------|------|
-| `/api/jobs/upload` | POST | 上传 Excel |
-| `/api/jobs/filter` | POST | 条件筛选 |
-| `/api/jobs/recommend` | POST | 智能推荐 |
-| `/api/jobs/{id}` | GET | 岗位详情 |
-| `/api/cities` | GET | 城市列表 |
+```bash
+npm run preview
+```
 
 ---
 
 ## 技术栈
 
-- **后端**：Python + FastAPI
-- **前端**：Vue 3 + Element Plus + Vite
-- **Excel 处理**：pandas + openpyxl
-- **图标**：Lucide Vue Next
+| 依赖 | 用途 |
+|-----|------|
+| Vue 3 | 前端框架 |
+| Vite | 构建工具 |
+| Element Plus | UI 组件库 |
+| SheetJS (xlsx) | Excel 读写（浏览器内） |
+| fuse.js | 模糊匹配（专业、列名识别） |
+| Lucide Vue Next | 图标 |
+
+---
+
+## 核心模块说明
+
+### engine/excel.js
+- 读取 `.xls` / `.xlsx` 文件
+- 智能列头识别：通过同义词映射自动识别"专业要求"、"学历要求"等列
+- 数据清洗：去除空行、标准化字段名
+
+### engine/matcher.js
+- 根据用户画像对岗位列表进行多条件匹配
+- 支持学历向下兼容、专业大类包含、性别/户籍严格/宽松模式
+- 输出匹配等级：完全符合 / 可能符合 / 不符合
+
+### engine/joiner.js
+- 读取报名统计表
+- 按"岗位代码 + 岗位名称"与岗位表关联
+- 处理格式漂移（前导零、空格、全半角）
+
+---
+
+## 部署
+
+本项目通过 GitHub Actions 自动部署到 GitHub Pages：
+
+- 工作流文件：`.github/workflows/deploy.yml`
+- 触发条件：`main` 分支推送
+- 构建命令：`npm ci && npm run build`
+- 部署目录：`webapp/frontend/dist`
+
+---
+
+## 浏览器兼容性
+
+- Chrome / Edge / Firefox / Safari 最新两个主版本
+- 依赖 `FileReader` 和 `localStorage`，IE 不支持
