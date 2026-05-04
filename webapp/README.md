@@ -96,12 +96,14 @@ npm run preview
 
 ## 部署
 
-本项目通过 GitHub Actions 自动部署到 GitHub Pages：
+本项目通过 **Vercel** 自动部署：
 
-- 工作流文件：`.github/workflows/deploy.yml`
+- **在线访问**：https://frontend-gamma-seven-37.vercel.app
 - 触发条件：`main` 分支推送
-- 构建命令：`npm ci && npm run build`
-- 部署目录：`webapp/frontend/dist`
+- 构建命令：`npm run build`
+- 输出目录：`dist/`
+
+Vercel 会自动识别 Vite 项目并完成构建，无需额外配置。
 
 ---
 

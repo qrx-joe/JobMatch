@@ -32,7 +32,7 @@
 - **前端**：Vue 3 + Vite + Element Plus
 - **Excel 解析**：SheetJS (xlsx)
 - **模糊匹配**：fuse.js
-- **部署**：GitHub Pages 静态托管
+- **部署**：Vercel 静态托管
 - **后端**：**无**
 
 ---
@@ -59,12 +59,9 @@ JobMatch/
 │       └── vite.config.js
 ├── data/
 │   └── samples/               # 真实考试数据样本（用于测试）
-├── .github/workflows/
-│   └── deploy.yml             # 自动部署到 GitHub Pages
 ├── archive/                   # 旧代码归档（server/、miniprogram/ 等）
 ├── PRODUCT.md                 # 产品定义文档（项目锚点）
-├── README.md                  # 本文件
-└── pyproject.toml             # Python 依赖（遗留，待清理）
+└── README.md                  # 本文件
 ```
 
 > **注意**：`server/`、`miniprogram/`、`shared/` 等旧架构代码已归档至 `archive/legacy/`，不再维护。
@@ -100,13 +97,14 @@ npm run build
 
 ## 部署
 
-项目已配置 GitHub Actions 自动部署：
+项目通过 **Vercel** 自动部署：
 
+- **在线访问**：https://frontend-gamma-seven-37.vercel.app
 - **触发条件**：`main` 分支推送
-- **目标**：GitHub Pages
-- **构建产物**：`webapp/frontend/dist`
+- **构建命令**：`cd webapp/frontend && npm run build`
+- **输出目录**：`webapp/frontend/dist`
 
-无需手动操作，合并到 `main` 后自动生效。
+无需手动操作，代码推送后 Vercel 自动构建并部署。
 
 ---
 
