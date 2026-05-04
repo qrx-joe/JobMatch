@@ -274,20 +274,20 @@ const activeCollapse = ref([])
 
 function createDefaultForm() {
   return {
-    major: '经济学',
-    education: '本科',
-    degree: '学士',
-    gender: '女',
-    household: '吕梁市',
-    age: 25,
+    major: '',
+    education: '',
+    degree: '',
+    gender: '',
+    household: '',
+    age: null,
     is_fresh_graduate: false,
-    political_status: '群众',
+    political_status: '',
     qualifications: [],
     computer_level: '',
     english_level: '',
     basic_experience: '',
-    work_years: 0,
-    target_cities: ['吕梁市', '太原市'],
+    work_years: null,
+    target_cities: [],
     gender_strict: true,
     household_strict: false
   }
@@ -327,11 +327,7 @@ async function clearCache() {
 
   localStorage.removeItem(PROFILE_KEY)
   emit('clear')
-  ElMessage.success('已清除，页面即将刷新...')
-
-  setTimeout(() => {
-    window.location.reload()
-  }, 800)
+  ElMessage.success('已清除')
 }
 
 const canSubmit = computed(() => {
