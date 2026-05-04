@@ -181,10 +181,7 @@ function parseSheet(rows, sheetName) {
       contact_person: normalizeText(row[contactIdx]),
       benefits: normalizeText(row[benefitsIdx])
     }))
-    .filter(
-      (job) =>
-        job.unit || job.job_type || job.department
-    )
+    .filter((job) => job.unit && job.job_type)
 
   // sheet_name 优先用 sheet 名称，其次从单位名提取
   let city = normalizeSheetName(sheetName)
