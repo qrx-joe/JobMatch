@@ -156,13 +156,20 @@ function parseSheet(rows, sheetName) {
   const contactIdx = detectColumn(headers, JOB_HEADER_PATTERNS.contact)
   const benefitsIdx = detectColumn(headers, JOB_HEADER_PATTERNS.benefits)
 
+  // 兜底：unit 和 position 都识别失败说明这不是有效岗位表（或表头格式陌生），
+  // 直接跳过，避免解析出全空岗位被 matcher 静默归到"完全符合"
+  if (unitIdx === -1 && posIdx === -1) {
+    console.warn(`[excel.js] 跳过 sheet "${sheetName}"：未能识别"服务单位"和"岗位类型"列`)
+    return []
+  }
+
   const jobs = rows
     .slice(dataStartIdx)
     .map((row) => ({
       index: row[indexIdx],
       department: normalizeText(row[deptIdx]),
-      unit: normalizeText(row[unitIdx]) || normalizeText(row[deptIdx]),
-      job_type: normalizeText(row[posIdx]) || normalizeText(row[descIdx]),
+      unit: normalizeText(row[unitIdx]),
+      job_type: normalizeText(row[posIdx]),
       recruit_count: row[recruitIdx] || 0,
       education: normalizeText(row[eduIdx]),
       degree: normalizeText(row[degIdx]),
