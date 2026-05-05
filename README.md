@@ -48,12 +48,10 @@
 | 3 | `screenshot-results.png` | 筛选结果列表（含多表关联后的竞争比） |
 | 4 | `screenshot-export.png` | 导出结果的 Excel 预览 |
 
-```markdown
 ![首页](./webapp/frontend/public/screenshots/screenshot-home.png)
 ![筛选面板](./webapp/frontend/public/screenshots/screenshot-filter.png)
 ![结果展示](./webapp/frontend/public/screenshots/screenshot-results.png)
 ![导出预览](./webapp/frontend/public/screenshots/screenshot-export.png)
-```
 
 ---
 
