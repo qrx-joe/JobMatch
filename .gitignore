@@ -45,3 +45,6 @@ package-lock.json
 
 # Build output
 dist/
+
+# Claude Code local config
+.claude/settings.local.json
