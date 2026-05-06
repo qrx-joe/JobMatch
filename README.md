@@ -39,19 +39,13 @@
 
 ### 截图
 
-截图放在 `webapp/frontend/public/screenshots/`，命名规范：
+| 上传岗位表 | 配置筛选条件 |
+|:---|:---|
+| ![上传岗位表](./webapp/frontend/public/screenshots/screenshot-home.png) | ![配置筛选条件](./webapp/frontend/public/screenshots/screenshot-filter.png) |
 
-| 序号 | 文件名 | 内容 |
-|------|--------|------|
-| 1 | `screenshot-home.png` | 首页（文件上传区域） |
-| 2 | `screenshot-filter.png` | 筛选条件配置面板（上传成功后） |
-| 3 | `screenshot-results.png` | 筛选结果列表（含多表关联后的竞争比） |
-| 4 | `screenshot-export.png` | 导出结果的 Excel 预览 |
-
-![首页](./webapp/frontend/public/screenshots/screenshot-home.png)
-![筛选面板](./webapp/frontend/public/screenshots/screenshot-filter.png)
-![结果展示](./webapp/frontend/public/screenshots/screenshot-results.png)
-![导出预览](./webapp/frontend/public/screenshots/screenshot-export.png)
+| 查看筛选结果（含竞争比） | 导出 Excel |
+|:---|:---|
+| ![筛选结果](./webapp/frontend/public/screenshots/screenshot-results.png) | ![导出 Excel](./webapp/frontend/public/screenshots/screenshot-export.png) |
 
 ---
 
@@ -77,26 +71,6 @@
 - 匹配结果（完全符合 / 可能符合 / 不符合）
 - 匹配说明与不匹配原因
 - 竞争比（关联统计表后）
-
----
-
-## 快速开始
-
-```bash
-cd webapp/frontend
-npm install
-npm run dev
-```
-
-打开浏览器访问 `http://localhost:3000`
-
-构建生产版本：
-
-```bash
-npm run build
-```
-
-产物输出至 `webapp/frontend/dist/`。
 
 ---
 
@@ -159,11 +133,13 @@ npm run build
 
 ---
 
-## 支持考试
+## 适用考试
 
-| 考试 | 数据情况 | 适用功能 |
+只要考试官方以 Excel 表格形式发布岗位信息，即可使用本工具进行筛选，不限于下表所列。
+
+| 考试 | 数据情况 | 已验证功能 |
 |---|---|---|
-| 国考 | 只有岗位表，无官方统计 Excel | 单表筛选 |
+| 国考 | 岗位表（官方不发布统计表） | 单表筛选 |
 | 山西省考 | 岗位表 + 报名统计表 | 单表筛选 + **多表关联** |
 | 山西事业编联考 | 岗位表 + 报名统计表 | 单表筛选 + **多表关联** |
 | 三支一扶 | 岗位表 + 报名统计表 | 单表筛选 + **多表关联** |
@@ -204,6 +180,26 @@ JobMatch/
 ├── PRODUCT.md                 # 产品定义文档
 └── README.md                  # 本文件
 ```
+
+---
+
+## 本地开发
+
+```bash
+cd webapp/frontend
+npm install
+npm run dev
+```
+
+打开浏览器访问 `http://localhost:3000`。
+
+构建生产版本：
+
+```bash
+npm run build
+```
+
+产物输出至 `webapp/frontend/dist/`。
 
 ---
 
